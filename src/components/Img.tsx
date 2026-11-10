@@ -21,7 +21,7 @@ export function Img({ name, responsive, className, style, alt = '', onClick }: P
   const want = responsive && portrait ? name.replace(/(\.[a-z]+)$/i, '-m$1') : name
   const src = asset(want) ?? (responsive ? asset(name) : null)
   if (!src) {
-    if (!import.meta.env.DEV) return null
+    if (!import.meta.env.DEV && !import.meta.env.VITE_SHOW_MISSING) return null
     return (
       <div className={`asset-missing ${className ?? ''}`} style={style} onClick={onClick}>
         {want}
