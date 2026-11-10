@@ -18,14 +18,14 @@ export const PASSWORD_HASH = 'd516a567d213abaeb7b8550a7f5d3e4d07b58693e187ddd944
 
 export const content = {
   door: {
-    line1: 'Somewhere in the world, a little Christmas magic is waiting for you...',
-    line2: `${HER_NAME}, are you ready?`,
-    button: 'OPEN THE DOOR',
+    line1: 'Ở một nơi nào đó trên thế giới, một chút phép màu Giáng sinh đang đợi em...',
+    line2: `${HER_NAME} ơi, em đã sẵn sàng chưa?`,
+    button: 'MỞ CÁNH CỬA',
   },
   gate: {
-    title: 'A little secret',
-    hint: 'Whisper the password to continue',
-    wrong: 'Hmm, not quite. Try again?',
+    title: 'Một bí mật nhỏ',
+    hint: 'Thì thầm mật khẩu để bước vào',
+    wrong: 'Chưa đúng rồi, thử lại nhé?',
   },
   letter: TODO_LONG as Maybe,
   cocoa: TODO_LONG as Maybe,
@@ -35,10 +35,10 @@ export const content = {
   reindeer: [] as Maybe[],
   santaMail: [] as Maybe[],
   gifts: [
-    { id: 1, title: 'Christmas Gift', unlockAt: '2026-12-24T00:00:00+07:00', body: TODO_LONG as Maybe },
-    { id: 2, title: 'New Year Gift', unlockAt: '2027-01-01T00:00:00+07:00', body: TODO_LONG as Maybe },
-    { id: 3, title: 'January 7', unlockAt: '2027-01-07T00:00:00+07:00', body: TODO_LONG as Maybe },
-    { id: 4, title: 'January 8', unlockAt: '2027-01-08T00:00:00+07:00', body: TODO_LONG as Maybe },
+    { id: 1, title: 'Quà Giáng sinh', unlockAt: '2026-12-24T00:00:00+07:00', body: TODO_LONG as Maybe },
+    { id: 2, title: 'Quà Năm mới', unlockAt: '2027-01-01T00:00:00+07:00', body: TODO_LONG as Maybe },
+    { id: 3, title: 'Ngày 7 tháng 1', unlockAt: '2027-01-07T00:00:00+07:00', body: TODO_LONG as Maybe },
+    { id: 4, title: 'Ngày 8 tháng 1', unlockAt: '2027-01-08T00:00:00+07:00', body: TODO_LONG as Maybe },
   ],
   playlist: [
     { title: "It's Beginning to Look a Lot Like Christmas", artist: 'Perry Como', youtube: TODO_LONG as Maybe },
@@ -48,3 +48,5 @@ export const content = {
     { title: 'White Christmas', artist: 'Bing Crosby', youtube: TODO_LONG as Maybe },
   ],
 }
+
+export const ui = { enter: 'Vào', skip: 'Bỏ qua ›' }

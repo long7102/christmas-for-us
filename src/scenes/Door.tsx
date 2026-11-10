@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { Img } from '../components/Img'
 import { SnowParticles } from '../components/SnowParticles'
-import { content } from '../content/content'
+import { content, ui } from '../content/content'
 import { store } from '../lib/storage'
 import { audio } from '../lib/audio'
 import { reducedMotion } from '../lib/device'
@@ -61,7 +61,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
 
       {returning && !opening && (
         <button className="door-skip" onClick={() => { audio.unlock(); finish() }}>
-          Skip ›
+          {ui.skip}
         </button>
       )}
 

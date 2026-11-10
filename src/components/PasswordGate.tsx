@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { sha256 } from '../lib/hash'
-import { PASSWORD_HASH, content } from '../content/content'
+import { PASSWORD_HASH, content, ui } from '../content/content'
 import { SnowParticles } from './SnowParticles'
 import { store } from '../lib/storage'
 
@@ -35,7 +35,7 @@ export function PasswordGate({ onPass }: { onPass: () => void }) {
           className="gate-input"
         />
         <p className="gate-bad" style={{ opacity: bad ? 1 : 0 }}>{content.gate.wrong}</p>
-        <button type="submit" className="btn-gold">Enter</button>
+        <button type="submit" className="btn-gold">{ui.enter}</button>
       </form>
     </div>
   )
