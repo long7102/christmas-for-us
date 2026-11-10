@@ -34,5 +34,6 @@ function assetIndex(): Plugin {
 
 export default defineConfig({
   plugins: [react(), tailwind(), assetIndex()],
+  server: { host: true, port: 5173, allowedHosts: true },
   build: { target: 'es2020', chunkSizeWarningLimit: 700 },
 })
