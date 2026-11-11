@@ -5,6 +5,7 @@ import { content, ui } from '../content/content'
 import { store } from '../lib/storage'
 import { reducedMotion, usePortrait } from '../lib/device'
 import { LAND, PORT, build, pixelShapes } from './doorGeometry'
+import VillageLife from './VillageLife'
 import landImg from '../assets/door-land.webp'
 import portImg from '../assets/door-port.webp'
 
@@ -12,7 +13,8 @@ import portImg from '../assets/door-port.webp'
 const villageFiles = import.meta.glob('../assets/village-*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>
 const villageUrl = (portrait: boolean) => Object.entries(villageFiles).find(([k]) => k.includes(portrait ? 'village-port' : 'village-land'))?.[1]
 /** Where the door house sits in the village shot (0..1) and how far to run in until it fills the screen. Tune per image. */
-const VILL = { land: { x: 0.5, y: 0.57, s: 5 }, port: { x: 0.5, y: 0.6, s: 5.4 } }
+/** x,y: the door in the village photo; s: zoom until it fills the door shot; dy: shift so its centre lands where the door shot's centre is. */
+const VILL = { land: { x: 0.5, y: 0.575, s: 4.2, dy: -0.1 }, port: { x: 0.505, y: 0.62, s: 3.1, dy: -0.085 } }
 
 const SLICES = 11 // layers that give each leaf its thickness
 
@@ -136,8 +138,8 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       tl.fromTo(villRef.current, { opacity: 0 }, { opacity: 1, duration: 2.6, ease: 'power1.inOut' }, 0)
         .set(villRef.current, { transformOrigin: `${v.x * 100}% ${v.y * 100}%` }, 0)
       at(900, () => setLine(1)); at(3100, () => setLine(2)); at(6000, () => setLine(3))
-      tl.to(villRef.current, { scale: v.s, duration: 4.6, ease: 'power2.inOut' }, 6.0)
-        .to(villRef.current, { y: -6, duration: 0.27, yoyo: true, repeat: 15, ease: 'sine.inOut' }, 6.0)
+      tl.to(villRef.current, { scale: v.s, y: v.dy * innerHeight, duration: 4.6, ease: 'power2.inOut' }, 6.0)
+        .to(villRef.current.querySelector('img'), { y: -6, duration: 0.27, yoyo: true, repeat: 15, ease: 'sine.inOut' }, 6.0)
         .to(sceneRef.current, { opacity: 1, duration: 1.8, ease: 'power1.inOut' }, 9.0)
         .to(villRef.current, { opacity: 0, duration: 1.2 }, 10.0)
       at(10800, () => setReady(true))
@@ -205,6 +207,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       {vill && (
         <div ref={villRef} className="door-vill door-cover" style={{ ['--ar' as string]: portrait ? 9 / 16 : 16 / 9 }}>
           <img src={vill} alt="" draggable={false} />
+          <VillageLife portrait={portrait} />
         </div>
       )}
 

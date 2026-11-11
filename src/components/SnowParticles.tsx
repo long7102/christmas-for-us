@@ -9,7 +9,7 @@ type Props = {
   className?: string
 }
 
-type Flake = { x: number; y: number; z: number; vx: number; ph: number }
+type Flake = { x: number; y: number; z: number; vx: number; ph: number; sp: number }
 
 /** Multi-depth soft snow on a 2D canvas. Paused when off-screen / tab hidden. */
 export function SnowParticles({ density = 1, burst = false, className }: Props) {
@@ -34,12 +34,12 @@ export function SnowParticles({ density = 1, burst = false, className }: Props) 
     sg.addColorStop(0, 'rgba(255,255,255,1)'); sg.addColorStop(0.45, 'rgba(240,248,255,.55)'); sg.addColorStop(1, 'rgba(240,248,255,0)')
     sc.fillStyle = sg; sc.fillRect(0, 0, 64, 64)
 
-    const make = (): Flake => ({ x: Math.random(), y: Math.random(), z: Math.random(), vx: (Math.random() - 0.5) * 0.02, ph: Math.random() * 6.28 })
+    const make = (): Flake => ({ x: Math.random(), y: Math.random(), z: Math.random(), vx: (Math.random() - 0.5) * 0.02, ph: Math.random() * 6.28, sp: 0.7 + Math.random() * 0.6 })
     const resize = () => {
       W = cv.clientWidth; H = cv.clientHeight
       cv.width = W * dpr; cv.height = H * dpr
-      const n = Math.round((W * H) / (coarse ? 14000 : 9000) * density * (reducedMotion() ? 0.4 : 1))
-      flakes = Array.from({ length: Math.min(n, coarse ? 90 : 220) }, make)
+      const n = Math.round((W * H) / (coarse ? 9000 : 6000) * density * (reducedMotion() ? 0.4 : 1))
+      flakes = Array.from({ length: Math.min(n, coarse ? 150 : 320) }, make)
     }
     resize()
     const ro = new ResizeObserver(resize)
@@ -67,17 +67,22 @@ export function SnowParticles({ density = 1, burst = false, className }: Props) 
             f.y = 0.5 + (Math.random() - 0.5) * 0.15
           }
         } else {
-          f.y += dt * (0.025 + depth * 0.07)
-          f.x += f.vx * dt + Math.sin(t / 1500 + f.ph) * dt * 0.012 * depth
+          const gust = 0.6 + Math.sin(t / 2600) * 0.45 + Math.sin(t / 970 + f.ph) * 0.15
+          f.y += dt * (0.06 + depth * 0.2) * f.sp
+          f.x += (f.vx + 0.035 * depth * gust) * dt + Math.sin(t / 700 + f.ph) * dt * 0.02 * depth
           if (f.y > 1.03) { f.y = -0.03; f.x = Math.random() }
           if (f.x > 1.03) f.x = -0.03
           if (f.x < -0.03) f.x = 1.03
         }
-        const r = (0.6 + depth * 2.1) * (1 + burstT * 1.8 * f.z)
+        const r = (0.6 + depth * 2.4) * (1 + burstT * 1.8 * f.z)
         const a = (0.25 + depth * 0.6) * (1 - burstT * 0.25)
         const px = f.x * W, py = f.y * H
         ctx.globalAlpha = a
-        ctx.drawImage(sprite, px - r * 2, py - r * 2, r * 4, r * 4)
+        if (burstT === 0 && f.z > 0.6) {
+          // near flakes are streaked by their motion
+          const len = r * (2.2 + f.z * 2)
+          ctx.save(); ctx.translate(px, py); ctx.rotate(-0.28); ctx.drawImage(sprite, -r * 2, -r * 2, r * 4 + len, r * 4); ctx.restore()
+        } else ctx.drawImage(sprite, px - r * 2, py - r * 2, r * 4, r * 4)
       }
     }
     raf = requestAnimationFrame(frame)

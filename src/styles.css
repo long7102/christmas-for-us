@@ -76,8 +76,8 @@ img { user-select: none; -webkit-user-drag: none; }
 .door-cover { position: absolute; left: 50%; top: 50%; width: max(100vw, calc(100svh * var(--ar, 1.7778))); height: max(100svh, calc(100vw / var(--ar, 1.7778))); translate: -50% -50%; will-change: transform; }
 .door-vill { z-index: 0; opacity: 0; }
 .door-vill img { width: 100%; height: 100%; display: block; object-fit: cover; }
-.door-intro.top { justify-content: flex-start; padding-top: clamp(56px, 12svh, 130px); }
-.door-intro.top::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 55%; background: linear-gradient(rgba(2, 8, 18, .75), transparent); z-index: -1; }
+.door-intro.top { justify-content: flex-end; padding-bottom: clamp(40px, 9svh, 110px); }
+.door-intro.top::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 58%; background: linear-gradient(transparent, rgba(2, 8, 18, .82)); z-index: -1; }
 .door-img { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block; }
 .door-light { position: absolute; z-index: 0; opacity: 0; background: radial-gradient(ellipse 75% 85% at 50% 55%, #ffe2a8 0%, #f2b866 30%, #c97f33 65%, #6e3812 100%); box-shadow: inset 0 0 60px 24px rgba(40, 14, 0, .55); }
 .door-glow { position: absolute; z-index: 0; left: 15%; top: -10%; width: 70%; height: 120%; background: radial-gradient(closest-side, rgba(255,196,110,.38), rgba(255,160,60,.12) 55%, transparent); opacity: 0; pointer-events: none; }
@@ -94,3 +94,16 @@ img { user-select: none; -webkit-user-drag: none; }
 .door-flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, #f6d9a0, #d9a05a 60%, #8a5524); opacity: 0; pointer-events: none; z-index: 7; }
 @media (prefers-reduced-motion: reduce) { .door-line1.in { opacity: .88; } }
 
+
+/* village life */
+.vlife { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.vglow { position: absolute; width: 7%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 196, 100, .55), rgba(255, 170, 70, .18) 45%, transparent 70%); mix-blend-mode: screen; animation: vflick 2.6s ease-in-out infinite; }
+@keyframes vflick { 0%, 100% { opacity: .25; transform: scale(.92); } 35% { opacity: .9; transform: scale(1.06); } 60% { opacity: .5; } 80% { opacity: .8; transform: scale(1); } }
+.vsmoke { position: absolute; width: 3.4%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(226, 234, 248, .55), rgba(226, 234, 248, .2) 50%, transparent 72%); filter: blur(3px); opacity: 0; animation: vsmoke 7s ease-out infinite; }
+@keyframes vsmoke { 0% { opacity: 0; transform: translate(0, 0) scale(.5); } 12% { opacity: .75; } 100% { opacity: 0; transform: translate(70%, -420%) scale(3.2); } }
+.vmist { position: absolute; left: -30%; width: 160%; height: 24%; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(205, 222, 245, .2), transparent 70%); filter: blur(14px); }
+.vmist.m1 { top: 4%; animation: vdrift 26s linear infinite; }
+.vmist.m2 { top: 26%; opacity: .8; animation: vdrift 34s linear infinite reverse; }
+.vmist.m3 { top: 52%; opacity: .55; animation: vdrift 40s linear infinite; }
+@keyframes vdrift { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
+@media (prefers-reduced-motion: reduce) { .vglow, .vsmoke, .vmist { animation: none; } }
