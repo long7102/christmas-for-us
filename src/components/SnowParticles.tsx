@@ -26,6 +26,14 @@ export function SnowParticles({ density = 1, burst = false, className }: Props) 
     let flakes: Flake[] = []
     let raf = 0, last = performance.now(), visible = true, burstT = 0
 
+    // one soft flake sprite, drawn scaled (much cheaper than a gradient per flake per frame)
+    const sprite = document.createElement('canvas')
+    sprite.width = sprite.height = 64
+    const sc = sprite.getContext('2d')!
+    const sg = sc.createRadialGradient(32, 32, 0, 32, 32, 32)
+    sg.addColorStop(0, 'rgba(255,255,255,1)'); sg.addColorStop(0.45, 'rgba(240,248,255,.55)'); sg.addColorStop(1, 'rgba(240,248,255,0)')
+    sc.fillStyle = sg; sc.fillRect(0, 0, 64, 64)
+
     const make = (): Flake => ({ x: Math.random(), y: Math.random(), z: Math.random(), vx: (Math.random() - 0.5) * 0.02, ph: Math.random() * 6.28 })
     const resize = () => {
       W = cv.clientWidth; H = cv.clientHeight
@@ -68,12 +76,8 @@ export function SnowParticles({ density = 1, burst = false, className }: Props) 
         const r = (0.6 + depth * 2.1) * (1 + burstT * 1.8 * f.z)
         const a = (0.25 + depth * 0.6) * (1 - burstT * 0.25)
         const px = f.x * W, py = f.y * H
-        const g = ctx.createRadialGradient(px, py, 0, px, py, r * 2)
-        g.addColorStop(0, `rgba(255,255,255,${a})`)
-        g.addColorStop(0.45, `rgba(240,248,255,${a * 0.55})`)
-        g.addColorStop(1, 'rgba(240,248,255,0)')
-        ctx.fillStyle = g
-        ctx.beginPath(); ctx.arc(px, py, r * 2, 0, 6.2832); ctx.fill()
+        ctx.globalAlpha = a
+        ctx.drawImage(sprite, px - r * 2, py - r * 2, r * 4, r * 4)
       }
     }
     raf = requestAnimationFrame(frame)

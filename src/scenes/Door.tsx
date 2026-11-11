@@ -4,15 +4,41 @@ import { SnowParticles } from '../components/SnowParticles'
 import { content, ui } from '../content/content'
 import { store } from '../lib/storage'
 import { reducedMotion, usePortrait } from '../lib/device'
-import { LAND, PORT, build } from './doorGeometry'
+import { LAND, PORT, build, pixelShapes } from './doorGeometry'
 import landImg from '../assets/door-land.webp'
 import portImg from '../assets/door-port.webp'
+
+/** Bakes the frame (with the doors cut out) and each leaf into its own transparent texture, so no clip-path is needed while animating. */
+function useDoorTextures(src: string, geo: typeof LAND) {
+  const [tex, setTex] = useState<{ frame: string; left: string; right: string } | null>(null)
+  useEffect(() => {
+    let dead = false
+    const im = new Image()
+    im.onload = () => {
+      const sh = pixelShapes(geo)
+      const path = (c: CanvasRenderingContext2D, pts: [number, number][], ox = 0, oy = 0) => { c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x - ox, y - oy) : c.moveTo(x - ox, y - oy))); c.closePath() }
+      const make = (w: number, h: number, draw: (c: CanvasRenderingContext2D) => void) => new Promise<string>((res) => {
+        const cv = document.createElement('canvas'); cv.width = Math.round(w); cv.height = Math.round(h)
+        draw(cv.getContext('2d')!)
+        cv.toBlob((b) => res(URL.createObjectURL(b!)), 'image/png')
+      })
+      Promise.all([
+        make(geo.w, geo.h, (c) => { c.drawImage(im, 0, 0); c.globalCompositeOperation = 'destination-out'; path(c, sh.ring); c.fill() }),
+        make(sh.bw, sh.bh, (c) => { path(c, sh.leafL, sh.x0, sh.y0); c.clip(); c.drawImage(im, -sh.x0, -sh.y0) }),
+        make(sh.bw, sh.bh, (c) => { path(c, sh.leafR, sh.cx, sh.y0); c.clip(); c.drawImage(im, -sh.cx, -sh.y0) }),
+      ]).then(([frame, left, right]) => !dead && setTex({ frame, left, right }))
+    }
+    im.src = src
+    return () => { dead = true }
+  }, [src, geo])
+  return tex
+}
 
 export default function Door({ onOpen }: { onOpen: () => void }) {
   const portrait = usePortrait()
   const g = useMemo(() => build(portrait ? PORT : LAND), [portrait])
   const img = portrait ? portImg : landImg
-  const half = (pos: string, clip: string) => ({ backgroundImage: `url(${img})`, backgroundSize: g.bgSize, backgroundPosition: `${pos} ${g.posY}`, clipPath: clip })
+  const tex = useDoorTextures(img, portrait ? PORT : LAND)
 
   const root = useRef<HTMLDivElement>(null)
   const box = useRef<HTMLDivElement>(null)
@@ -37,20 +63,22 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
     const tl = gsap.timeline({ onComplete: finish })
     tl.to(q('.door-cta'), { opacity: 0, y: 10, duration: 0.5 }, 0)
       // we step toward the door; it trembles as if warm light is pushing from the other side
-      .to(box.current, { scale: 1.5, duration: 2.6, ease: 'power2.inOut' }, 0)
-      .to(q('.door-panel'), { rotateY: (i: number) => (i ? -1.6 : 1.6), duration: 0.07, yoyo: true, repeat: 9, ease: 'sine.inOut' }, 0.5)
+      .to(box.current, { scale: 1.35, duration: 2.4, ease: 'power2.inOut' }, 0)
+      .to(q('.door-panel'), { rotateY: (i: number) => (i ? -1.4 : 1.4), duration: 0.07, yoyo: true, repeat: 9, ease: 'sine.inOut' }, 0.5)
       .fromTo(q('.door-light'), { opacity: 0 }, { opacity: 0.8, duration: 1.4, ease: 'power1.in' }, 1)
       .fromTo(q('.door-glow'), { opacity: 0 }, { opacity: 0.8, duration: 2, ease: 'power1.in' }, 1)
-      // the doors burst inward
-      .to(q('.door-panel-l'), { rotateY: 112, duration: 1.7, ease: 'back.out(1.3)' }, 1.5)
-      .to(q('.door-panel-r'), { rotateY: -112, duration: 1.7, ease: 'back.out(1.3)' }, 1.5)
-      .add(() => setBurst(true), 1.7)
-      .to(q('.door-panel'), { opacity: 0, duration: 0.5 }, 3.0)
-      // and we run in: the walls rush past, only warm light is left ahead
-      .to(box.current, { scale: 16, duration: 2.3, ease: 'power3.in' }, 2.6)
-      .to(box.current, { y: -10, duration: 0.22, yoyo: true, repeat: 9, ease: 'sine.inOut' }, 2.6)
-      .to(q('.door-flash'), { opacity: 0.85, duration: 1.5, ease: 'power1.in' }, 3.7)
-      .to(root.current, { opacity: 0, duration: 1.5 }, 4.6)
+      // both whole leaves swing open on their hinges, slightly darkening as they turn away
+      .to(q('.door-panel-l'), { rotateY: 100, duration: 2.3, ease: 'power2.inOut' }, 1.4)
+      .to(q('.door-panel-r'), { rotateY: -100, duration: 2.3, ease: 'power2.inOut' }, 1.4)
+      .to(q('.door-shade'), { opacity: 0.5, duration: 2.3, ease: 'power2.inOut' }, 1.4)
+      .add(() => setBurst(true), 2.4)
+      // then we run in between them: the walls rush past, only warm light is left ahead
+      .to(box.current, { scale: 14, duration: 2.4, ease: 'power3.in' }, 3.1)
+      .to(box.current, { y: -10, duration: 0.22, yoyo: true, repeat: 9, ease: 'sine.inOut' }, 3.1)
+      // once the walls have left the screen, stop drawing them at all
+      .set(q('.door-img, .door-panels, .door-scrim, .door-glow'), { visibility: 'hidden' }, 4.4)
+      .to(q('.door-flash'), { opacity: 0.85, duration: 1.5, ease: 'power1.in' }, 4.2)
+      .to(root.current, { opacity: 0, duration: 1.5 }, 5.1)
   }
 
   return (
@@ -66,10 +94,10 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
         <div ref={box} className="door-box" style={{ ['--ar' as string]: g.aspect, transformOrigin: g.origin }}>
           <div className="door-glow" />
           <div className="door-light" style={{ ...g.area, clipPath: g.lightClip }} />
-          <img src={img} className="door-img" style={{ clipPath: g.frameClip }} alt="" draggable={false} />
+          {tex && <img src={tex.frame} className="door-img" alt="" draggable={false} />}
           <div className="door-panels" style={g.area}>
-            <div className="door-panel door-panel-l" style={half(g.posL, g.clipL)} />
-            <div className="door-panel door-panel-r" style={half(g.posR, g.clipR)} />
+            {tex && <div className="door-panel door-panel-l" style={{ backgroundImage: `url(${tex.left})` }}><i className="door-shade" /></div>}
+            {tex && <div className="door-panel door-panel-r" style={{ backgroundImage: `url(${tex.right})` }}><i className="door-shade" /></div>}
           </div>
         </div>
         <div className="door-scrim" />

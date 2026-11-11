@@ -1,7 +1,7 @@
-/** Where the door leaves sit inside each door photo (px of the source image). Doors below `cut` open; the wreath above stays. */
+/** Where the door leaves sit inside each door photo (px of the source image). Each leaf is the whole arch-shaped half of the door. */
 export type DoorGeo = { w: number; h: number; cx: number; hw: number; apex: number; spring: number; bottom: number; cut: number }
-export const LAND: DoorGeo = { w: 799, h: 449, cx: 400, hw: 156, apex: 14, spring: 125, bottom: 413, cut: 160 }
-export const PORT: DoorGeo = { w: 449, h: 799, cx: 227, hw: 130, apex: 140, spring: 290, bottom: 716, cut: 190 }
+export const LAND: DoorGeo = { w: 799, h: 449, cx: 400, hw: 156, apex: 14, spring: 125, bottom: 413, cut: 15 }
+export const PORT: DoorGeo = { w: 449, h: 799, cx: 227, hw: 130, apex: 140, spring: 290, bottom: 716, cut: 141 }
 
 const xAt = (g: DoorGeo, y: number) => g.hw * Math.sqrt(Math.max(0, 1 - ((g.spring - y) / (g.spring - g.apex)) ** 2))
 
@@ -37,4 +37,14 @@ export function build(g: DoorGeo) {
   // the light fills the full arch-shaped opening (clipped like the frame hole)
   const lightClip = `polygon(${ring.map(([x, y]) => `${pct(x, x0, bw)} ${pct(y, y0, bh)}`).join(', ')})`
   return { frameClip, clipL, clipR, bgSize, posY, posL: posX(x0), posR: posX(g.cx), area, lightClip, origin: `${(g.cx / g.w) * 100}% ${((g.cut + bh * 0.45) / g.h) * 100}%`, aspect: g.w / g.h }
+}
+
+/** Pixel polygons for baking textures: whole opening ring, and each leaf with its bounding box. */
+export function pixelShapes(g: DoorGeo) {
+  const L = leftChain(g)
+  const mirror = (pts: [number, number][]) => pts.map(([x, y]) => [g.cx + (g.cx - x), y] as [number, number])
+  const ring = [...L, ...mirror([...L].reverse())]
+  const leafL = [...L, [g.cx, g.cut], [g.cx, g.bottom]] as [number, number][]
+  const leafR = mirror(leafL)
+  return { ring, leafL, leafR, x0: g.cx - g.hw, cx: g.cx, y0: g.cut, bw: g.hw, bh: g.bottom - g.cut }
 }
