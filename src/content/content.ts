@@ -2,13 +2,21 @@
  * Toàn bộ nội dung cá nhân nằm ở đây.
  * Mục nào Long chưa điền thì để TODO_LONG — KHÔNG tự viết thay.
  */
+/** Dev / preview builds show a visible marker where content is still missing; production hides it. */
+export const PREVIEW = import.meta.env.DEV || !!import.meta.env.VITE_PREVIEW
 export const TODO_LONG = '__TODO_LONG__' as const
 export type Maybe<T = string> = T | typeof TODO_LONG
 
 /** Text for display: TODO is visible in dev only, hidden (empty) in production build. */
 export function show(v: Maybe): string {
   if (v !== TODO_LONG) return v
-  return import.meta.env.DEV ? '[ĐIỀN]' : ''
+  return PREVIEW ? '[ĐIỀN: nội dung của Long]' : ''
+}
+
+/** Ngoại hình hai nhân vật cảnh cuối — Long chưa cung cấp, đây là giá trị tạm. */
+export const couple = {
+  herHair: '#2a1a14', herCoat: '#8f2434', herScarf: '#f1e3c4', herHat: '#f1e3c4',
+  hisHair: '#2b2118', hisCoat: '#1f4a3a', hisScarf: '#c63a48', hisHat: '#8a8f99',
 }
 
 export const HER_NAME = 'Khánh Hạ'
@@ -30,10 +38,12 @@ export const content = {
   letter: TODO_LONG as Maybe,
   cocoa: TODO_LONG as Maybe,
   cookie: TODO_LONG as Maybe,
-  ornaments: [] as Maybe[],
+  ornaments: [TODO_LONG, TODO_LONG, TODO_LONG, TODO_LONG, TODO_LONG, TODO_LONG] as Maybe[],
   globeSecret: TODO_LONG as Maybe,
-  reindeer: [] as Maybe[],
-  santaMail: [] as Maybe[],
+  reindeer: [TODO_LONG, TODO_LONG, TODO_LONG, TODO_LONG, TODO_LONG] as Maybe[],
+  santaMail: [TODO_LONG] as Maybe[],
+  /** Email/số của Long cho nút "Gửi cho anh" (để trống = mở soạn thư không có người nhận). */
+  sendTo: '',
   gifts: [
     { id: 1, title: 'Quà Giáng sinh', unlockAt: '2026-12-24T00:00:00+07:00', body: TODO_LONG as Maybe },
     { id: 2, title: 'Quà Năm mới', unlockAt: '2027-01-01T00:00:00+07:00', body: TODO_LONG as Maybe },
