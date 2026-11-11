@@ -33,7 +33,8 @@ export function build(g: DoorGeo) {
   const bgSize = `${100 / fw}% ${100 / fh}%`
   const posY = `${((y0 / g.h) / (1 - fh)) * 100}%`
   const posX = (left: number) => `${((left / g.w) / (1 - fw)) * 100}%`
-  const area = { left: `${(x0 / g.w) * 100}%`, top: `${(y0 / g.h) * 100}%`, width: `${(bw / g.w) * 100}%`, height: `${(bh / g.h) * 100}%` }
+  const areaNum = { widthNum: bw / g.w }
+  const area = { ...areaNum, left: `${(x0 / g.w) * 100}%`, top: `${(y0 / g.h) * 100}%`, width: `${(bw / g.w) * 100}%`, height: `${(bh / g.h) * 100}%` }
   // the light fills the full arch-shaped opening (clipped like the frame hole)
   const lightClip = `polygon(${ring.map(([x, y]) => `${pct(x, x0, bw)} ${pct(y, y0, bh)}`).join(', ')})`
   return { frameClip, clipL, clipR, bgSize, posY, posL: posX(x0), posR: posX(g.cx), area, lightClip, origin: `${(g.cx / g.w) * 100}% ${((g.cut + bh * 0.45) / g.h) * 100}%`, aspect: g.w / g.h }
