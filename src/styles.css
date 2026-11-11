@@ -111,3 +111,7 @@ img { user-select: none; -webkit-user-drag: none; }
 
 /* soft edges while the close-up is still smaller than the screen, so it dissolves into the village */
 .door-box.feather { --fr: 50%; -webkit-mask-image: radial-gradient(ellipse var(--fr) var(--fr) at 50% 50%, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse var(--fr) var(--fr) at 50% 50%, #000 55%, transparent 100%); }
+
+/* the whole door photo is always visible (never cropped); the space around it is filled with a soft, dimmed copy of the same photo */
+.door-box { position: absolute; left: 50%; top: 50%; width: min(100vw, calc(100svh * var(--ar, 1.7778))); height: min(100svh, calc(100vw / var(--ar, 1.7778))); translate: -50% -50%; }
+.door-back { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(26px) brightness(.55) saturate(1.1); }

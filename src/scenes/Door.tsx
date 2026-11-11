@@ -189,7 +189,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       const W = innerWidth, H = innerHeight
       const arV = portrait ? 9 / 16 : 16 / 9
       const Wv = Math.max(W, H * arV), Hv = Wv / arV
-      const Wd = Math.max(W, H * g.aspect), Hd = Wd / g.aspect
+      const Wd = Math.min(W, H * g.aspect), Hd = Wd / g.aspect
       const c = (v.w * Wv) / (g.dw * Wd) // close-up scale at which its door matches the village door
       const lnEnd = Math.log(1 / c)
       const dBoxX = (g.ox - 0.5) * Wd, dBoxY = (g.oy - 0.5) * Hd
@@ -299,7 +299,8 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       )}
 
       <div ref={sceneRef} className="door-scene">
-        <div ref={box} className="door-box door-cover" style={{ ['--ar' as string]: g.aspect, transformOrigin: g.origin }}>
+        <div className="door-back" style={{ backgroundImage: `url(${img})` }} />
+        <div ref={box} className="door-box" style={{ ['--ar' as string]: g.aspect, transformOrigin: g.origin }}>
           <div className="door-glow" />
           <div className="door-light" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }} />
           {tex && <img src={tex.frame} className="door-img" alt="" draggable={false} />}
