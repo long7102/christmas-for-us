@@ -78,11 +78,7 @@ export function SnowParticles({ density = 1, burst = false, className }: Props) 
         const a = (0.25 + depth * 0.6) * (1 - burstT * 0.25)
         const px = f.x * W, py = f.y * H
         ctx.globalAlpha = a
-        if (burstT === 0 && f.z > 0.6) {
-          // near flakes are streaked by their motion
-          const len = r * (2.2 + f.z * 2)
-          ctx.save(); ctx.translate(px, py); ctx.rotate(-0.28); ctx.drawImage(sprite, -r * 2, -r * 2, r * 4 + len, r * 4); ctx.restore()
-        } else ctx.drawImage(sprite, px - r * 2, py - r * 2, r * 4, r * 4)
+        ctx.drawImage(sprite, px - r * 2, py - r * 2, r * 4, r * 4)
       }
     }
     raf = requestAnimationFrame(frame)

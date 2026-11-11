@@ -110,4 +110,4 @@ img { user-select: none; -webkit-user-drag: none; }
 .hnd { position: absolute; transform-style: preserve-3d; pointer-events: none; }
 
 /* soft edges while the close-up is still smaller than the screen, so it dissolves into the village */
-.door-box.feather { -webkit-mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 50%, transparent 100%); mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 50%, transparent 100%); }
+.door-box.feather { --fr: 50%; -webkit-mask-image: radial-gradient(ellipse var(--fr) var(--fr) at 50% 50%, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse var(--fr) var(--fr) at 50% 50%, #000 55%, transparent 100%); }

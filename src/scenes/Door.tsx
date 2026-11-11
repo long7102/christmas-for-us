@@ -72,6 +72,32 @@ function useDoorTextures(src: string, geo: typeof LAND) {
   return tex
 }
 
+/** Re-samples a photo at up to 2x with a gentle unsharp mask, so edges stay crisp when it is shown large or on dense screens. */
+function useSharpened(src?: string) {
+  const [out, setOut] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    setOut(undefined)
+    if (!src) return
+    let dead = false
+    const im = new Image()
+    im.onload = () => {
+      const k = Math.min(2, 3000 / im.naturalWidth)
+      const w = Math.round(im.naturalWidth * k), h = Math.round(im.naturalHeight * k)
+      const a = document.createElement('canvas'); a.width = w; a.height = h
+      const ac = a.getContext('2d')!; ac.imageSmoothingQuality = 'high'; ac.drawImage(im, 0, 0, w, h)
+      const b = document.createElement('canvas'); b.width = w; b.height = h
+      const bc = b.getContext('2d')!; bc.filter = 'blur(1.6px)'; bc.drawImage(a, 0, 0)
+      const A = ac.getImageData(0, 0, w, h), B = bc.getImageData(0, 0, w, h).data, d = A.data, amt = 0.85
+      for (let i = 0; i < d.length; i += 4) for (let c = 0; c < 3; c++) d[i + c] = d[i + c] + amt * (d[i + c] - B[i + c])
+      ac.putImageData(A, 0, 0)
+      a.toBlob((bl) => !dead && bl && setOut(URL.createObjectURL(bl)), 'image/jpeg', 0.92)
+    }
+    im.src = src
+    return () => { dead = true }
+  }, [src])
+  return out
+}
+
 /** Clumps and powder of snow that fall off the door, garland and ledges when the door moves. */
 function useShed() {
   const cv = useRef<HTMLCanvasElement>(null)
@@ -115,8 +141,8 @@ function useShed() {
       const side = Math.random() < 0.5 ? -1 : 1
       const x = top ? r.left + Math.random() * r.width : side < 0 ? r.left - r.width * (0.02 + Math.random() * 0.16) : r.right + r.width * (0.02 + Math.random() * 0.16)
       const y = top ? r.top + Math.random() * r.height * 0.18 : r.top + Math.random() * r.height * 0.75
-      const powder = Math.random() < 0.65
-      parts.current.push({ x, y, vx: (Math.random() - 0.5) * 70 + (top ? 0 : side * 25), vy: Math.random() * 60, r: powder ? 2 + Math.random() * 4 : 7 + Math.random() * 16, a: powder ? 0.8 : 0.95, life: 1.2 + Math.random() * 1.4, powder })
+      const powder = Math.random() < 0.9
+      parts.current.push({ x, y, vx: (Math.random() - 0.5) * 70 + (top ? 0 : side * 25), vy: Math.random() * 60, r: powder ? 1.4 + Math.random() * 2.6 : 4 + Math.random() * 6, a: powder ? 0.6 : 0.8, life: 1.2 + Math.random() * 1.4, powder })
     }
     if (!raf.current) loop()
   }
@@ -127,7 +153,8 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
   const portrait = usePortrait()
   const g = useMemo(() => build(portrait ? PORT : LAND), [portrait])
   const img = portrait ? portImg : landImg
-  const vill = villageUrl(portrait)
+  const villRaw = villageUrl(portrait)
+  const vill = useSharpened(villRaw)
   const tex = useDoorTextures(img, portrait ? PORT : LAND)
   const shed = useShed()
 
@@ -139,8 +166,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
   const [line, setLine] = useState(0) // 0 none, 1 line1, 2 line1+2, 3 hidden
   const [ready, setReady] = useState(false) // button visible
   const [opening, setOpening] = useState(false)
-  const [burst, setBurst] = useState(false)
-  const returning = store.get('opened', false)
+    const returning = store.get('opened', false)
 
   // Leaf thickness follows the rendered size.
   useEffect(() => {
@@ -150,38 +176,51 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
 
   // Intro: village fades in, we run to the house, the door appears, the button follows.
   useEffect(() => {
+    if (villRaw && !vill) return // wait for the sharpened photo
     const k = reducedMotion() ? 0.3 : 1
     const timers: ReturnType<typeof setTimeout>[] = []
     const at = (ms: number, f: () => void) => timers.push(setTimeout(f, ms * k))
     const tl = gsap.timeline()
     const v = vill ? VILL[portrait ? 'port' : 'land'] : null
     if (v && villRef.current && sceneRef.current && box.current && !reducedMotion()) {
-      // Match-zoom: the village is only zoomed until its door is as big as the door in the close-up shot, then the close-up
-      // (which is sharper at that size) takes over and settles to full size. No big upscaling of either photo.
+      // One continuous camera move: both photos are scaled by the same exponential zoom, so there is no stop between
+      // "walking down the street" and "arriving at the door". The close-up fades in while it is still smaller than the
+      // screen (soft edges) and grows to full size exactly as the zoom ends. No big upscaling of either photo.
       const W = innerWidth, H = innerHeight
       const arV = portrait ? 9 / 16 : 16 / 9
       const Wv = Math.max(W, H * arV), Hv = Wv / arV
       const Wd = Math.max(W, H * g.aspect), Hd = Wd / g.aspect
-      const s0 = (v.w * Wv * v.s) / (g.dw * Wd)
+      const c = (v.w * Wv) / (g.dw * Wd) // close-up scale at which its door matches the village door
+      const lnEnd = Math.log(1 / c)
+      const dBoxX = (g.ox - 0.5) * Wd, dBoxY = (g.oy - 0.5) * Hd
+      const sm = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
+      const proxy = { p: 0 }
+      const apply = () => {
+        const p = proxy.p, G = Math.exp(p * lnEnd)
+        const ox = -(v.x - 0.5) * Wv * G * (1 - p), oy = -(v.y - 0.5) * Hv * G * (1 - p)
+        // village: the door drifts to the middle of the screen
+        gsap.set(villRef.current, { scale: G, x: -(v.x - 0.5) * Wv * G * p, y: -(v.y - 0.5) * Hv * G * p, opacity: 1 - sm(2.3, 3.4, G) })
+        // close-up: keeps its door exactly over the village door, then settles to its natural framing
+        const w = sm(0.55, 0.92, p)
+        gsap.set(box.current, { scale: G * c, x: (1 - w) * (-ox - dBoxX), y: (1 - w) * (-oy - dBoxY) })
+        box.current!.style.setProperty('--fr', `${50 + 110 * sm(0.55, 0.96, p)}%`)
+        gsap.set(sceneRef.current, { opacity: sm(1.5, 2.3, G) })
+      }
       gsap.set(sceneRef.current, { opacity: 0 })
-      gsap.set(box.current, { scale: s0, x: -(g.ox - 0.5) * Wd, y: -(g.oy - 0.5) * Hd })
       gsap.set(villRef.current, { transformOrigin: '50% 50%' })
+      apply()
+      box.current.classList.add('feather')
       tl.fromTo(villRef.current, { opacity: 0 }, { opacity: 1, duration: 2.4, ease: 'power1.inOut' }, 0)
-      at(900, () => setLine(1)); at(3000, () => setLine(2)); at(5000, () => setLine(3))
-      tl.to(villRef.current, { scale: v.s, x: -(v.x - 0.5) * Wv * v.s, y: -(v.y - 0.5) * Hv * v.s, duration: 3.8, ease: 'power2.inOut' }, 5.0)
-        .to(villRef.current.querySelector('img'), { y: -5, duration: 0.27, yoyo: true, repeat: 13, ease: 'sine.inOut' }, 5.0)
-        .to(sceneRef.current, { opacity: 1, duration: 1.0, ease: 'power1.inOut' }, 7.9)
-        .add(() => box.current?.classList.add('feather'), 7.9)
-        .to(box.current, { scale: 1, x: 0, y: 0, duration: 2.2, ease: 'power2.out' }, 7.9)
-        .to(villRef.current, { opacity: 0, duration: 0.9 }, 9.2)
-        .add(() => box.current?.classList.remove('feather'), 10.2)
-      at(10300, () => setReady(true))
+      at(900, () => setLine(1)); at(3000, () => setLine(2)); at(4600, () => setLine(3))
+      tl.to(proxy, { p: 1, duration: 5.6, ease: 'sine.inOut', onUpdate: apply, onComplete: () => { box.current?.classList.remove('feather'); gsap.set(villRef.current, { display: 'none' }) } }, 4.6)
+        .to(villRef.current.querySelector('img'), { y: -5, duration: 0.27, yoyo: true, repeat: 20, ease: 'sine.inOut' }, 4.6)
+      at(10400, () => setReady(true))
     } else {
       if (sceneRef.current) gsap.to(sceneRef.current, { opacity: 1, duration: 2, delay: 5.6 * k })
       at(800, () => setLine(1)); at(2900, () => setLine(2)); at(5600, () => setLine(3)); at(7600, () => setReady(true))
     }
     return () => { timers.forEach(clearTimeout); tl.kill() }
-  }, [vill, portrait])
+  }, [vill, villRaw, portrait])
 
   const finish = () => { store.set('opened', true); onOpen() }
 
@@ -200,23 +239,22 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       .to(box.current, { scale: 1.32, duration: 3, ease: 'power2.inOut' }, 0)
     // 1. a low rumble: the snow on the garland starts to slide
     rumble(tl, 0.7, 3, 22)
-    tl.add(() => dust(22), 0.9).add(() => dust(26), 1.5)
+    tl.add(() => dust(12), 0.9).add(() => dust(14), 1.5)
       .fromTo(q('.door-light'), { opacity: 0 }, { opacity: 0.8, duration: 2, ease: 'power1.in' }, 1.8)
       .fromTo(q('.door-glow'), { opacity: 0 }, { opacity: 0.8, duration: 2.4, ease: 'power1.in' }, 1.8)
     // 2. the heavy leaves creak off their latch, then swing wide with their own weight
     tl.to(q('.door-panel-l'), { rotateY: 13, duration: 1.3, ease: 'power2.in' }, 1.4)
       .to(q('.door-panel-r'), { rotateY: -13, duration: 1.3, ease: 'power2.in' }, 1.5)
-      .add(() => dust(46), 2.6)
+      .add(() => dust(24), 2.6)
       .to(q('.door-panel-l'), { rotateY: 104, duration: 1.7, ease: 'power1.inOut' }, 2.7)
       .to(q('.door-panel-r'), { rotateY: -104, duration: 1.7, ease: 'power1.inOut' }, 2.8)
       .to(q('.door-shade'), { opacity: 1, duration: 1.8, ease: 'power1.inOut' }, 2.7)
-      .add(() => dust(54), 3.3)
-      .add(() => setBurst(true), 3.4)
+      .add(() => dust(28), 3.3)
     // 3. they hit the wall with a thud
     tl.to(q('.door-panel-l'), { rotateY: 97, duration: 0.5, ease: 'power2.out' }, 4.4)
       .to(q('.door-panel-r'), { rotateY: -97, duration: 0.5, ease: 'power2.out' }, 4.5)
     rumble(tl, 4.4, 9, 7)
-    tl.add(() => dust(40), 4.45)
+    tl.add(() => dust(18), 4.45)
     // 4. and we run in between them toward the light
     tl.to(box.current, { scale: 14, duration: 2.5, ease: 'power3.in' }, 4.0)
       .set(q('.door-img, .door-panels, .door-scrim, .door-glow'), { visibility: 'hidden' }, 6.2)
@@ -277,7 +315,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
         <h1 className={`door-line2 ${line === 2 ? 'in' : ''}`}><span className="mask-line"><span>{content.door.line2}</span></span></h1>
       </div>
 
-      <SnowParticles density={vill ? 1.5 : 1.1} burst={burst} />
+      <SnowParticles density={vill ? 1.4 : 1.1} />
       <canvas ref={shed.cv} className="door-shed" />
       {returning && !opening && <button className="door-skip" onClick={finish}>{ui.skip}</button>}
 
