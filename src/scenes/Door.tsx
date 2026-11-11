@@ -43,8 +43,8 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       .to(q('.door-copy, .door-cta'), { opacity: 0, y: -12, duration: 0.6 }, 0)
       // the doors tremble, as if something warm is pushing from the other side
       .to(q('.door-panel'), { rotateY: (i: number) => (i ? -2.2 : 2.2), duration: 0.07, yoyo: true, repeat: 9, ease: 'sine.inOut' }, 0.1)
-      .fromTo(q('.door-light'), { opacity: 0 }, { opacity: 1, duration: 0.9, ease: 'power2.in' }, 0.5)
-      .fromTo(q('.door-glow'), { opacity: 0 }, { opacity: 1, duration: 1.4, ease: 'power2.in' }, 0.6)
+      .fromTo(q('.door-light'), { opacity: 0 }, { opacity: 0.85, duration: 1.4, ease: 'power1.in' }, 0.5)
+      .fromTo(q('.door-glow'), { opacity: 0 }, { opacity: 0.8, duration: 2.2, ease: 'power1.in' }, 0.6)
       // then they burst open
       .to(q('.door-panel-l'), { rotateY: 112, duration: 1.9, ease: 'back.out(1.3)' }, 1.0)
       .to(q('.door-panel-r'), { rotateY: -112, duration: 1.9, ease: 'back.out(1.3)' }, 1.0)
@@ -52,8 +52,8 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       .add(() => setBurst(true), 1.2)
       .to(q('.door-panel'), { opacity: 0, duration: 0.5 }, 2.7)
       .to(box.current, { scale: 7, duration: 2.0, ease: 'power3.in' }, 2.8)
-      .to(q('.door-flash'), { opacity: 1, duration: 0.9, ease: 'power2.in' }, 3.9)
-      .to(root.current, { opacity: 0, duration: 1.1 }, 4.7)
+      .to(q('.door-flash'), { opacity: 0.9, duration: 1.4, ease: 'power1.inOut' }, 3.7)
+      .to(root.current, { opacity: 0, duration: 1.4 }, 4.7)
   }
 
   const area = { left: `${O.l}%`, top: `${O.t}%`, width: `${O.w}%`, height: `${O.h}%` }
