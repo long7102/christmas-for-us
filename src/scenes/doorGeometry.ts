@@ -1,7 +1,8 @@
 /** Where the door leaves sit inside each door photo (px of the source image). Each leaf is the whole arch-shaped half of the door. */
-export type DoorGeo = { w: number; h: number; cx: number; hw: number; apex: number; spring: number; bottom: number; cut: number }
-export const LAND: DoorGeo = { w: 799, h: 449, cx: 400, hw: 156, apex: 14, spring: 125, bottom: 413, cut: 15 }
-export const PORT: DoorGeo = { w: 449, h: 799, cx: 227, hw: 130, apex: 140, spring: 290, bottom: 716, cut: 141 }
+export type Box = [number, number, number, number] // x, y, w, h in source px
+export type DoorGeo = { w: number; h: number; cx: number; hw: number; apex: number; spring: number; bottom: number; cut: number; handleL: Box; handleR: Box }
+export const LAND: DoorGeo = { w: 799, h: 449, cx: 400, hw: 156, apex: 14, spring: 125, bottom: 413, cut: 15, handleL: [362, 210, 35, 102], handleR: [402, 210, 37, 102] }
+export const PORT: DoorGeo = { w: 449, h: 799, cx: 227, hw: 130, apex: 140, spring: 290, bottom: 716, cut: 141, handleL: [176, 433, 48, 106], handleR: [225, 433, 49, 106] }
 
 const xAt = (g: DoorGeo, y: number) => g.hw * Math.sqrt(Math.max(0, 1 - ((g.spring - y) / (g.spring - g.apex)) ** 2))
 
@@ -37,7 +38,7 @@ export function build(g: DoorGeo) {
   const area = { ...areaNum, left: `${(x0 / g.w) * 100}%`, top: `${(y0 / g.h) * 100}%`, width: `${(bw / g.w) * 100}%`, height: `${(bh / g.h) * 100}%` }
   // the light fills the full arch-shaped opening (clipped like the frame hole)
   const lightClip = `polygon(${ring.map(([x, y]) => `${pct(x, x0, bw)} ${pct(y, y0, bh)}`).join(', ')})`
-  return { frameClip, clipL, clipR, bgSize, posY, posL: posX(x0), posR: posX(g.cx), area, lightClip, origin: `${(g.cx / g.w) * 100}% ${((g.cut + bh * 0.45) / g.h) * 100}%`, aspect: g.w / g.h }
+  return { frameClip, clipL, clipR, bgSize, posY, posL: posX(x0), posR: posX(g.cx), area, lightClip, origin: `${(g.cx / g.w) * 100}% ${((g.cut + bh * 0.45) / g.h) * 100}%`, ox: g.cx / g.w, oy: (g.cut + bh * 0.45) / g.h, dw: (2 * g.hw) / g.w, aspect: g.w / g.h }
 }
 
 /** Pixel polygons for baking textures: whole opening ring, and each leaf with its bounding box. */

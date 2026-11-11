@@ -14,11 +14,11 @@ const villageFiles = import.meta.glob('../assets/village-*.webp', { eager: true,
 const villageUrl = (portrait: boolean) => Object.entries(villageFiles).find(([k]) => k.includes(portrait ? 'village-port' : 'village-land'))?.[1]
 /** Where the door house sits in the village shot (0..1) and how far to run in until it fills the screen. Tune per image. */
 /** x,y: the door in the village photo; s: zoom until it fills the door shot; dy: shift so its centre lands where the door shot's centre is. */
-const VILL = { land: { x: 0.5, y: 0.575, s: 4.2, dy: -0.1 }, port: { x: 0.505, y: 0.62, s: 3.1, dy: -0.085 } }
+const VILL = { land: { x: 0.5, y: 0.575, s: 2.2, w: 0.094 }, port: { x: 0.505, y: 0.62, s: 1.8, w: 0.19 } }
 
 const SLICES = 11 // layers that give each leaf its thickness
 
-type Tex = { frame: string; left: string; right: string; leftDark: string; rightDark: string }
+type Tex = { frame: string; left: string; right: string; leftDark: string; rightDark: string; hl: string; hr: string; hlDark: string; hrDark: string }
 
 /** Bakes the frame (doors cut out) and each leaf (+ a darker copy for its thickness) into transparent textures. */
 function useDoorTextures(src: string, geo: typeof LAND) {
@@ -34,15 +34,37 @@ function useDoorTextures(src: string, geo: typeof LAND) {
         draw(cv.getContext('2d')!)
         cv.toBlob((b) => res(URL.createObjectURL(b!)), 'image/png')
       })
-      const leaf = (pts: [number, number][], ox: number, dark: boolean) => make(sh.bw, sh.bh, (c) => {
-        c.save(); path(c, pts, ox, sh.y0); c.clip(); c.drawImage(im, -ox, -sh.y0)
+      // paint the handle out of the leaf (copy plain wood from beside it) so a real, raised handle can replace it
+      const unhandle = (c: CanvasRenderingContext2D, [bx, by, bw, bh]: [number, number, number, number], ox: number, dir: 1 | -1) => {
+        const t = document.createElement('canvas'); t.width = bw; t.height = bh
+        const tc = t.getContext('2d')!
+        tc.drawImage(im, bx + dir * (bw + 12), by, bw, bh, 0, 0, bw, bh)
+        const d = tc.getImageData(0, 0, bw, bh)
+        for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) { const e = Math.min(x, bw - 1 - x, y, bh - 1 - y); d.data[(y * bw + x) * 4 + 3] = Math.min(1, e / 5) * 255 }
+        tc.putImageData(d, 0, 0)
+        c.drawImage(t, bx - ox, by - sh.y0)
+      }
+      const leaf = (pts: [number, number][], ox: number, dark: boolean, hb: [number, number, number, number], dir: 1 | -1) => make(sh.bw, sh.bh, (c) => {
+        c.save(); path(c, pts, ox, sh.y0); c.clip(); c.drawImage(im, -ox, -sh.y0); unhandle(c, hb, ox, dir)
         if (dark) { c.globalCompositeOperation = 'source-atop'; c.fillStyle = 'rgba(70,36,14,.4)'; c.fillRect(0, 0, sh.bw, sh.bh) }
         c.restore()
       })
+      // the brass handle, cut out of the photo by colour, upscaled for smooth edges
+      const brass = (b: [number, number, number, number], dark: boolean) => make(b[2] * 3, b[3] * 3, (c) => {
+        c.imageSmoothingQuality = 'high'; c.drawImage(im, b[0], b[1], b[2], b[3], 0, 0, b[2] * 3, b[3] * 3)
+        const d = c.getImageData(0, 0, b[2] * 3, b[3] * 3), k = dark ? 0.42 : 1
+        for (let i = 0; i < d.data.length; i += 4) {
+          const r = d.data[i], gg = d.data[i + 1], bl = d.data[i + 2], lum = 0.3 * r + 0.59 * gg + 0.11 * bl
+          const a = Math.min(1, Math.max(0, (lum - 62) / 34)) * Math.min(1, Math.max(0, (r - bl - 28) / 26))
+          d.data[i] = r * k; d.data[i + 1] = gg * k; d.data[i + 2] = bl * k; d.data[i + 3] = a * 255
+        }
+        c.putImageData(d, 0, 0)
+      })
       Promise.all([
         make(geo.w, geo.h, (c) => { c.drawImage(im, 0, 0); c.globalCompositeOperation = 'destination-out'; path(c, sh.ring); c.fill() }),
-        leaf(sh.leafL, sh.x0, false), leaf(sh.leafR, sh.cx, false), leaf(sh.leafL, sh.x0, true), leaf(sh.leafR, sh.cx, true),
-      ]).then(([frame, left, right, leftDark, rightDark]) => !dead && setTex({ frame, left, right, leftDark, rightDark }))
+        leaf(sh.leafL, sh.x0, false, geo.handleL, -1), leaf(sh.leafR, sh.cx, false, geo.handleR, 1), leaf(sh.leafL, sh.x0, true, geo.handleL, -1), leaf(sh.leafR, sh.cx, true, geo.handleR, 1),
+        brass(geo.handleL, false), brass(geo.handleR, false), brass(geo.handleL, true), brass(geo.handleR, true),
+      ]).then(([frame, left, right, leftDark, rightDark, hl, hr, hlDark, hrDark]) => !dead && setTex({ frame, left, right, leftDark, rightDark, hl, hr, hlDark, hrDark }))
     }
     im.src = src
     return () => { dead = true }
@@ -133,16 +155,25 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
     const at = (ms: number, f: () => void) => timers.push(setTimeout(f, ms * k))
     const tl = gsap.timeline()
     const v = vill ? VILL[portrait ? 'port' : 'land'] : null
-    if (v && villRef.current && sceneRef.current && !reducedMotion()) {
+    if (v && villRef.current && sceneRef.current && box.current && !reducedMotion()) {
+      // Match-zoom: the village is only zoomed until its door is as big as the door in the close-up shot, then the close-up
+      // (which is sharper at that size) takes over and settles to full size. No big upscaling of either photo.
+      const W = innerWidth, H = innerHeight
+      const arV = portrait ? 9 / 16 : 16 / 9
+      const Wv = Math.max(W, H * arV), Hv = Wv / arV
+      const Wd = Math.max(W, H * g.aspect), Hd = Wd / g.aspect
+      const s0 = (v.w * Wv * v.s) / (g.dw * Wd)
       gsap.set(sceneRef.current, { opacity: 0 })
-      tl.fromTo(villRef.current, { opacity: 0 }, { opacity: 1, duration: 2.6, ease: 'power1.inOut' }, 0)
-        .set(villRef.current, { transformOrigin: `${v.x * 100}% ${v.y * 100}%` }, 0)
-      at(900, () => setLine(1)); at(3100, () => setLine(2)); at(6000, () => setLine(3))
-      tl.to(villRef.current, { scale: v.s, y: v.dy * innerHeight, duration: 4.6, ease: 'power2.inOut' }, 6.0)
-        .to(villRef.current.querySelector('img'), { y: -6, duration: 0.27, yoyo: true, repeat: 15, ease: 'sine.inOut' }, 6.0)
-        .to(sceneRef.current, { opacity: 1, duration: 1.8, ease: 'power1.inOut' }, 9.0)
-        .to(villRef.current, { opacity: 0, duration: 1.2 }, 10.0)
-      at(10800, () => setReady(true))
+      gsap.set(box.current, { scale: s0, x: -(g.ox - 0.5) * Wd, y: -(g.oy - 0.5) * Hd })
+      gsap.set(villRef.current, { transformOrigin: '50% 50%' })
+      tl.fromTo(villRef.current, { opacity: 0 }, { opacity: 1, duration: 2.4, ease: 'power1.inOut' }, 0)
+      at(900, () => setLine(1)); at(3000, () => setLine(2)); at(5000, () => setLine(3))
+      tl.to(villRef.current, { scale: v.s, x: -(v.x - 0.5) * Wv * v.s, y: -(v.y - 0.5) * Hv * v.s, duration: 3.8, ease: 'power2.inOut' }, 5.0)
+        .to(villRef.current.querySelector('img'), { y: -5, duration: 0.27, yoyo: true, repeat: 13, ease: 'sine.inOut' }, 5.0)
+        .to(sceneRef.current, { opacity: 1, duration: 1.0, ease: 'power1.inOut' }, 7.9)
+        .to(box.current, { scale: 1, x: 0, y: 0, duration: 2.2, ease: 'power2.out' }, 7.9)
+        .to(villRef.current, { opacity: 0, duration: 1.0 }, 8.5)
+      at(10300, () => setReady(true))
     } else {
       if (sceneRef.current) gsap.to(sceneRef.current, { opacity: 1, duration: 2, delay: 5.6 * k })
       at(800, () => setLine(1)); at(2900, () => setLine(2)); at(5600, () => setLine(3)); at(7600, () => setReady(true))
@@ -191,12 +222,28 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       .to(root.current, { opacity: 0, duration: 1.4 }, 6.6)
   }
 
+  const geo = portrait ? PORT : LAND
+  const sh = useMemo(() => pixelShapes(geo), [geo])
+  const handle = (side: 'l' | 'r') => {
+    if (!tex) return null
+    const [hx, hy, hw, hh] = side === 'l' ? geo.handleL : geo.handleR
+    const ox = side === 'l' ? sh.x0 : sh.cx
+    const url = (dark: boolean) => (side === 'l' ? (dark ? tex.hlDark : tex.hl) : dark ? tex.hrDark : tex.hr)
+    return (
+      <div className="hnd" style={{ left: `${((hx - ox) / sh.bw) * 100}%`, top: `${((hy - sh.y0) / sh.bh) * 100}%`, width: `${(hw / sh.bw) * 100}%`, height: `${(hh / sh.bh) * 100}%` }}>
+        {Array.from({ length: 8 }, (_, k) => (
+          <i key={k} className="slice" style={{ backgroundImage: `url(${k === 7 ? url(false) : url(true)})`, transform: `translateZ(calc(var(--depth) * ${(0.04 + k * 0.045).toFixed(3)}))` }} />
+        ))}
+      </div>
+    )
+  }
   const leaf = (side: 'l' | 'r') => (
     <div className={`door-panel door-panel-${side}`}>
       {tex && Array.from({ length: SLICES }, (_, k) => (
         <i key={k} className="slice" style={{ backgroundImage: `url(${k === 0 ? (side === 'l' ? tex.left : tex.right) : side === 'l' ? tex.leftDark : tex.rightDark})`, transform: `translateZ(calc(var(--depth) * ${(-k / (SLICES - 1)).toFixed(3)}))` }} />
       ))}
       {tex && <i className="slice door-shade" style={{ backgroundImage: `url(${side === 'l' ? tex.leftDark : tex.rightDark})`, transform: 'translateZ(.6px)' }} />}
+      {handle(side)}
     </div>
   )
 

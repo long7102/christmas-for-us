@@ -73,7 +73,7 @@ img { user-select: none; -webkit-user-drag: none; }
 .door-line2 { margin: 0; font-weight: 500; font-size: clamp(1.9rem, 5.4vw, 3.6rem); color: var(--gold-soft); text-shadow: 0 0 36px rgba(242,200,121,.35); line-height: 1.15; max-width: 40rem; }
 .door-line1:not(.in) { transition-duration: .8s; }
 .door-scene { position: absolute; inset: 0; overflow: hidden; opacity: 0; z-index: 1; }
-.door-cover { position: absolute; left: 50%; top: 50%; width: max(100vw, calc(100svh * var(--ar, 1.7778))); height: max(100svh, calc(100vw / var(--ar, 1.7778))); translate: -50% -50%; will-change: transform; }
+.door-cover { position: absolute; left: 50%; top: 50%; width: max(100vw, calc(100svh * var(--ar, 1.7778))); height: max(100svh, calc(100vw / var(--ar, 1.7778))); translate: -50% -50%; }
 .door-vill { z-index: 0; opacity: 0; }
 .door-vill img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .door-intro.top { justify-content: flex-end; padding-bottom: clamp(40px, 9svh, 110px); }
@@ -107,3 +107,4 @@ img { user-select: none; -webkit-user-drag: none; }
 .vmist.m3 { top: 52%; opacity: .55; animation: vdrift 40s linear infinite; }
 @keyframes vdrift { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
 @media (prefers-reduced-motion: reduce) { .vglow, .vsmoke, .vmist { animation: none; } }
+.hnd { position: absolute; transform-style: preserve-3d; pointer-events: none; }
