@@ -14,7 +14,7 @@ const villageFiles = import.meta.glob('../assets/village-*.webp', { eager: true,
 const villageUrl = (portrait: boolean) => Object.entries(villageFiles).find(([k]) => k.includes(portrait ? 'village-port' : 'village-land'))?.[1]
 /** Where the door house sits in the village shot (0..1) and how far to run in until it fills the screen. Tune per image. */
 /** x,y: the door in the village photo; s: zoom until it fills the door shot; dy: shift so its centre lands where the door shot's centre is. */
-const VILL = { land: { x: 0.5, y: 0.575, s: 2.2, w: 0.094 }, port: { x: 0.505, y: 0.62, s: 1.8, w: 0.19 } }
+const VILL = { land: { x: 0.5, y: 0.634, s: 2.0, w: 0.108 }, port: { x: 0.508, y: 0.6, s: 1.7, w: 0.194 } }
 
 const SLICES = 11 // layers that give each leaf its thickness
 
@@ -171,8 +171,10 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       tl.to(villRef.current, { scale: v.s, x: -(v.x - 0.5) * Wv * v.s, y: -(v.y - 0.5) * Hv * v.s, duration: 3.8, ease: 'power2.inOut' }, 5.0)
         .to(villRef.current.querySelector('img'), { y: -5, duration: 0.27, yoyo: true, repeat: 13, ease: 'sine.inOut' }, 5.0)
         .to(sceneRef.current, { opacity: 1, duration: 1.0, ease: 'power1.inOut' }, 7.9)
+        .add(() => box.current?.classList.add('feather'), 7.9)
         .to(box.current, { scale: 1, x: 0, y: 0, duration: 2.2, ease: 'power2.out' }, 7.9)
-        .to(villRef.current, { opacity: 0, duration: 1.0 }, 8.5)
+        .to(villRef.current, { opacity: 0, duration: 0.9 }, 9.2)
+        .add(() => box.current?.classList.remove('feather'), 10.2)
       at(10300, () => setReady(true))
     } else {
       if (sceneRef.current) gsap.to(sceneRef.current, { opacity: 1, duration: 2, delay: 5.6 * k })

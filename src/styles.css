@@ -108,3 +108,6 @@ img { user-select: none; -webkit-user-drag: none; }
 @keyframes vdrift { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
 @media (prefers-reduced-motion: reduce) { .vglow, .vsmoke, .vmist { animation: none; } }
 .hnd { position: absolute; transform-style: preserve-3d; pointer-events: none; }
+
+/* soft edges while the close-up is still smaller than the screen, so it dissolves into the village */
+.door-box.feather { -webkit-mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 50%, transparent 100%); mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 50%, transparent 100%); }
