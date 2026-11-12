@@ -6,6 +6,7 @@ import { store } from '../lib/storage'
 import { reducedMotion, usePortrait } from '../lib/device'
 import { LAND, PORT, build, pixelShapes } from './doorGeometry'
 import VillageLife from './VillageLife'
+import { sfx } from '../lib/audio'
 import landImg from '../assets/door-land.jpg'
 import portImg from '../assets/door-port.jpg'
 
@@ -149,9 +150,9 @@ function useShed() {
   return { cv, burst }
 }
 
-/** Fill the screen (cover) unless that would crop more than ~40% of the photo; then show it whole (contain). */
+/** Wide screens fill (cover, up to 40% crop). Tall phones show the whole photo (contain) and the extra space is a mirrored continuation of the wall/snow. */
 function useFit(ar: number): 'cover' | 'contain' {
-  const calc = () => { const A = innerWidth / innerHeight; const crop = A > ar ? 1 - ar / A : 1 - A / ar; return crop <= 0.4 ? 'cover' : 'contain' }
+  const calc = () => { const A = innerWidth / innerHeight; const crop = A > ar ? 1 - ar / A : 1 - A / ar; return crop <= (A < 1 ? 0.04 : 0.4) ? 'cover' : 'contain' }
   const [fit, setFit] = useState<'cover' | 'contain'>(calc)
   useEffect(() => { const f = () => setFit(calc()); f(); addEventListener('resize', f); return () => removeEventListener('resize', f) }, [ar])
   return fit
@@ -175,13 +176,29 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
   const [line, setLine] = useState(0) // 0 none, 1 line1, 2 line1+2, 3 hidden
   const [ready, setReady] = useState(false) // button visible
   const [opening, setOpening] = useState(false)
+  const [rs, setRs] = useState(0) // rendered px per source px
+  const [snd, setSnd] = useState(() => sfx.running && !sfx.muted)
     const returning = store.get('opened', false)
+
+  // Wind outside. Starts as soon as the browser allows sound (first tap); the speaker button also unlocks it.
+  useEffect(() => {
+    const sync = () => { if (sfx.running) sfx.startWind(); setSnd(sfx.running && !sfx.muted) }
+    sync()
+    const off = sfx.subscribe(sync)
+    const iv = setInterval(sync, 700)
+    return () => { off(); clearInterval(iv) }
+  }, [])
 
   // Leaf thickness follows the rendered size.
   useEffect(() => {
-    const set = () => { if (box.current && panels.current) panels.current.style.setProperty('--depth', `${((box.current.offsetWidth * (g.area.widthNum / 2)) * 0.2).toFixed(1)}px`) }
+    const set = () => {
+      if (!box.current || !panels.current) return
+      const r = box.current.offsetWidth / (portrait ? PORT : LAND).w
+      setRs(r)
+      panels.current.style.setProperty('--depth', `${((portrait ? PORT : LAND).hw * r * 0.2).toFixed(1)}px`)
+    }
     set(); addEventListener('resize', set); return () => removeEventListener('resize', set)
-  }, [g])
+  }, [g, fit, portrait])
 
   // Intro: village fades in, we run to the house, the door appears, the button follows.
   useEffect(() => {
@@ -231,7 +248,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
     return () => { timers.forEach(clearTimeout); tl.kill() }
   }, [vill, villRaw, portrait, fit])
 
-  const finish = () => { store.set('opened', true); onOpen() }
+  const finish = () => { store.set('opened', true); sfx.windLevel(0, 1.5); onOpen() }
 
   const open = () => {
     if (opening) return
@@ -243,11 +260,13 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       for (let i = 0; i < steps; i++) tl.to(box.current, { x: (Math.random() - 0.5) * amp, y: (Math.random() - 0.5) * amp, duration: 0.045, ease: 'none' }, at + i * 0.045)
       tl.to(box.current, { x: 0, y: 0, duration: 0.08 }, at + steps * 0.045)
     }
+    sfx.unlock(); sfx.startWind()
     const tl = gsap.timeline({ onComplete: finish })
     // We stay where we are. The leaves open in place and STAY open, then we run in between them.
     tl.to(q('.door-cta'), { opacity: 0, y: 10, duration: 0.5 }, 0)
     // 1. a low rumble: the snow on the garland starts to slide
     rumble(tl, 0.4, 3, 22)
+    tl.add(() => sfx.creak(1.5, 62, 96, 0.2), 0.9).add(() => sfx.windLevel(0.5, 1), 1.0)
     tl.add(() => dust(12), 0.6).add(() => dust(14), 1.2)
       .fromTo(q('.door-light'), { opacity: 0 }, { opacity: 0.8, duration: 2, ease: 'power1.in' }, 1.2)
       .fromTo(q('.door-glow'), { opacity: 0 }, { opacity: 0.7, duration: 2.4, ease: 'power1.in' }, 1.2)
@@ -255,6 +274,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
     tl.to(q('.door-panel-l'), { rotateY: 12, duration: 1.2, ease: 'power2.in' }, 0.9)
       .to(q('.door-panel-r'), { rotateY: -12, duration: 1.2, ease: 'power2.in' }, 1.0)
       .add(() => dust(22), 2.0)
+      .add(() => { sfx.creak(1.9, 88, 150, 0.26); sfx.windLevel(0.75, 1.2) }, 2.1)
       .to(q('.door-panel-l'), { rotateY: 78, duration: 1.7, ease: 'power1.inOut' }, 2.1)
       .to(q('.door-panel-r'), { rotateY: -78, duration: 1.7, ease: 'power1.inOut' }, 2.2)
       .to(q('.door-shade'), { opacity: 0.55, duration: 1.8, ease: 'power1.inOut' }, 2.1)
@@ -263,9 +283,10 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       .to(q('.door-panel-l'), { rotateY: 73, duration: 0.45, ease: 'power2.out' }, 3.8)
       .to(q('.door-panel-r'), { rotateY: -73, duration: 0.45, ease: 'power2.out' }, 3.9)
     rumble(tl, 3.8, 8, 7)
-    tl.add(() => dust(16), 3.85)
+    tl.add(() => { dust(16); sfx.thud() }, 3.85)
     // 3. a beat to look at the open door, then we run in between the leaves toward the light
-    tl.to(box.current, { scale: 14, duration: 2.6, ease: 'power3.in' }, 4.6)
+    tl.add(() => sfx.whoosh(2.4), 4.7).add(() => sfx.windLevel(0.2, 2.5), 6.4)
+      .to(box.current, { scale: 14, duration: 2.6, ease: 'power3.in' }, 4.6)
       .set(q('.door-img, .door-panels, .door-scrim, .door-glow, .door-back'), { visibility: 'hidden' }, 7.0)
       .to(q('.door-flash'), { opacity: 0.85, duration: 1.4, ease: 'power1.in' }, 6.2)
       .to(root.current, { opacity: 0, duration: 1.4 }, 7.0)
@@ -280,21 +301,36 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
     const url = (dark: boolean) => (side === 'l' ? (dark ? tex.hlDark : tex.hl) : dark ? tex.hrDark : tex.hr)
     return (
       <div className="hnd" style={{ left: `${((hx - ox) / sh.bw) * 100}%`, top: `${((hy - sh.y0) / sh.bh) * 100}%`, width: `${(hw / sh.bw) * 100}%`, height: `${(hh / sh.bh) * 100}%` }}>
-        {Array.from({ length: 8 }, (_, k) => (
-          <i key={k} className="slice" style={{ backgroundImage: `url(${k === 7 ? url(false) : url(true)})`, transform: `translateZ(calc(var(--depth) * ${(0.04 + k * 0.045).toFixed(3)}))` }} />
+        {Array.from({ length: 5 }, (_, k) => (
+          <i key={k} className="slice" style={{ backgroundImage: `url(${k === 4 ? url(false) : url(true)})`, transform: `translateZ(calc(var(--depth) * ${(0.05 + k * 0.07).toFixed(3)}))` }} />
         ))}
       </div>
     )
   }
-  const leaf = (side: 'l' | 'r') => (
-    <div className={`door-panel door-panel-${side}`}>
-      {tex && Array.from({ length: SLICES }, (_, k) => (
-        <i key={k} className="slice" style={{ backgroundImage: `url(${k === 0 ? (side === 'l' ? tex.left : tex.right) : side === 'l' ? tex.leftDark : tex.rightDark})`, transform: `translateZ(calc(var(--depth) * ${(-k / (SLICES - 1)).toFixed(3)}))` }} />
-      ))}
-      {tex && <i className="slice door-shade" style={{ backgroundImage: `url(${side === 'l' ? tex.leftDark : tex.rightDark})`, transform: 'translateZ(.6px)' }} />}
-      {handle(side)}
-    </div>
-  )
+  /** One solid slab: front face (photo), back face (dark), and a continuous rim around the outline. No stacked layers. */
+  const leaf = (side: 'l' | 'r') => {
+    const pts = (side === 'l' ? sh.leafL : sh.leafR).map(([x, y]) => [(x - (side === 'l' ? sh.x0 : sh.cx)) * rs, (y - sh.y0) * rs] as [number, number])
+    const D = sh.bw * rs * 0.2
+    const rim = rs
+      ? pts.map((p, i) => {
+          const q = pts[(i + 1) % pts.length], dx = q[0] - p[0], dy = q[1] - p[1], len = Math.hypot(dx, dy)
+          if (len < 0.8) return null
+          const ang = (Math.atan2(dy, dx) * 180) / Math.PI
+          const lit = 0.5 + 0.4 * Math.abs(Math.cos((ang * Math.PI) / 180)) // flatter edges (arch top) catch more light
+          const c1 = `rgb(${Math.round(120 * lit)},${Math.round(72 * lit)},${Math.round(38 * lit)})`, c2 = `rgb(${Math.round(78 * lit)},${Math.round(46 * lit)},${Math.round(24 * lit)})`
+          return <i key={i} className="rim" style={{ width: len + 0.6, height: D, background: `linear-gradient(${c1}, ${c2})`, transform: `translate3d(${p[0]}px,${p[1]}px,0) rotateZ(${ang}deg) rotateX(-90deg)` }} />
+        })
+      : null
+    return (
+      <div className={`door-panel door-panel-${side}`}>
+        {tex && <i className="slice" style={{ backgroundImage: `url(${side === 'l' ? tex.leftDark : tex.rightDark})`, transform: `translateZ(${-D}px)` }} />}
+        {tex && rim}
+        {tex && <i className="slice" style={{ backgroundImage: `url(${side === 'l' ? tex.left : tex.right})` }} />}
+        {tex && <i className="slice door-shade" style={{ backgroundImage: `url(${side === 'l' ? tex.leftDark : tex.rightDark})`, transform: 'translateZ(.6px)' }} />}
+        {handle(side)}
+      </div>
+    )
+  }
 
   return (
     <div ref={root} className="door">
@@ -310,6 +346,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       <div ref={sceneRef} className="door-scene">
         <div className="door-back" style={{ backgroundImage: `url(${img})` }} />
         <div ref={box} className={`door-box ${fit}`} style={{ ['--ar' as string]: g.aspect, transformOrigin: g.origin }}>
+          {fit === 'contain' && <><div className="mir mir-t" style={{ backgroundImage: `url(${img})` }} /><div className="mir mir-b" style={{ backgroundImage: `url(${img})` }} /></>}
           <div className="door-glow" />
           <div className="door-light" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }} />
           {tex && <img src={tex.frame} className="door-img" alt="" draggable={false} />}
@@ -327,6 +364,9 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
 
       <SnowParticles density={vill ? 1.4 : 1.1} />
       <canvas ref={shed.cv} className="door-shed" />
+      <button className="door-sound" aria-label={snd ? 'Tắt âm thanh' : 'Bật âm thanh'} onClick={() => { if (!sfx.running) { sfx.setMuted(false); sfx.unlock(); sfx.startWind() } else sfx.setMuted(!sfx.muted); setSnd(sfx.running && !sfx.muted) }}>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" />{snd ? <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" /> : <path d="M17 9l5 6M22 9l-5 6" />}</svg>
+      </button>
       {returning && !opening && <button className="door-skip" onClick={finish}>{ui.skip}</button>}
 
       <div className={`door-cta reveal ${ready ? 'in' : ''}`}>
