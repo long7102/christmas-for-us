@@ -3,7 +3,7 @@ import Tree from './Tree'
 import Cats from './Cats'
 import MusicBox from './MusicBox'
 import Lenis from 'lenis'
-import { reducedMotion } from '../lib/device'
+import { isLite, reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
@@ -26,7 +26,7 @@ function Sparks({ fx }: { fx: React.MutableRefObject<Fx> }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
-    const calm = reducedMotion()
+    const calm = reducedMotion() || isLite()
     type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; star: boolean; ph: number }
     const ps: P[] = []
     let raf = 0, last = performance.now(), W = 0, H = 0
@@ -90,13 +90,13 @@ function Notes({ fx }: { fx: React.MutableRefObject<Fx2> }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
-    const calm = reducedMotion()
+    const calm = reducedMotion() || isLite()
     type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; g: number; ph: number }
     const ps: P[] = []
     let raf = 0, last = performance.now(), W = 0, H = 0
     const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight }
     size(); addEventListener('resize', size)
-    const glyphs = ['♪', '♫', '♩', '♬']
+    const glyphs = ['♪', '♫', '✦', '♬', '✧']
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       const f = fx.current
@@ -116,7 +116,7 @@ function Notes({ fx }: { fx: React.MutableRefObject<Fx2> }) {
         const k = 1 - p.life / p.max
         ctx.globalAlpha = Math.min(1, k * 2) * 0.9
         ctx.shadowColor = 'rgba(255,200,100,.9)'; ctx.shadowBlur = 8
-        if (p.g) { ctx.fillStyle = '#ffe9b0'; ctx.font = `${p.s}px serif`; ctx.fillText(glyphs[(i + (p.ph | 0)) % 4], p.x, p.y) }
+        if (p.g) { ctx.fillStyle = '#ffe9b0'; ctx.font = `${p.s}px serif`; ctx.fillText(glyphs[(i + (p.ph | 0)) % 5], p.x, p.y) }
         else { ctx.fillStyle = '#fff3c8'; ctx.beginPath(); ctx.arc(p.x, p.y, p.s * 0.12 * (0.7 + 0.5 * Math.sin(t / 110 + p.ph)), 0, 6.283); ctx.fill() }
       }
       ctx.globalAlpha = 1; ctx.shadowBlur = 0
@@ -163,7 +163,7 @@ export default function WorldScroll() {
       st.setProperty('--R', `${R}px`)
       st.setProperty('--D', `${R * 2}px`)
       st.setProperty('--ring', String(Math.min(1, Math.sin(Math.PI * p) * 2.2) * (p > 0.003 ? 1 : 0)))
-      st.setProperty('--bloom', String(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, p)), 2) * 0.75))
+      st.setProperty('--bloom', String(Math.max(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, p)), 2) * 0.75, Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, q)), 2) * 0.55)))
       st.setProperty('--cv', p > 0.003 ? 'visible' : 'hidden')
       st.setProperty('--cpe', p > 0.985 ? 'auto' : 'none')
       st.setProperty('--tv', q > 0.003 ? 'visible' : 'hidden')
@@ -221,9 +221,9 @@ export default function WorldScroll() {
   return (
     <div className="xf" ref={wrap} style={{ height: `${(1 + HOLD0 + SPAN2 + HOLD + SPAN + END) * 100}dvh` }}>
       <div className="xf-sticky">
-        <div className="xf-layer xf-box"><MusicBox active={seen.box} /></div>
-        <div className="xf-layer xf-tree"><Tree paused={!seen.tree} /></div>
-        <div className="xf-layer xf-cats"><Cats active={seen.cats} /></div>
+        <div className={`xf-layer xf-box${seen.box ? '' : ' idle'}`}><MusicBox active={seen.box} /></div>
+        <div className={`xf-layer xf-tree${seen.tree ? '' : ' idle'}`}><Tree paused={!seen.tree} /></div>
+        <div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div>
         <i className="xf-gold" aria-hidden />
         <i className="xf-glow" aria-hidden />
         <i className="xf-candy" aria-hidden />

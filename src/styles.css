@@ -723,7 +723,7 @@ html.lenis, html.lenis body { height: auto; }
 @media (prefers-reduced-motion: reduce) { .disc.spin { animation: none; } }
 
 /* ===== Nút loa và bảng âm lượng ===== */
-.snd { position: absolute; z-index: 8; }
+.snd { position: absolute; z-index: 12; }
 .snd-tr { top: max(16px, env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); }
 .snd-door { top: max(16px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); }
 .snd .tr-sound, .snd .door-sound { position: static; }
@@ -742,3 +742,26 @@ html.lenis, html.lenis body { height: auto; }
 .snd-row input::-moz-range-track { height: 4px; border-radius: 2px; background: rgba(255,226,160,.2); } .snd-row input::-moz-range-progress { height: 4px; border-radius: 2px; background: #e8b45a; }
 .snd-row input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff8dc, #d9a64f 70%); box-shadow: 0 1px 4px rgba(0,0,0,.6); }
 .snd-row input::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 50%; background: #e6b660; }
+
+/* ===== Màn chờ, chế độ nhẹ, gợn chạm, tinh chỉnh điện thoại ===== */
+.boot { position: fixed; inset: 0; z-index: 200; display: grid; place-content: center; justify-items: center; gap: 14px; color: #f3d596; font-family: var(--serif); background: radial-gradient(ellipse at 50% 40%, #1d140d 0%, #0b0705 70%); transition: opacity .8s ease; }
+.boot.out { opacity: 0; pointer-events: none; }
+.boot p { margin: 0; font-size: 1.25rem; font-style: italic; letter-spacing: .04em; animation: boot-p 1.8s ease-in-out infinite; }
+.boot-flake { animation: boot-spin 5s linear infinite; filter: drop-shadow(0 0 10px rgba(243,213,150,.5)); }
+@keyframes boot-spin { to { transform: rotate(360deg) } } @keyframes boot-p { 50% { opacity: .55 } }
+@media (prefers-reduced-motion: reduce) { .boot-flake, .boot p { animation: none; } }
+/* cảnh không đang xem: dừng mọi hoạt ảnh CSS trong đó */
+.idle, .idle *, .idle *::before, .idle *::after { animation-play-state: paused !important; }
+/* chế độ nhẹ cho máy yếu */
+.lite .xf-sticky::after, .lite .tr-dust, .lite .xf-fx, .lite .tr-embers { display: none; }
+.lite .mb-bokeh i::after, .lite .cat-bulbs i::after, .lite .tr-tw::after, .lite .tr-lamp::after, .lite .mb-lantern { display: none; }
+.lite .xf-gold { filter: none; }
+/* gợn chạm vàng */
+.rip { position: fixed; z-index: 300; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; pointer-events: none; border: 2px solid rgba(255,226,160,.9); box-shadow: 0 0 14px rgba(255,200,110,.7); animation: rip .55s ease-out forwards; }
+@keyframes rip { to { transform: scale(5); opacity: 0; } }
+/* điện thoại: vùng chạm rộng hơn, không phóng to khi chạm đúp, không kéo dãn quá mép */
+html { overscroll-behavior: none; }
+button, a, [role="button"] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.xf-dots button::before { content: ""; position: absolute; inset: -12px; }
+@media (pointer: coarse) { .xf-dots { gap: 18px; } .scroll-cue { width: 46px; height: 46px; } .tr-sound, .tr-lights, .door-sound { width: 46px; height: 46px; } }
+@media (max-aspect-ratio: 1/1) and (max-height: 720px) { .tree-scene.tall .sec-desc ~ .sec-desc { display: none; } }

@@ -90,3 +90,12 @@ npx tsc -b        # kiểm tra kiểu
 - Danh sách nhạc (`.mb-playlist`, nội dung `musicbox.tracks` trong content.ts): bài 1 là Sugar Plum Fairy (nhạc nền có sẵn, điều khiển bằng `sfx.playMusic/pauseMusic/toggleMusic/seekMusic/musicClock`), hai bài sau là chỗ trống `soon: true` chờ Long. Muốn thêm bài thật: cần nhiều nguồn nhạc; hiện sfx chỉ có một `music`, phải mở rộng thành danh sách.
 - Vũ công không xoay nữa (xoay giả trông dẹt): lắc nhẹ + bóng đổ khi nhạc chạy. Nếu Long gửi chuỗi ảnh xoay các góc thì thay bằng đổi khung ảnh theo góc.
 - Bấm vũ công khi nắp mở = phát/dừng nhạc. Sách và cành thông giữ nguyên (viền grabCut, giấy cổ).
+
+### Lần 7: mượt hơn, nhẹ hơn, bảng âm lượng, Last Christmas
+- Nhạc: `src/assets/music/<id>.mp3` tự được nhận (id trong `musicbox.tracks`). Đã có `last-christmas.mp3` (nén 88 kbps) và `sugarplum-fairy.mp3` (nén 96 kbps); `nutcracker`, `feliz-navidad` chờ Long. Nhạc chỉ tải khi chọn bài (lúc build thường, tệp tách riêng); bản Artifact thì nhúng cả vào HTML nên phải giữ tổng dưới 16MB.
+- Âm thanh: `sfx` có ba nhóm âm lượng (`vol.music/amb/fx`, nhớ trong localStorage) qua hai GainNode `amb` và `fx` nối vào `master`; thêm tiếng ở mức nào cũng phải nối vào `this.fx` (hiệu ứng) hoặc `this.amb` (nền), không nối thẳng `master`. `components/SoundControl.tsx` là nút loa chung kèm bảng chỉnh (cửa, hộp nhạc, cây thông). Đổi bài mờ dần (`fade`).
+- Tải: `components/Loader.tsx` (màn chờ bông tuyết), `lib/preload.ts` (tải sẵn ảnh cảnh sau, theo thứ tự hộp nhạc, cây thông, mèo), `lib/perf.ts` (đo fps 4 giây đầu, thấp thì thêm class `lite` trên `<html>` và nhớ; `?lite=1` bật, `?lite=0` tắt; trong môi trường vẽ phần mềm của em nó luôn bật). CSS `.lite` bỏ hạt phim, bụi, lớp sáng loang; `isLite()` giảm hạt trong Tree/WorldScroll.
+- Cảnh không hiện thì `.idle` dừng mọi hoạt ảnh CSS (class đặt ở `WorldScroll`).
+- Gợn chạm vàng + rung nhẹ trên điện thoại: `lib/ripple.ts`. Vùng chạm lớn hơn trên máy cảm ứng, `robots.txt` chặn hết, thẻ noindex/noarchive/no-referrer.
+- Chuyển cảnh: cả hai lần đều có bloom vàng, nốt nhạc và sao bay lên; `--bloom` dùng chung.
+- Kiểm thử: kịch bản Playwright ở /tmp (không nằm trong repo) chạy cổng mật khẩu, cửa, thế giới, hộp nhạc, bảng âm lượng trên máy tính, iPhone 13 và Pixel 7 (giả lập bằng Chromium), và khoá quà theo ngày bằng ?date= (chỉ chạy ở chế độ dev).
