@@ -155,6 +155,7 @@ export const cats = {
   hint: 'Em rê chuột vào từng bé, rồi bấm xem bé đổi dáng nhé.',
   bong: { title: 'Bông · bé của anh', tip: 'Cô nàng trắng pha xám, mắt hổ phách, được anh thương từng cái ôm, từng giấc ngủ. Bấm để bé đổi dáng.' },
   mochi: { title: 'Mochi · bé của em', tip: 'Cô nàng xám vằn, mắt xanh vàng, được em nuông chiều hết mực. Bấm để bé đổi dáng.' },
+  lamp: { title: 'Ngọn đèn lồng', tip: 'Bấm để thổi tắt, rồi thắp lại cho hai bé.' },
 }
 
 export const treeText = {

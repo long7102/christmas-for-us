@@ -17,6 +17,7 @@ class Sfx {
   private fireTimer = 0
   private subs = new Set<() => void>()
   private purrOn = false
+  private mixV = 0
   private purrGain?: GainNode
 
   constructor() {
@@ -83,7 +84,7 @@ class Sfx {
       }
       tick()
     }
-    if (this.fireGain) this.fireGain.gain.setTargetAtTime(this.fireOn ? 1 : 0, this.ctx.currentTime, 0.4)
+    if (this.fireGain) this.fireGain.gain.setTargetAtTime(this.fireOn ? 1 - 0.85 * this.mixV : 0, this.ctx.currentTime, 0.4)
     if (!this.fireOn) { clearTimeout(this.fireTimer) }
   }
   /** Một tiếng nổ lách tách. */
@@ -133,7 +134,7 @@ class Sfx {
       am.connect(breath); breath.connect(out)
       o1.start(); o2.start()
     }
-    this.purrGain.gain.setTargetAtTime(this.purrOn ? 0.1 : 0, c.currentTime, 0.8)
+    this.purrGain.gain.setTargetAtTime(this.purrOn ? 0.1 * this.mixV : 0, c.currentTime, 0.8)
   }
 
   /** Tiếng "meo" dài: mở đầu khép môi (m), lên cao rồi kéo dài và xuống dần, giọng rung nhẹ, hơi thở cuối câu. */
@@ -160,6 +161,51 @@ class Sfx {
     const ng = c.createGain(); ng.gain.setValueAtTime(0.0001, t); ng.gain.linearRampToValueAtTime(0.02, t + 0.3); ng.gain.linearRampToValueAtTime(0.045, t + dur * 0.85); ng.gain.exponentialRampToValueAtTime(0.0001, t + dur)
     n.connect(nf); nf.connect(ng); ng.connect(this.master); n.start(t, Math.random()); n.stop(t + dur + 0.05)
     o.start(t); o.stop(t + dur + 0.05)
+  }
+
+  /** Hoà âm theo cảnh: m = 0 là cảnh cây thông (lửa tí tách rõ), m = 1 là cảnh hai chú mèo (lửa nhỏ dần, tiếng gừ gừ lên, nhạc nền dịu bớt). */
+  mix(m: number) {
+    m = Math.min(1, Math.max(0, m))
+    if (Math.abs(m - this.mixV) < 0.01) return
+    this.mixV = m
+    if (this.music) this.music.volume = 0.42 - 0.14 * m
+    this.syncFire(); this.syncPurr()
+  }
+
+  /** Hơi thổi tắt đèn: tiếng hơi ngắn, nghe xa dần. */
+  puff() {
+    if (!this.ctx || !this.master || !this.noise || this.ctx.state !== 'running') return
+    const c = this.ctx, t = c.currentTime
+    const n = this.src(false), f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.8; f.frequency.setValueAtTime(1800, t); f.frequency.exponentialRampToValueAtTime(500, t + 0.5)
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.28, t + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55)
+    n.connect(f); f.connect(g); g.connect(this.master); n.start(t, Math.random()); n.stop(t + 0.6)
+  }
+
+  /** Thắp đèn lại: que diêm quẹt khẽ rồi tiếng bùng lên dịu. */
+  relight() {
+    if (!this.ctx || !this.master || !this.noise || this.ctx.state !== 'running') return
+    const c = this.ctx, t = c.currentTime
+    const scr = this.src(false), sf = c.createBiquadFilter(); sf.type = 'highpass'; sf.frequency.value = 2600
+    const sg = c.createGain(); sg.gain.setValueAtTime(0.0001, t); sg.gain.linearRampToValueAtTime(0.1, t + 0.03); sg.gain.exponentialRampToValueAtTime(0.0001, t + 0.22)
+    scr.connect(sf); sf.connect(sg); sg.connect(this.master); scr.start(t, Math.random()); scr.stop(t + 0.25)
+    const n = this.src(false), f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.9; f.frequency.setValueAtTime(300, t + 0.22); f.frequency.exponentialRampToValueAtTime(2200, t + 0.7)
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t + 0.22); g.gain.linearRampToValueAtTime(0.2, t + 0.38); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.95)
+    n.connect(f); f.connect(g); g.connect(this.master); n.start(t + 0.22, Math.random()); n.stop(t + 1)
+  }
+
+  /** Chuông leng keng rất nhẹ khi vòng kẹo Giáng sinh loang ra. */
+  chime() {
+    if (!this.ctx || !this.master || this.ctx.state !== 'running') return
+    const c = this.ctx, t0 = c.currentTime
+    const notes = [1318.5, 1568, 1975.5, 2637]
+    notes.forEach((fr, i) => {
+      const t = t0 + i * 0.13
+      for (const [mul, vol] of [[1, 0.05], [2.01, 0.018], [3.02, 0.008]] as const) {
+        const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = fr * mul
+        const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4)
+        o.connect(g); g.connect(this.master!); o.start(t); o.stop(t + 1.5)
+      }
+    })
   }
 
   private src(loop = true) { const s = this.ctx!.createBufferSource(); s.buffer = this.noise!; s.loop = loop; s.loopStart = 0; return s }

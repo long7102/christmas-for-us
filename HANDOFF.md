@@ -62,3 +62,10 @@ npx tsc -b        # kiểm tra kiểu
 - Ảnh Mochi duỗi người BẢN DỌC chưa có (ảnh gửi lệch khung với ảnh ngủ dọc nên không ghép được): cần chỉnh từ chính `cats-port.webp`. Hiện bản dọc Mochi chỉ cử động nhẹ.
 - Ánh sáng bập bùng: `useFlicker` đặt `--fl` (cả phòng theo bếp) và `--fl2` (đèn lồng) liên tục. Tiếng gừ gừ `sfx.purr`, tiếng meo `sfx.meow` (WebAudio tự tạo, chưa nghe thử).
 - Chuyển cảnh `WorldScroll.tsx`: dài hơn (SPAN = 1.7 lần chiều cao màn hình), vòng kẹo đỏ trắng xanh viền vàng, tuyết và sao vàng (canvas `Sparks`).
+
+### Cập nhật cảnh mèo (lần 4)
+- Đèn lồng bấm được: thổi tắt (`sfx.puff`) -> phòng tối (`--dark`, `lampT` điều khiển `k` trong `useFlicker`) -> thắp lại (`sfx.relight`) bùng sáng rồi ổn định. Trong lúc đó khoá bấm mọi thứ (`busy = 'lamp'`).
+- Hoà âm theo cảnh: `sfx.mix(m)` trong `WorldScroll` (m chạy theo thanh cuộn): lửa nhỏ dần, gừ gừ lên, nhạc dịu bớt. `sfx.chime()` leng keng khi vòng kẹo bắt đầu loang (và khi cuộn ngược).
+- Ô tối khi chuyển cảnh trên máy thật: đã tách lớp bằng `will-change` (`.xf-tree`, `.xf-cats > .tree-scene`); chưa xác nhận hết lỗi trên máy của Long.
+- Việc còn lại (Long cần gửi): ảnh Mochi duỗi người BẢN DỌC (dạng tệp, chỉnh từ `cats-port.webp`), pose Bông ngồi tỉnh bản dọc, chuyện riêng của hai bé, quà 25/12 và 14/2, QR cho quà 8/1, ảnh thật của hai người, link YouTube hộp nhạc (nếu dùng).
+- Cảnh kế tiếp theo thứ tự Long đặt: 2 bàn trà, 3 hộp nhạc (gắn Sugar Plum Fairy), 6 hai người ngắm tuyết (cần Long tả ngoại hình). Cách làm mỗi cảnh: tạo ảnh cho Long duyệt trước rồi mới viết mã; ảnh tạo bằng Canva chỉ ra bản nhỏ nên Long tự tạo và gửi lại; hai ảnh cùng một cảnh phải chỉnh từ ảnh nền (cùng khung).

@@ -563,3 +563,6 @@ img { user-select: none; -webkit-user-drag: none; }
   background: radial-gradient(ellipse 100% 100% at 0% 0%, rgba(24,11,5,.94) 0%, rgba(30,15,7,.86) 40%, rgba(34,18,8,.5) 72%, rgba(40,22,10,0) 100%); }
 .cats-scene.tall .cats-veil { display: none; }
 .xf-cats .cats-veil { opacity: var(--ct, 0); }
+
+/* thổi tắt đèn lồng: cả phòng tối xuống (biến --dark do mã điều khiển) */
+.cat-dark { position: absolute; inset: 0; pointer-events: none; background: rgba(8,3,0, calc(var(--dark, 0) * .62)); }

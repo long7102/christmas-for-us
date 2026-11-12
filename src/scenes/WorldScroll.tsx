@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Tree from './Tree'
 import Cats from './Cats'
 import { reducedMotion } from '../lib/device'
+import { sfx } from '../lib/audio'
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const smooth = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
@@ -79,6 +80,7 @@ function Sparks({ fx }: { fx: React.MutableRefObject<Fx> }) {
 export default function WorldScroll() {
   const wrap = useRef<HTMLDivElement>(null)
   const fx = useRef<Fx>({ p: 0, R: 0, cx: 0, cy: 0, on: false })
+  const prevP = useRef(0)
   const [seen, setSeen] = useState({ tree: true, cats: false, near: false })
 
   useEffect(() => {
@@ -106,6 +108,9 @@ export default function WorldScroll() {
       st.setProperty('--tt', String(1 - smooth(0.0, 0.16, p)))
       st.setProperty('--ct', String(smooth(0.78, 0.97, p)))
       st.setProperty('--cue', String(1 - smooth(0, 0.06, p)))
+      sfx.mix(smooth(0.2, 0.85, p))
+      const pp = prevP.current; prevP.current = p
+      if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
       setSeen((o) => { const n = { tree: p < 0.75, cats: p > 0.003, near: p > 0.6 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
@@ -124,7 +129,7 @@ export default function WorldScroll() {
     <div className="xf" ref={wrap}>
       <div className="xf-sticky">
         <div className="xf-layer xf-tree"><Tree paused={!seen.tree} /></div>
-        <div className="xf-layer xf-cats"><Cats active={seen.cats} near={seen.near} /></div>
+        <div className="xf-layer xf-cats"><Cats active={seen.cats} /></div>
         <i className="xf-glow" aria-hidden />
         <i className="xf-candy" aria-hidden />
         <i className="xf-bloom" aria-hidden />

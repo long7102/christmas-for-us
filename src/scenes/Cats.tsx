@@ -35,13 +35,13 @@ function Glow({ L, cat, on }: { L: CatLayout; cat: Cat; on: boolean }) {
  * Ánh sáng chập chờn chậm và dịu (tránh mỏi mắt): đèn lồng đổi nhịp mỗi ~0,4 đến 1 giây, ánh sáng cả phòng lấy theo bếp lửa
  * (ngoài khung ảnh, bên trái) nhưng bị ngọn đèn lồng kéo theo nên hai thứ sáng tối cùng nhau.
  */
-function useFlicker(stage: React.RefObject<HTMLDivElement | null>, active: boolean) {
+function useFlicker(stage: React.RefObject<HTMLDivElement | null>, active: boolean, lampT: React.MutableRefObject<{ k: number; tau: number }>) {
   useEffect(() => {
     const el = stage.current
     if (!el || !active) return
     if (reducedMotion()) { el.style.setProperty('--fl', '.8'); el.style.setProperty('--fl2', '.85'); return }
     let raf = 0, last = performance.now()
-    let fire = 0.8, tFire = 0.8, nFire = 0, lamp = 0.85, tLamp = 0.85, nLamp = 0
+    let fire = 0.8, tFire = 0.8, nFire = 0, lamp = 0.85, tLamp = 0.85, nLamp = 0, k = 1
     const frame = (t: number) => {
       const dt = Math.min(0.06, (t - last) / 1000); last = t
       nFire -= dt; nLamp -= dt
@@ -49,18 +49,20 @@ function useFlicker(stage: React.RefObject<HTMLDivElement | null>, active: boole
       if (nLamp <= 0) { nLamp = 0.35 + Math.random() * 0.65; tLamp = Math.random() < 0.12 ? 0.55 + Math.random() * 0.12 : 0.78 + Math.random() * 0.22 }
       fire += (tFire - fire) * (1 - Math.exp(-dt / 0.3))
       lamp += (tLamp - lamp) * (1 - Math.exp(-dt / 0.16))
-      el.style.setProperty('--fl2', lamp.toFixed(3))
-      el.style.setProperty('--fl', (0.55 * fire + 0.45 * lamp).toFixed(3))
+      k += (lampT.current.k - k) * (1 - Math.exp(-dt / lampT.current.tau))
+      el.style.setProperty('--fl2', (lamp * k).toFixed(3))
+      el.style.setProperty('--fl', (0.55 * fire * (0.35 + 0.65 * Math.min(k, 1)) + 0.45 * lamp * k).toFixed(3))
+      el.style.setProperty('--dark', Math.min(1, Math.max(0, 1 - k)).toFixed(3))
       raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
     const vis = () => { cancelAnimationFrame(raf); if (!document.hidden) { last = performance.now(); raf = requestAnimationFrame(frame) } }
     document.addEventListener('visibilitychange', vis)
     return () => { cancelAnimationFrame(raf); document.removeEventListener('visibilitychange', vis) }
-  }, [stage, active])
+  }, [stage, active, lampT])
 }
 
-export default function Cats({ active = true, near = true }: { active?: boolean; near?: boolean }) {
+export default function Cats({ active = true }: { active?: boolean }) {
   const sec = useRef<HTMLElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const txt = useRef<HTMLDivElement>(null)
@@ -71,21 +73,22 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [tip, setTip] = useState<{ title: string; text: string; b: { x: number; y: number; w: number; h: number } } | null>(null)
   const [hov, setHov] = useState<Who | null>(null)
-  const [busy, setBusy] = useState<Who | null>(null)
+  const [busy, setBusy] = useState<Who | 'lamp' | null>(null)
+  const lampT = useRef({ k: 1, tau: 0.3 })
   const [tbox, setTbox] = useState({ h: 0 })
   const [show, setShow] = useState<string | null>(null)
   const timers = useRef<number[]>([])
   const next = useRef<Record<Who, number>>({ bong: 0, mochi: 0 })
 
-  useFlicker(stage, active)
+  useFlicker(stage, active, lampT)
 
-  // tiếng gừ gừ nhẹ khi cảnh này đang ở trước mắt
+  // tiếng gừ gừ nhẹ: mức to nhỏ do sfx.mix (chạy theo thanh cuộn) điều khiển
   useEffect(() => {
-    if (!near) return
+    if (!active) return
     sfx.purr(true)
     const off = sfx.subscribe(() => sfx.purr(true))
     return () => { off(); sfx.purr(false) }
-  }, [near])
+  }, [active])
 
   useEffect(() => {
     const el = sec.current!
@@ -140,6 +143,18 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
     timers.current.push(window.setTimeout(() => setShow(null), hold))
     timers.current.push(window.setTimeout(() => setBusy(null), hold + FADE_OUT))
   }
+  /** Bấm đèn lồng: thổi tắt, cả phòng tối xuống, rồi thắp lại và bùng sáng ấm lên một nhịp. */
+  const pokeLamp = () => {
+    if (busy) return
+    setTip(null); setHov(null); setBusy('lamp')
+    const calm = reducedMotion()
+    sfx.puff()
+    lampT.current = { k: 0.04, tau: calm ? 0.1 : 0.28 }
+    timers.current.push(window.setTimeout(() => { sfx.relight(); lampT.current = { k: 1.28, tau: 0.16 } }, calm ? 900 : 2000))
+    timers.current.push(window.setTimeout(() => { lampT.current = { k: 1, tau: 0.5 } }, calm ? 1200 : 2700))
+    timers.current.push(window.setTimeout(() => setBusy(null), calm ? 1500 : 3500))
+  }
+  const enterLamp = () => { if (!busy) setTip({ title: copy.lamp.title, text: copy.lamp.tip, b: polyBox(L.lampPoly) }) }
   const enter = (c: (typeof cats)[number]) => {
     if (busy) return
     setHov(c.id); setTip({ title: c.info.title, text: c.info.tip, b: polyBox(c.cat.poly) })
@@ -189,6 +204,7 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
           <i className="cat-lamp" style={{ left: L.lamp[0] - L.lamp[2], top: L.lamp[1] - L.lamp[2], width: L.lamp[2] * 2, height: L.lamp[2] * 2 }} />
           <i className="cat-lamp core" style={{ left: L.lamp[0] - L.lamp[2] * 0.32, top: L.lamp[1] - L.lamp[2] * 0.32, width: L.lamp[2] * 0.64, height: L.lamp[2] * 0.64 }} />
           <div className="cat-dim" />
+          <div className="cat-dark" />
           {active && <Dust w={L.w} h={L.h} />}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
@@ -197,6 +213,9 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
                 onMouseEnter={() => enter(c)} onMouseLeave={leave} onFocus={() => enter(c)} onBlur={leave}
                 onClick={() => poke(c.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(c.id) } }} />
             ))}
+            <polygon className="cat-hs" points={L.lampPoly.map((q) => q.join(',')).join(' ')} tabIndex={busy ? -1 : 0} role="button" aria-label="Đèn lồng" aria-disabled={!!busy}
+              onMouseEnter={enterLamp} onMouseLeave={leave} onFocus={enterLamp} onBlur={leave}
+              onClick={pokeLamp} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pokeLamp() } }} />
           </svg>
         </div>
       </div>
