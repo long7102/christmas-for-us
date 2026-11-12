@@ -27,9 +27,9 @@ export const gifts: { id: number; title: string; unlockAt: string; body: string 
 
 /** Chữ minh hoạ ở góc cảnh cây thông (sẽ đổi khi Long chốt nội dung). */
 export const tree = {
-  eyebrow: 'Dưới gốc cây',
-  title: 'Bốn món quà cho em',
-  body: 'Mỗi món quà sẽ mở vào một ngày riêng. Em chạm vào hộp quà để xem.',
+  eyebrow: 'Khu vực 05 / 06',
+  title: 'Cây thông',
+  body: 'Dưới gốc cây có bốn món quà, mỗi món mở vào một ngày riêng. Em rê chuột vào hộp quà (hoặc chạm trên điện thoại) để xem.',
 }
 
 export const treeText = {
