@@ -201,7 +201,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       panels.current.style.setProperty('--depth', `${((portrait ? PORT : LAND).hw * r * THICK).toFixed(1)}px`)
       // the leaves hang deeper inside the doorway; scale compensates the perspective so they still fill the opening when shut
       const rec = (portrait ? PORT : LAND).hw * r * RECESS
-      gsap.set(panels.current.querySelectorAll('.door-panel'), { z: -rec, scale: (PERSP + rec) / PERSP })
+      gsap.set(panels.current.querySelector('.door-recess'), { z: -rec, scale: (PERSP + rec) / PERSP })
     }
     set(); addEventListener('resize', set); return () => removeEventListener('resize', set)
   }, [g, fit, portrait])
@@ -231,7 +231,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
         const p = proxy.p, G = Math.exp(p * lnEnd)
         const ox = -(v.x - 0.5) * Wv * G * (1 - p), oy = -(v.y - 0.5) * Hv * G * (1 - p)
         // village: the door drifts to the middle of the screen
-        gsap.set(villRef.current, { scale: G, x: -(v.x - 0.5) * Wv * G * p, y: -(v.y - 0.5) * Hv * G * p, opacity: 1 - sm(2.3, 3.4, G) })
+        gsap.set(villRef.current, { scale: G, x: -(v.x - 0.5) * Wv * G * p, y: -(v.y - 0.5) * Hv * G * p, opacity: 1 - sm(0.86, 1, p) })
         // close-up: keeps its door exactly over the village door, then settles to its natural framing
         const w = sm(0.55, 0.92, p)
         gsap.set(box.current, { scale: G * c, x: (1 - w) * (-ox - dBoxX), y: (1 - w) * (-oy - dBoxY) })
@@ -293,7 +293,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
     // 3. a beat to look at the open door, then we run in between the leaves toward the light
     tl.add(() => sfx.whoosh(2.4), 4.7).add(() => sfx.windLevel(0.2, 2.5), 6.4)
       .to(box.current, { scale: 14, duration: 2.6, ease: 'power3.in' }, 4.6)
-      .set(q('.door-img, .door-panels, .door-scrim, .door-glow, .door-back'), { visibility: 'hidden' }, 7.0)
+      .set(q('.door-img, .door-panels, .door-scrim, .door-glow'), { visibility: 'hidden' }, 7.0)
       .to(q('.door-flash'), { opacity: 0.85, duration: 1.4, ease: 'power1.in' }, 6.2)
       .to(root.current, { opacity: 0, duration: 1.4 }, 7.0)
   }
@@ -353,14 +353,13 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       )}
 
       <div ref={sceneRef} className="door-scene">
-        <div className="door-back" style={{ backgroundImage: `url(${img})` }} />
         <div ref={box} className={`door-box ${fit}`} style={{ ['--ar' as string]: g.aspect, transformOrigin: g.origin }}>
           {fit === 'contain' && <><div className="mir mir-t" style={{ backgroundImage: `url(${img})` }} /><div className="mir mir-b" style={{ backgroundImage: `url(${img})` }} /></>}
           <div className="door-glow" />
           <div className="door-light" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }} />
           {tex && <img src={tex.frame} className="door-img" alt="" draggable={false} />}
           <div ref={panels} className="door-panels" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }}>
-            {leaf('l')}{leaf('r')}
+            <div className="door-recess">{leaf('l')}{leaf('r')}</div>
           </div>
         </div>
         <div className="door-scrim" />
