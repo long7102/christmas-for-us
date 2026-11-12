@@ -781,3 +781,10 @@ button, a, [role="button"] { touch-action: manipulation; -webkit-tap-highlight-c
 @keyframes dh-ring { 0%, 30% { transform: scale(.3); opacity: 0; } 36% { opacity: .95; } 80%, 100% { transform: scale(4.6); opacity: 0; } }
 @keyframes dh-glow { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { .door-hit .hint svg, .door-hit .ring, .door-hit.on::before { animation: none; } .door-hit .ring { opacity: .6; transform: scale(2); } }
+
+/* thanh xem nhanh (chỉ bản xem thử) */
+.pv { position: fixed; z-index: 400; left: 50%; bottom: max(10px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; gap: 4px; padding: 4px; border-radius: 999px; font-family: var(--serif); background: rgba(24,12,6,.82); border: 1px solid rgba(232,184,106,.5); box-shadow: 0 8px 24px rgba(0,0,0,.45); max-width: calc(100vw - 16px); overflow-x: auto; }
+.pv button { flex: 0 0 auto; padding: 6px 12px; border-radius: 999px; cursor: pointer; font: 600 .9rem var(--serif); color: #f6e0a8; background: transparent; white-space: nowrap; }
+.pv button:hover { background: rgba(255,226,160,.15); } .pv button.on { color: #3a1d06; background: linear-gradient(180deg, #ffe7ae, #e8b45a); }
+@media (max-width: 520px) { .pv button { padding: 6px 9px; font-size: .82rem; } }
+.pv .tg { color: #e1bd76; } .pv.min { opacity: .75; } .pv.min:hover { opacity: 1; }

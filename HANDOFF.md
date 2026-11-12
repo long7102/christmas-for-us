@@ -103,3 +103,6 @@ npx tsc -b        # kiểm tra kiểu
 ### Lần 8
 - Cảnh cửa: bỏ hết chữ và nút "MỞ CÁNH CỬA". `Door.tsx` có `.door-hit` (nút trong suốt trùm lên cánh cửa, bấm là mở) và hoạt ảnh gợi ý bàn tay nhấn kèm gợn sáng vàng ở chỗ tay nắm; chỉ hiện khi máy quay đã tới sát cửa. Nội dung `content.door.line1/line2/button` không còn dùng.
 - Hình minh hoạ mới trong `Icons.tsx`: `BasketIcon` (giỏ củi), `PaintingIcon` (bức tranh, `snow` cho tranh thứ hai), gắn trong `iconFor` ở `Letter.tsx`. Các vật còn dùng hình chung: shelf, tools, garland, chair, rug, tree, window, curtainL/R.
+
+### Bản xem thử nối ba phần
+- Bản Artifact build bằng `VITE_PREVIEW=1 npx vite build --assetsInlineLimit 100000000`: có thanh "Xem nhanh" (`components/PreviewBar.tsx`) nhảy thẳng tới Cổng, Cánh cửa, Hộp nhạc, Cây thông, Hai bé, và mở thẳng bằng `#hop-nhac`, `#cay-thong`, `#meo`. Bản chính thức (không đặt biến) KHÔNG có thanh này nên mật khẩu và cánh cửa vẫn như cũ. Nhảy cảnh trong thế giới dùng sự kiện `olcw:goto` (WorldScroll).
