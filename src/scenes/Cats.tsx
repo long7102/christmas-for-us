@@ -215,6 +215,12 @@ export default function Cats({ active = true }: { active?: boolean }) {
           <i className="cat-lamp core" style={{ left: L.lamp[0] - L.lamp[2] * 0.32, top: L.lamp[1] - L.lamp[2] * 0.32, width: L.lamp[2] * 0.64, height: L.lamp[2] * 0.64 }} />
           <div className="cat-dim" />
           <div className="cat-dark" />
+          {/* dây đèn sau lưng: tối đèn lớn thì từng bóng nhỏ sáng lên, toả ánh ấm lên cành thông và tường đá */}
+          <div className="cat-bulbs" aria-hidden>
+            {L.bulbs.map(([x, y], i) => (
+              <i key={i} style={{ left: x, top: y, animationDelay: `-${((i * 37) % 29) / 10}s`, animationDuration: `${2.6 + (i % 5) * 0.55}s` }} />
+            ))}
+          </div>
           {active && <Dust w={L.w} h={L.h} />}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
