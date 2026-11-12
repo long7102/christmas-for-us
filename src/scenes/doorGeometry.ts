@@ -1,8 +1,8 @@
 /** Where the door leaves sit inside each door photo (px of the source image). Each leaf is the whole arch-shaped half of the door. */
 export type Box = [number, number, number, number] // x, y, w, h in source px
-export type DoorGeo = { w: number; h: number; cx: number; hw: number; apex: number; spring: number; bottom: number; cut: number; handleL: Box; handleR: Box }
-export const LAND: DoorGeo = { w: 799, h: 449, cx: 400, hw: 156, apex: 14, spring: 125, bottom: 413, cut: 15, handleL: [362, 210, 35, 102], handleR: [402, 210, 37, 102] }
-export const PORT: DoorGeo = { w: 449, h: 799, cx: 227, hw: 130, apex: 140, spring: 290, bottom: 716, cut: 141, handleL: [176, 433, 48, 106], handleR: [225, 433, 49, 106] }
+export type DoorGeo = { w: number; h: number; cx: number; hw: number; apex: number; spring: number; bottom: number; cut: number; handleL: Box; handleR: Box; metal: 'brass' | 'iron' }
+export const LAND: DoorGeo = { w: 1680, h: 944, cx: 838, hw: 267, apex: 118, spring: 350, bottom: 822, cut: 119, handleL: [786, 490, 44, 124], handleR: [848, 490, 44, 124], metal: 'iron' }
+export const PORT: DoorGeo = { w: 944, h: 1680, cx: 472, hw: 270, apex: 452, spring: 700, bottom: 1316, cut: 453, handleL: [424, 916, 42, 100], handleR: [482, 916, 38, 100], metal: 'iron' }
 
 const xAt = (g: DoorGeo, y: number) => g.hw * Math.sqrt(Math.max(0, 1 - ((g.spring - y) / (g.spring - g.apex)) ** 2))
 

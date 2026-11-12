@@ -6,8 +6,8 @@ import { store } from '../lib/storage'
 import { reducedMotion, usePortrait } from '../lib/device'
 import { LAND, PORT, build, pixelShapes } from './doorGeometry'
 import VillageLife from './VillageLife'
-import landImg from '../assets/door-land.webp'
-import portImg from '../assets/door-port.webp'
+import landImg from '../assets/door-land.jpg'
+import portImg from '../assets/door-port.jpg'
 
 // Optional establishing shot of the village (drop village-land.webp / village-port.webp into src/assets).
 const villageFiles = import.meta.glob('../assets/village-*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>
@@ -55,7 +55,7 @@ function useDoorTextures(src: string, geo: typeof LAND) {
         const d = c.getImageData(0, 0, b[2] * 3, b[3] * 3), k = dark ? 0.42 : 1
         for (let i = 0; i < d.data.length; i += 4) {
           const r = d.data[i], gg = d.data[i + 1], bl = d.data[i + 2], lum = 0.3 * r + 0.59 * gg + 0.11 * bl
-          const a = Math.min(1, Math.max(0, (lum - 62) / 34)) * Math.min(1, Math.max(0, (r - bl - 28) / 26))
+          const a = geo.metal === 'brass' ? Math.min(1, Math.max(0, (lum - 62) / 34)) * Math.min(1, Math.max(0, (r - bl - 28) / 26)) : Math.min(1, Math.max(0, (95 - lum) / 30)) * Math.min(1, Math.max(0, (44 - (r - bl)) / 22))
           d.data[i] = r * k; d.data[i + 1] = gg * k; d.data[i + 2] = bl * k; d.data[i + 3] = a * 255
         }
         c.putImageData(d, 0, 0)
@@ -203,7 +203,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
         // close-up: keeps its door exactly over the village door, then settles to its natural framing
         const w = sm(0.55, 0.92, p)
         gsap.set(box.current, { scale: G * c, x: (1 - w) * (-ox - dBoxX), y: (1 - w) * (-oy - dBoxY) })
-        box.current!.style.setProperty('--fr', `${50 + 110 * sm(0.55, 0.96, p)}%`)
+        box.current!.style.setProperty('--fr', `${50 + 105 * sm(0.78, 1, p)}%`)
         gsap.set(sceneRef.current, { opacity: sm(1.5, 2.3, G) })
       }
       gsap.set(sceneRef.current, { opacity: 0 })
