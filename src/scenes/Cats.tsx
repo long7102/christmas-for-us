@@ -9,7 +9,7 @@ import { polyBox, type R } from './treeLayout'
 
 type Who = 'bong' | 'mochi'
 const FADE_OUT = 1100
-const FAKE_MS = 3400
+const FAKE_MS = 6500
 
 const rect = (r: R) => ({ left: r.x, top: r.y, width: r.w, height: r.h })
 

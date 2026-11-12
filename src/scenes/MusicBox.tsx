@@ -7,6 +7,17 @@ import { Dust } from './Tree'
 import { polyBox } from './treeLayout'
 import { ModalView, type Modal } from './Letter'
 import { MB } from './musicLayout'
+import sugarUrl from '../assets/sugarplum-fairy.mp3'
+
+/** Tệp nhạc bỏ thêm vào src/assets/music/ (tên tệp = id bài) sẽ tự được nhận. */
+const FILES = import.meta.glob('../assets/music/*.{mp3,m4a,ogg,wav}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>
+const urlFor = (id: string): string | undefined => {
+  if (id === 'sugarplum-fairy') return sugarUrl
+  const k = Object.keys(FILES).find((f) => f.split('/').pop()!.replace(/\.[^.]+$/, '') === id)
+  return k ? FILES[k] : undefined
+}
+const TRACKS = copy.tracks.map((t) => ({ ...t, url: urlFor(t.id) }))
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI']
 
 const pts = (p: [number, number][]) => p.map((q) => q.join(',')).join(' ')
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
@@ -28,6 +39,8 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
   const [mode, setMode] = useState<'wide' | 'tall'>(() => (innerWidth / innerHeight < 1.05 ? 'tall' : 'wide'))
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [lid, setLid] = useState<Lid>(0)
+  const [cur, setCur] = useState(0)
+  const [listOpen, setListOpen] = useState(false)
   const [playing, setPlaying] = useState(() => sfx.musicPlaying)
   const [clock, setClock] = useState({ t: 0, d: 0 })
   const [tip, setTip] = useState<{ title: string; text: string; b: { x: number; y: number; w: number; h: number } } | null>(null)
@@ -121,6 +134,20 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
       later(() => setLid(0), 650)
     }
   }
+  /** Chọn một bài: đổi bài và phát; hết bài thì tự sang bài kế có sẵn. */
+  const playTrack = (i: number) => {
+    const t = TRACKS[i]
+    if (!t.url) return
+    if (i === cur && t.url === sfx.track) { sfx.toggleMusic(); return }
+    setCur(i)
+    sfx.setTrack(t.url, () => step(1, i))
+  }
+  const step = (dir: 1 | -1, from = cur) => {
+    for (let k = 1; k <= TRACKS.length; k++) {
+      const j = (from + dir * k + TRACKS.length * 4) % TRACKS.length
+      if (TRACKS[j].url) { setCur(j); sfx.setTrack(TRACKS[j].url!, () => step(1, j)); return }
+    }
+  }
   const toggleLamp = () => { setTip(null); lights.toggle() }
   const seek = (e: React.MouseEvent<HTMLDivElement>) => { const r = e.currentTarget.getBoundingClientRect(); sfx.seekMusic((e.clientX - r.left) / r.width); setClock(sfx.musicClock()) }
 
@@ -175,11 +202,11 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
             <polygon className="cat-hs" points={pts(L.lanternPoly)} tabIndex={0} role="button" aria-label="Đèn lồng"
               onMouseEnter={() => show(copy.lamp.title, lightsOn ? copy.lamp.tipOn : copy.lamp.tipOff, L.lanternPoly)} onMouseLeave={() => setTip(null)}
               onFocus={() => show(copy.lamp.title, lightsOn ? copy.lamp.tipOn : copy.lamp.tipOff, L.lanternPoly)} onBlur={() => setTip(null)} onClick={toggleLamp} onKeyDown={key(toggleLamp)} />
-            <polygon className="tr-hs" points={pts(boxPoly)} tabIndex={0} role="button" aria-label={lid === 2 ? 'Đóng hộp nhạc' : 'Mở hộp nhạc'}
+            <polygon className="cat-hs" points={pts(boxPoly)} tabIndex={0} role="button" aria-label={lid === 2 ? 'Đóng hộp nhạc' : 'Mở hộp nhạc'}
               onMouseEnter={() => show(boxCopy.title, boxCopy.tip, boxPoly)} onMouseLeave={() => setTip(null)}
               onFocus={() => show(boxCopy.title, boxCopy.tip, boxPoly)} onBlur={() => setTip(null)} onClick={toggleLid} onKeyDown={key(toggleLid)} />
             {lid === 2 && (
-              <polygon className="tr-hs" points={pts(L.polys.bal)} tabIndex={0} role="button" aria-label="Cô vũ công"
+              <polygon className="cat-hs" points={pts(L.polys.bal)} tabIndex={0} role="button" aria-label="Cô vũ công"
                 onMouseEnter={() => show(copy.dancer.title, copy.dancer.tip, L.polys.bal)} onMouseLeave={() => setTip(null)}
                 onFocus={() => show(copy.dancer.title, copy.dancer.tip, L.polys.bal)} onBlur={() => setTip(null)} onClick={() => sfx.toggleMusic()} onKeyDown={key(() => sfx.toggleMusic())} />
             )}
@@ -196,24 +223,36 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
         <p className="sec-hint"><span aria-hidden>✦</span>{lid === 2 ? copy.hintOpen : copy.hintClosed}</p>
       </div>
 
-      {/* danh sách nhạc: hiện khi nắp mở hẳn, như một tấm thẻ gỗ khắc nằm cạnh hộp */}
-      <aside className={`mb-playlist${lid === 2 ? ' on' : ''}`} aria-label={copy.playlistTitle} aria-hidden={lid !== 2}>
-        <h3>{copy.playlistTitle}</h3>
-        <ol>
-          {copy.tracks.map((t, i) => (
-            <li key={i} className={t.soon ? 'soon' : playing ? 'now' : ''}>
-              <button disabled={t.soon || lid !== 2} onClick={() => sfx.toggleMusic()} aria-label={t.soon ? `${t.title} (sắp có)` : playing ? `Dừng ${t.title}` : `Phát ${t.title}`}>
-                <span className="n">{t.soon ? i + 1 : playing ? <i className="eq" aria-hidden><b /><b /><b /></i> : '▶'}</span>
-                <span className="t"><b>{t.title}</b><small>{t.artist}</small></span>
-              </button>
-            </li>
-          ))}
-        </ol>
-        <div className="bar" role="slider" aria-label="Tua nhạc" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(frac * 100)} onClick={seek}>
-          <i style={{ width: `${(frac * 100).toFixed(1)}%` }} />
+      {/* danh sách nhạc: gọn một viên thuốc ở góc trên trái khi nắp mở, bấm để mở tấm thẻ đồng khắc; điều khiển nhạc của cả trang */}
+      <div className={`mb-pl${lid === 2 ? ' on' : ''}${listOpen ? ' expanded' : ''}`} aria-hidden={lid !== 2}>
+        <div className="mb-pill">
+          <button className="pp" disabled={lid !== 2} aria-label={playing ? 'Dừng nhạc' : 'Phát nhạc'} onClick={() => sfx.toggleMusic()}><i className={`disc${playing ? ' spin' : ''}`} /><em aria-hidden>{playing ? '❚❚' : '▶'}</em></button>
+          <button className="np" disabled={lid !== 2} aria-expanded={listOpen} onClick={() => setListOpen((v) => !v)}>
+            <small>{copy.nowPlaying}</small><b>{TRACKS[cur].title}</b><span className="chev" aria-hidden>{listOpen ? '▴' : '▾'}</span>
+          </button>
         </div>
-        <div className="ctl"><span>{mmss(clock.t)}</span><button onClick={() => sfx.toggleMusic()} disabled={lid !== 2}>{playing ? 'Dừng' : 'Phát'}</button><span>{clock.d ? mmss(clock.d) : '--:--'}</span></div>
-      </aside>
+        <div className="mb-card" role="region" aria-label={copy.playlistTitle}>
+          <h3><span aria-hidden>❦</span>{copy.playlistTitle}<span aria-hidden>❦</span></h3>
+          <ol>
+            {TRACKS.map((t, i) => (
+              <li key={t.id} className={`${!t.url ? 'soon' : ''}${i === cur && t.url ? ' cur' : ''}`}>
+                <button disabled={!t.url || lid !== 2 || !listOpen} onClick={() => playTrack(i)} aria-label={t.url ? `${i === cur && playing ? 'Dừng' : 'Phát'} ${t.title}` : `${t.title} (${copy.soon})`}>
+                  <span className="n">{i === cur && playing && t.url ? <i className="eq" aria-hidden><b /><b /><b /></i> : ROMAN[i]}</span>
+                  <span className="t"><b>{t.title}</b><small>{t.url ? t.artist : `${t.artist} · ${copy.soon}`}</small></span>
+                </button>
+              </li>
+            ))}
+          </ol>
+          <div className="bar" role="slider" aria-label="Tua nhạc" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(frac * 100)} onClick={seek}><i style={{ width: `${(frac * 100).toFixed(1)}%` }} /><u style={{ left: `${(frac * 100).toFixed(1)}%` }} /></div>
+          <div className="ctl">
+            <span>{mmss(clock.t)}</span>
+            <button aria-label="Bài trước" onClick={() => step(-1)} disabled={lid !== 2 || !listOpen}>⏮</button>
+            <button className="main" onClick={() => sfx.toggleMusic()} disabled={lid !== 2 || !listOpen}>{playing ? 'Dừng' : 'Phát'}</button>
+            <button aria-label="Bài sau" onClick={() => step(1)} disabled={lid !== 2 || !listOpen}>⏭</button>
+            <span>{clock.d ? mmss(clock.d) : '--:--'}</span>
+          </div>
+        </div>
+      </div>
 
       <button className="tr-sound" aria-label={snd ? 'Tắt âm thanh' : 'Bật âm thanh'} onClick={() => { if (!sfx.running) { sfx.setMuted(false); sfx.unlock() } else sfx.setMuted(!sfx.muted); setSnd(sfx.running && !sfx.muted) }}>
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 9v6h4l5 4V5L8 9z" />{snd ? <><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" /></> : <path d="M17 9l5 6M22 9l-5 6" />}</svg>
