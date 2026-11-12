@@ -202,9 +202,10 @@ export default function WorldScroll() {
     return () => { removeEventListener('scroll', on); removeEventListener('resize', on); cancelAnimationFrame(raf); cancelAnimationFrame(lraf); lenis.current?.destroy(); lenis.current = null }
   }, [])
 
-  const goTo = (screens: number) => {
+  const goTo = (screens: number, instant = false) => {
     const top = (wrap.current?.getBoundingClientRect().top ?? 0) + scrollY + innerHeight * screens
-    if (lenis.current) lenis.current.scrollTo(top, { duration: 2.2, easing: (t) => 1 - Math.pow(1 - t, 3) })
+    if (instant) { if (lenis.current) lenis.current.scrollTo(top, { immediate: true }); else scrollTo(0, top) }
+    else if (lenis.current) lenis.current.scrollTo(top, { duration: 2.2, easing: (t) => 1 - Math.pow(1 - t, 3) })
     else scrollTo({ top, behavior: 'smooth' })
   }
   const down = (e: React.MouseEvent) => {
@@ -217,6 +218,15 @@ export default function WorldScroll() {
     { label: 'Cây thông', at: HOLD0 + SPAN2 + 0.02, on: seen.tree && !seen.cats },
     { label: 'Bông và Mochi', at: HOLD0 + SPAN2 + HOLD + SPAN + 0.02, on: seen.cats },
   ]
+
+  // bản xem thử: App gửi sự kiện nhảy thẳng tới một cảnh (0 hộp nhạc, 1 cây thông, 2 hai bé)
+  const jump = useRef<(i: number, instant: boolean) => void>(() => {})
+  jump.current = (i, instant) => goTo(stops[Math.min(2, Math.max(0, i))].at, instant)
+  useEffect(() => {
+    const h = (e: Event) => { const d = (e as CustomEvent<{ i: number; instant?: boolean }>).detail; jump.current(d.i, !!d.instant) }
+    addEventListener('olcw:goto', h)
+    return () => removeEventListener('olcw:goto', h)
+  }, [])
 
   return (
     <div className="xf" ref={wrap} style={{ height: `${(1 + HOLD0 + SPAN2 + HOLD + SPAN + END) * 100}dvh` }}>
