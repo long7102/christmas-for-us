@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Tree from './Tree'
 import Cats from './Cats'
 import MusicBox from './MusicBox'
+import Lenis from 'lenis'
 import { reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
 
@@ -137,6 +138,7 @@ export default function WorldScroll() {
   const fx2 = useRef<Fx2>({ e: 0, on: false, edge: 0 })
   const prevP = useRef(0)
   const prevQ = useRef(0)
+  const lenis = useRef<Lenis | null>(null)
   const [seen, setSeen] = useState({ tree: false, cats: false, near: false, box: true })
 
   useEffect(() => {
@@ -187,16 +189,34 @@ export default function WorldScroll() {
       setSeen((o) => { const n = { tree: q > 0.003 && p < 0.75, cats: p > 0.003, near: p > 0.6, box: q < 0.995 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
+    // cuộn có quán tính (mượt như kéo bằng tay) trên máy tính; điện thoại giữ cuộn gốc của trình duyệt
+    let lraf = 0
+    if (!calm && matchMedia('(pointer: fine)').matches) {
+      const l = new Lenis({ lerp: 0.085, wheelMultiplier: 0.85, smoothWheel: true })
+      lenis.current = l
+      const loop = (t: number) => { l.raf(t); lraf = requestAnimationFrame(loop) }
+      lraf = requestAnimationFrame(loop)
+    }
     apply()
     addEventListener('scroll', on, { passive: true }); addEventListener('resize', on)
-    return () => { removeEventListener('scroll', on); removeEventListener('resize', on); cancelAnimationFrame(raf) }
+    return () => { removeEventListener('scroll', on); removeEventListener('resize', on); cancelAnimationFrame(raf); cancelAnimationFrame(lraf); lenis.current?.destroy(); lenis.current = null }
   }, [])
 
+  const goTo = (screens: number) => {
+    const top = (wrap.current?.getBoundingClientRect().top ?? 0) + scrollY + innerHeight * screens
+    if (lenis.current) lenis.current.scrollTo(top, { duration: 2.2, easing: (t) => 1 - Math.pow(1 - t, 3) })
+    else scrollTo({ top, behavior: 'smooth' })
+  }
   const down = (e: React.MouseEvent) => {
     e.preventDefault()
-    const top = (wrap.current?.getBoundingClientRect().top ?? 0) + scrollY
-    scrollTo({ top: top + innerHeight * (prevQ.current > 0.9 ? HOLD0 + SPAN2 + HOLD + SPAN + 0.02 : HOLD0 + SPAN2 + 0.02), behavior: 'smooth' })
+    goTo(prevQ.current > 0.9 ? HOLD0 + SPAN2 + HOLD + SPAN + 0.02 : HOLD0 + SPAN2 + 0.02)
   }
+  /** Ba chấm bên phải: đi thẳng tới từng cảnh. */
+  const stops: { label: string; at: number; on: boolean }[] = [
+    { label: 'Hộp nhạc', at: 0, on: seen.box && !seen.tree },
+    { label: 'Cây thông', at: HOLD0 + SPAN2 + 0.02, on: seen.tree && !seen.cats },
+    { label: 'Bông và Mochi', at: HOLD0 + SPAN2 + HOLD + SPAN + 0.02, on: seen.cats },
+  ]
 
   return (
     <div className="xf" ref={wrap} style={{ height: `${(1 + HOLD0 + SPAN2 + HOLD + SPAN + END) * 100}dvh` }}>
@@ -210,6 +230,9 @@ export default function WorldScroll() {
         <i className="xf-bloom" aria-hidden />
         <Sparks fx={fx} />
         <Notes fx={fx2} />
+        <nav className="xf-dots" aria-label="Các cảnh">
+          {stops.map((d) => <button key={d.label} className={d.on ? 'on' : ''} aria-label={d.label} aria-current={d.on} onClick={() => goTo(d.at)}><span>{d.label}</span></button>)}
+        </nav>
         <a className="scroll-cue" href="#cats" aria-label="Cuộn xuống cảnh kế tiếp" onClick={down}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
         </a>

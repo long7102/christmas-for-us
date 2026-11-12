@@ -155,7 +155,7 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
   const body = g ? g.body.map((t, i) => <p className="hand" key={i}>{t}</p>) : null
 
   return (
-    <div className={`tr-modal${closing ? ' closing' : ''}`} onClick={onClose}>
+    <div className={`tr-modal${closing ? ' closing' : ''}`} data-lenis-prevent onClick={onClose}>
       <div className={`lt-sheet ${m ? 'memory' : 'gift'} ${wide ? 'wide' : ''}`} data-paper={g ? `g${g.id}` : modal.kind === 'memory' ? paperFor(modal.id) : ''} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
         <div className="lt-paper" />
         <div className="lt-deco" />
