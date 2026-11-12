@@ -69,3 +69,7 @@ npx tsc -b        # kiểm tra kiểu
 - Ô tối khi chuyển cảnh trên máy thật: đã tách lớp bằng `will-change` (`.xf-tree`, `.xf-cats > .tree-scene`); chưa xác nhận hết lỗi trên máy của Long.
 - Việc còn lại (Long cần gửi): ảnh Mochi duỗi người BẢN DỌC (dạng tệp, chỉnh từ `cats-port.webp`), pose Bông ngồi tỉnh bản dọc, chuyện riêng của hai bé, quà 25/12 và 14/2, QR cho quà 8/1, ảnh thật của hai người, link YouTube hộp nhạc (nếu dùng).
 - Cảnh kế tiếp theo thứ tự Long đặt: 2 bàn trà, 3 hộp nhạc (gắn Sugar Plum Fairy), 6 hai người ngắm tuyết (cần Long tả ngoại hình). Cách làm mỗi cảnh: tạo ảnh cho Long duyệt trước rồi mới viết mã; ảnh tạo bằng Canva chỉ ra bản nhỏ nên Long tự tạo và gửi lại; hai ảnh cùng một cảnh phải chỉnh từ ảnh nền (cùng khung).
+
+### Công tắc đèn chung (lần 5)
+- `src/lib/lights.ts`: công tắc đèn dùng chung hai cảnh, nằm trong bộ nhớ (cuộn qua lại vẫn giữ, tải lại thì sáng lại). Cảnh mèo: bấm đèn lồng. Cảnh cây thông: nút bóng đèn dưới nút loa (góc trên phải). Tắt đèn ở cây thông: bỏ đèn lấp lánh và đèn lồng, phủ tối (`.tr-dark`, chừa vùng bếp lửa), còn ánh lửa, tuyết và cửa sổ.
+- Khi cảnh mèo hiện ra trong lúc đèn đang tắt, phòng tối ngay (`useFlicker` lấy `k` ban đầu từ `lampT`).

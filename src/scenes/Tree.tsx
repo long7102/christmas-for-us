@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { gifts, getMemory, lampStories, tree as treeCopy } from '../content/content'
 import { reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
+import { lights, useLights } from '../lib/lights'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
@@ -236,6 +237,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
   const [opened, setOpened] = useState<Record<number, boolean>>(() => store.get('giftsOpened', {}))
   const [opening, setOpening] = useState<number | null>(null)
   const [, tick] = useState(0)
+  const lightsOn = useLights()
   const [snd, setSnd] = useState(() => sfx.running && !sfx.muted)
   useEffect(() => {
     sfx.fire(true)
@@ -335,7 +337,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
   }
 
   return (
-    <section className={`tree-scene ${mode} ${compact ? 'compact' : ''}`} ref={sec}>
+    <section className={`tree-scene ${mode} ${compact ? 'compact' : ''}${lightsOn ? '' : ' lights-off'}`} ref={sec}>
       <PaperFilter />
       <div className="sec-frame" ref={host}>
         <div className={`tr-stage${flash ? ' flash' : ''}`} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
@@ -344,8 +346,6 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
           <Fire r={L.fire} flare={fireOn} />
           {!paused && <Flames r={L.fire} flare={fireOn} />}
           {!paused && <Embers r={L.fire} kick={kick} />}
-          <Lamps lamps={L.lamps} flare={lampOn} />
-          <Twinkles t={L.tree} />
           {!paused && <Dust w={L.w} h={L.h} />}
           <div className="tr-warm" />
 
@@ -394,6 +394,10 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
           {halo('star', starKey)}
           {halo('wreath', wreathKey)}
 
+          <div className="tr-dark" />
+          {/* đèn nhỏ nằm trên lớp tối: tắt đèn lớn rồi vẫn sáng */}
+          <Lamps lamps={L.lamps} flare={lampOn} />
+          <Twinkles t={L.tree} />
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             {spots.map((q) => (
               <polygon key={q.id} className="tr-hs" points={q.poly.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button"
@@ -421,6 +425,9 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
 
       <button className="tr-sound" aria-label={snd ? 'Tắt âm thanh' : 'Bật âm thanh'} onClick={() => { if (!sfx.running) { sfx.setMuted(false); sfx.unlock() } else sfx.setMuted(!sfx.muted); setSnd(sfx.running && !sfx.muted) }}>
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 9v6h4l5 4V5L8 9z" />{snd ? <><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" /></> : <path d="M17 9l5 6M22 9l-5 6" />}</svg>
+      </button>
+      <button className="tr-lights" aria-label={lightsOn ? 'Tắt đèn' : 'Bật đèn'} title={lightsOn ? 'Tắt đèn, chỉ còn ánh lửa' : 'Bật đèn lại'} onClick={() => lights.toggle()}>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill={lightsOn ? 'currentColor' : 'none'} fillOpacity=".25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" />{lightsOn && <path d="M12 1v0M4 6L3 5M20 6l1-1M2 12H1M23 12h-1" strokeWidth="1.4" />}</svg>
       </button>
       <div className="sec-text" ref={txt}>
         <h2 className="sec-title">{treeCopy.title}</h2>

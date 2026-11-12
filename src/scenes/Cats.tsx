@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { cats as copy } from '../content/content'
 import { reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
+import { lights, useLights } from '../lib/lights'
 import { CAT_LAND, CAT_PORT, type Cat, type CatLayout, type Pose } from './catsLayout'
 import { Dust } from './Tree'
 import { polyBox, type R } from './treeLayout'
@@ -41,7 +42,7 @@ function useFlicker(stage: React.RefObject<HTMLDivElement | null>, active: boole
     if (!el || !active) return
     if (reducedMotion()) { el.style.setProperty('--fl', '.8'); el.style.setProperty('--fl2', '.85'); return }
     let raf = 0, last = performance.now()
-    let fire = 0.8, tFire = 0.8, nFire = 0, lamp = 0.85, tLamp = 0.85, nLamp = 0, k = 1
+    let fire = 0.8, tFire = 0.8, nFire = 0, lamp = 0.85, tLamp = 0.85, nLamp = 0, k = Math.min(1, lampT.current.k)
     const frame = (t: number) => {
       const dt = Math.min(0.06, (t - last) / 1000); last = t
       nFire -= dt; nLamp -= dt
@@ -76,7 +77,8 @@ export default function Cats({ active = true }: { active?: boolean }) {
   const [busy, setBusy] = useState<Who | 'lamp' | null>(null)
   const lampT = useRef({ k: 1, tau: 0.3 })
   const lampBusy = useRef(false)
-  const [lampOn, setLampOn] = useState(true)
+  const lampOn = useLights()
+  const firstLamp = useRef(true)
   const [tbox, setTbox] = useState({ h: 0 })
   const [show, setShow] = useState<string | null>(null)
   const timers = useRef<number[]>([])
@@ -145,21 +147,23 @@ export default function Cats({ active = true }: { active?: boolean }) {
     timers.current.push(window.setTimeout(() => setShow(null), hold))
     timers.current.push(window.setTimeout(() => setBusy(null), hold + FADE_OUT))
   }
-  /** Bấm đèn lồng: bật hoặc tắt hẳn (không hẹn giờ). Tắt thì cả phòng tối xuống, bật lại thì bùng sáng ấm lên một nhịp rồi ổn định. */
+  /** Bấm đèn lồng: bật hoặc tắt hẳn (không hẹn giờ), dùng chung công tắc với đèn ở cảnh cây thông. */
   const pokeLamp = () => {
     if (lampBusy.current) return
     lampBusy.current = true
-    const calm = reducedMotion()
     setTip(null)
-    if (lampOn) {
-      sfx.puff(); lampT.current = { k: 0.04, tau: calm ? 0.1 : 0.3 }; setLampOn(false)
-      timers.current.push(window.setTimeout(() => { lampBusy.current = false }, 450))
-    } else {
-      sfx.relight(); lampT.current = { k: 1.28, tau: 0.16 }; setLampOn(true)
-      timers.current.push(window.setTimeout(() => { lampT.current = { k: 1, tau: 0.5 } }, 700))
-      timers.current.push(window.setTimeout(() => { lampBusy.current = false }, 1000))
-    }
+    lights.toggle()
+    timers.current.push(window.setTimeout(() => { lampBusy.current = false }, 900))
   }
+  // ánh sáng trong phòng đi theo công tắc: tắt thì tối xuống, bật lại thì bùng sáng ấm lên một nhịp rồi ổn định
+  useEffect(() => {
+    const calm = reducedMotion(), first = firstLamp.current
+    firstLamp.current = false
+    if (!lampOn) { lampT.current = { k: 0.04, tau: first ? 0.02 : calm ? 0.1 : 0.3 }; return }
+    if (first) { lampT.current = { k: 1, tau: 0.3 }; return }
+    lampT.current = { k: 1.28, tau: 0.16 }
+    timers.current.push(window.setTimeout(() => { lampT.current = { k: 1, tau: 0.5 } }, 700))
+  }, [lampOn])
   const enterLamp = () => setTip({ title: copy.lamp.title, text: lampOn ? copy.lamp.tipOn : copy.lamp.tipOff, b: polyBox(L.lampPoly) })
   const enter = (c: (typeof cats)[number]) => {
     if (busy) return
