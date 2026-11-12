@@ -20,6 +20,8 @@ class Sfx {
   private mixV = 0
   private boxV = 0
   private userPaused = false
+  private curUrl = musicUrl
+  private endCb?: () => void
   private purrGain?: GainNode
 
   constructor() {
@@ -61,7 +63,7 @@ class Sfx {
   startMusic() {
     if (!this.music) {
       const a = new Audio(musicUrl); a.loop = true; a.volume = 0.42; a.preload = 'auto'; this.music = a
-      a.addEventListener('play', () => this.emit()); a.addEventListener('pause', () => this.emit())
+      a.addEventListener('play', () => this.emit()); a.addEventListener('pause', () => this.emit()); a.addEventListener('ended', () => this.endCb?.())
     }
     this.music.muted = this.muted
     if (this.music.paused && !this.userPaused) this.music.play().catch(() => {})
@@ -69,6 +71,15 @@ class Sfx {
 
   /** Điều khiển nhạc từ hộp nhạc (danh sách phát). */
   get musicPlaying() { return !!this.music && !this.music.paused && !this.muted }
+  /** Đổi bài (url) và phát. onEnd: gọi khi hết bài (để sang bài kế); không có onEnd thì lặp lại bài. */
+  setTrack(url: string, onEnd?: () => void) {
+    this.startMusic()
+    const a = this.music!
+    this.endCb = onEnd; a.loop = !onEnd
+    if (url !== this.curUrl) { this.curUrl = url; a.src = url; a.currentTime = 0 }
+    this.playMusic()
+  }
+  get track() { return this.curUrl }
   playMusic() { this.userPaused = false; if (this.muted) this.setMuted(false); this.unlock(); this.startMusic(); this.music?.play().catch(() => {}) }
   pauseMusic() { this.userPaused = true; this.music?.pause() }
   toggleMusic() { if (this.musicPlaying) this.pauseMusic(); else this.playMusic() }

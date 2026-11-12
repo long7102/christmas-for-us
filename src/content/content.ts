@@ -196,11 +196,17 @@ export const musicbox = {
   hintClosed: 'Em bấm vào chiếc hộp để mở nắp nhé.',
   hintOpen: 'Chọn một bài ở danh sách, hoặc bấm vào hộp để đóng lại.',
   playlistTitle: 'Danh sách nhạc',
-  /** Danh sách bài. Bài đầu là nhạc nền có sẵn; các bài sau chờ Long gửi (đánh dấu soon). */
+  nowPlaying: 'Đang phát',
+  soon: 'Sắp có',
+  /**
+   * Danh sách bài. `id` trùng tên tệp trong src/assets/music/<id>.mp3 (hoặc .m4a, .ogg): có tệp là phát được, chưa có thì hiện "Sắp có".
+   * Sugar Plum Fairy dùng tệp nhạc nền sẵn có. Last Christmas và Feliz Navidad có bản quyền nên Long cần tự gửi tệp.
+   */
   tracks: [
-    { title: 'Sugar Plum Fairy', artist: 'Tchaikovsky · Kẹo hạt dẻ', soon: false },
-    { title: 'Bài hát tiếp theo', artist: 'Anh sẽ thêm vào đây', soon: true },
-    { title: 'Bài hát tiếp theo', artist: 'Anh sẽ thêm vào đây', soon: true },
+    { id: 'sugarplum-fairy', title: 'Sugar Plum Fairy', artist: 'Tchaikovsky · Kẹo hạt dẻ' },
+    { id: 'last-christmas', title: 'Last Christmas', artist: 'Wham!' },
+    { id: 'nutcracker', title: 'The Nutcracker', artist: 'Tchaikovsky · Kẹp hạt dẻ' },
+    { id: 'feliz-navidad', title: 'Feliz Navidad', artist: 'José Feliciano' },
   ],
   dancer: { title: 'Cô vũ công', tip: 'Cô nàng múa theo nhạc. Bấm để dừng hoặc phát nhạc.' },
   box: { closed: { title: 'Chiếc hộp nhạc', tip: 'Gỗ óc chó cũ, bộ lược đồng bên trong. Bấm để mở nắp.' }, open: { title: 'Chiếc hộp nhạc', tip: 'Bấm để đóng nắp lại.' } },
