@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LONG_EMAIL, gifts, memories, treeText } from '../content/content'
+import { LONG_EMAIL, gifts, lampStories, memories, treeText } from '../content/content'
 import { store } from '../lib/storage'
 import { FireIcon, LampIcon, StarIcon, StockingIcon, WreathIcon } from './Icons'
 import { countdown, isUnlocked } from '../lib/unlock'
@@ -15,14 +15,6 @@ export function PaperFilter() {
         <feDisplacementMap in="SourceGraphic" in2="a" scale="9" xChannelSelector="R" yChannelSelector="G" result="b" />
         <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="2" seed="2" result="c" />
         <feDisplacementMap in="b" in2="c" scale="4" xChannelSelector="G" yChannelSelector="R" />
-      </filter>
-      <filter id="tr-ink" x="-2%" y="-5%" width="104%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" result="n" />
-        <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G" result="rag" />
-        <feTurbulence type="fractalNoise" baseFrequency="0.55 0.7" numOctaves="3" seed="4" result="m" />
-        <feColorMatrix in="m" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 14 -9.8" result="holes" />
-        <feComposite in="rag" in2="holes" operator="out" result="worn" />
-        <feComponentTransfer in="worn"><feFuncA type="linear" slope=".92" /></feComponentTransfer>
       </filter>
     </svg>
   )
@@ -53,9 +45,9 @@ function Postmark({ text }: { text: string }) {
 }
 
 function iconFor(id: string) {
-  if (id === 'stock0') return <StockingIcon main="#a82a2a" dark="#6a1212" light="#d84e4e" variant="coins" />
-  if (id === 'stock1') return <StockingIcon main="#e4d6b4" dark="#a8926a" light="#f6ecd2" variant="orange" />
-  if (id === 'stock2') return <StockingIcon main="#25603f" dark="#0f2c1a" light="#3f8a5c" variant="tag" />
+  if (id === 'stock0') return <StockingIcon main="#9c2a28" dark="#5e1412" light="#c44a42" patch="#e6d8b4" variant="coins" />
+  if (id === 'stock1') return <StockingIcon main="#d9c9a2" dark="#9a845a" light="#efe3c2" patch="#9c3a30" variant="orange" />
+  if (id === 'stock2') return <StockingIcon main="#2c5a3c" dark="#122e1c" light="#44805a" patch="#e0d2ae" variant="tag" />
   if (id === 'wreath') return <WreathIcon />
   if (id === 'star') return <StarIcon />
   if (id === 'lamp') return <LampIcon />
@@ -74,13 +66,13 @@ function Reply({ id }: { id: number }) {
   }
   return (
     <div className="lt-reply">
-      <label className="ink" htmlFor={`lt-note-${id}`}>{treeText.replyLabel}</label>
+      <label htmlFor={`lt-note-${id}`}>{treeText.replyLabel}</label>
       <textarea id={`lt-note-${id}`} value={v} onChange={(e) => setV(e.target.value)} placeholder={treeText.replyHolder} rows={8} />
       <div className="lt-actions">
         <a className="lt-btn primary" href={href}>{treeText.send}</a>
         <button className="lt-btn" onClick={copy} type="button">{done ? treeText.copied : treeText.copy}</button>
       </div>
-      <p className="lt-small ink">{treeText.sendHint}<br />Email nhận: <span className="lt-sel">{LONG_EMAIL}</span></p>
+      <p className="lt-small">{treeText.sendHint}<br />Email nhận: <span className="lt-sel">{LONG_EMAIL}</span></p>
     </div>
   )
 }
@@ -100,16 +92,17 @@ function Qr({ label }: { label?: string }) {
   )
 }
 
-function Holly() {
+/** Hoa văn góc kiểu khắc mực xưa. */
+function Corner({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
   return (
-    <svg className="lt-holly" viewBox="0 0 110 90" aria-hidden>
-      <g stroke="#0f2f1c" strokeWidth="1.2">
-        <path d="M6 70c6-26 30-40 56-34-9 8-8 22-24 32-10 6-22 6-32 2z" fill="#2b6a3e" />
-        <path d="M30 86c-3-24 6-44 28-56 3 9 10 17 3 33-5 12-17 22-31 23z" fill="#1f5230" />
-        <path d="M52 52c18-2 36 6 48 24-18 6-34 0-48-24z" fill="#34794a" />
+    <svg className={`lt-corner ${pos}`} viewBox="0 0 80 80" aria-hidden>
+      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.4">
+        <path d="M4 76 V30 Q4 4 30 4 H76" />
+        <path d="M11 76 V34 Q11 11 34 11 H76" strokeWidth=".8" />
+        <path d="M18 18 Q30 18 30 30 Q30 40 22 40 Q14 40 14 32 Q14 26 20 26" />
+        <path d="M34 18 Q46 14 50 24 M18 34 Q14 46 24 50" />
       </g>
-      <g fill="#c6302a" stroke="#7a1412" strokeWidth=".8"><circle cx="40" cy="58" r="6" /><circle cx="52" cy="64" r="6" /><circle cx="46" cy="48" r="6" /></g>
-      <g fill="#fff" opacity=".6"><circle cx="38" cy="56" r="1.7" /><circle cx="50" cy="62" r="1.7" /><circle cx="44" cy="46" r="1.7" /></g>
+      <g fill="currentColor"><circle cx="21" cy="30" r="1.8" /><circle cx="52" cy="25" r="1.6" /><circle cx="25" cy="52" r="1.6" /><path d="M4 4 l5 2 -2 5 -4 -3z" /></g>
     </svg>
   )
 }
@@ -133,30 +126,31 @@ export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClo
   }, [onClose])
 
   const g = modal.kind === 'gift' ? gifts[modal.i] : null
-  const m = modal.kind === 'memory' ? memories[modal.id] : null
+  const lampI = modal.kind === 'memory' && modal.id === 'lamp' ? (modal.i ?? 0) % lampStories.length : 0
+  const m = modal.kind === 'memory' ? (modal.id === 'lamp' ? lampStories[lampI] : memories[modal.id]) : null
   const locked = g ? !isUnlocked(g.unlockAt) : false
   const cd = g && locked ? countdown(g.unlockAt) : null
   const title = g ? g.title : m!.title
   const open = !!g && !locked
   const wide = (g && open && g.kind !== 'plain') || !!m
-  const body = g ? g.body.map((t, i) => <p className="hand ink" key={i}>{t}</p>) : null
+  const body = g ? g.body.map((t, i) => <p className="hand" key={i}>{t}</p>) : null
 
   return (
     <div className="tr-modal" onClick={onClose}>
-      <div className={`lt-sheet ${m ? 'memory' : 'gift'} ${wide ? 'wide' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
+      <div className={`lt-sheet ${m ? 'memory' : 'gift'} ${wide ? 'wide' : ''}`} data-paper={g ? `g${g.id}` : modal.kind === 'memory' ? (modal.id === 'lamp' ? 'lamp' : modal.id) : ''} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
         <div className="lt-paper" />
-        <div className="lt-fox" />
         {g && <Postmark text={g.stamp} />}
         <Stamp tilt={g ? 4 : -5} />
         {g ? <Seal mark="L♥H" /> : <i className="lt-pin" />}
-        <Holly />
+        <div className="lt-frame" />
+        <Corner pos="tl" /><Corner pos="br" />
         {g && open && <div className="lt-sparkles" aria-hidden>{Array.from({ length: 9 }, (_, i) => <i key={i} style={{ left: `${(i * 37 + 8) % 96}%`, top: `${(i * 53 + 5) % 92}%`, animationDelay: `-${(i * 0.43).toFixed(2)}s` }}>✦</i>)}</div>}
         <div className="lt-body">
-          <h2 className="ink">{title}</h2>
+          <h2>{title}</h2>
           <div className="lt-rule" aria-hidden />
           {cd && (
             <>
-              <p className="ink">{treeText.locked}</p>
+              <p>{treeText.locked}</p>
               <div className="lt-clock" role="timer" aria-label={`Còn ${cd.d} ngày ${cd.h} giờ ${cd.m} phút ${cd.s} giây`}>
                 {([['ngày', cd.d], ['giờ', cd.h], ['phút', cd.m], ['giây', cd.s]] as const).map(([u, v]) => (
                   <div key={u}><b>{String(v).padStart(2, '0')}</b><span>{u}</span></div>
@@ -164,7 +158,7 @@ export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClo
               </div>
             </>
           )}
-          {g && open && g.kind === 'plain' && (g.body.length === 0 ? <p className="hand ink">{treeText.empty}</p> : body)}
+          {g && open && g.kind === 'plain' && (g.body.length === 0 ? <p className="hand">{treeText.empty}</p> : body)}
           {g && open && g.kind !== 'plain' && (
             <div className="lt-cols">
               <div className="lt-col">{body}</div>
@@ -178,8 +172,8 @@ export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClo
                 <div className="lt-photo"><span>{treeText.photo}</span></div>
               </div>
               <div className="lt-col">
-                {m.meaning.map((t, i) => <p className="ink" key={i}>{t}</p>)}
-                <p className="hand ink">{m.story}</p>
+                {m.meaning.map((t, i) => <p key={i}>{t}</p>)}
+                <p className="hand">{m.story}</p>
               </div>
             </div>
           )}

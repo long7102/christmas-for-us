@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { gifts, memories, tree as treeCopy } from '../content/content'
+import { gifts, lampStories, memories, tree as treeCopy } from '../content/content'
 import { reducedMotion } from '../lib/device'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
@@ -243,6 +243,7 @@ export default function Tree() {
   }
 
   const showTip = (id: string, poly: P, i?: number) => {
+    if (id === 'lamp') { const m = lampStories[(i ?? 0) % lampStories.length]; setTip({ title: m.title, text: m.tip, b: polyBox(poly) }); return }
     if (id.startsWith('gift')) {
       const gf = gifts[i!]
       setTip({ title: gf.title, text: isUnlocked(gf.unlockAt) ? 'Đã đến ngày, bấm để mở.' : 'Chưa đến ngày mở, bấm để xem còn bao lâu.', b: polyBox(poly) })
@@ -332,7 +333,7 @@ export default function Tree() {
             ))}
             {L.lampPolys.map((lp, i) => (
               <polygon key={`lp${i}`} className="tr-hs" points={lp.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button" aria-label="đèn"
-                onMouseEnter={() => showTip('lamp', lp)} onMouseLeave={() => setTip(null)} onFocus={() => showTip('lamp', lp)} onBlur={() => setTip(null)}
+                onMouseEnter={() => showTip('lamp', lp, i)} onMouseLeave={() => setTip(null)} onFocus={() => showTip('lamp', lp, i)} onBlur={() => setTip(null)}
                 onClick={() => { setTip(null); pokeLamp(i) }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pokeLamp(i) } }} />
             ))}
             {L.polys.map((p, i) => {
@@ -351,9 +352,10 @@ export default function Tree() {
 
       <div className="sec-text" ref={txt}>
         <h2 className="sec-title">{treeCopy.title}</h2>
+        <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>
         <p className="sec-tag">{treeCopy.tagline}</p>
         <p className="sec-desc">{treeCopy.body}</p>
-        <p className="sec-hint">{treeCopy.hint}</p>
+        <p className="sec-hint"><span aria-hidden>✦</span>{treeCopy.hint}</p>
       </div>
 
       {tip && (() => {

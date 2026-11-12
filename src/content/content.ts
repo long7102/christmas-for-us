@@ -73,17 +73,23 @@ export const memories: Record<string, { title: string; tip: string; meaning: str
     meaning: ['Theo truyền thuyết, ba nhà thông thái đã đi theo một ngôi sao sáng suốt nhiều đêm để tìm đến nơi đứa trẻ Giáng sinh ra đời. Từ đó, ngôi sao được đặt trên đỉnh cây: cao nhất và sáng nhất.', 'Dù đêm có dài đến đâu, ai đang lạc đường cũng có một điểm sáng để hướng về.'],
     story: 'Chuyện của hai đứa về ngôi sao sẽ được viết ở đây.',
   },
-  lamp: {
-    title: 'Ngọn đèn nhỏ', tip: 'Ngọn đèn giữ ánh sáng cho người về muộn.',
-    meaning: ['Ngày xưa, người ta thắp một ngọn đèn đặt nơi cửa sổ trong đêm đông để người đi xa nhìn thấy mà tìm đường về.', 'Mỗi ngọn nến là một lời nhắn không cần nói thành lời: có người đang chờ em ở đây.'],
-    story: 'Chuyện của hai đứa về ngọn đèn sẽ được viết ở đây.',
-  },
   fire: {
     title: 'Bếp lửa', tip: 'Bếp lửa là nơi mình sưởi ấm cho nhau.',
     meaning: ['Từ xưa, bếp lửa là trái tim của ngôi nhà: mọi người quây quần quanh nó vào những đêm đông. Cái ấm của lửa không chỉ là hơi nóng, mà là việc ngồi gần nhau, kể chuyện cho nhau nghe, hay chỉ lặng im mà vẫn thấy yên lòng.', 'Sưởi ấm nhau nghĩa là cùng nhau giữ cho căn nhà không bao giờ lạnh.'],
     story: 'Chuyện của hai đứa về bếp lửa sẽ được viết ở đây.',
   },
 }
+
+type Memo = { title: string; tip: string; meaning: string[]; story: string }
+/** Mỗi ngọn đèn một câu chuyện riêng (theo thứ tự trong ảnh: trái trên, trên lò sưởi, cạnh tủ sách, cửa sổ, tường phải, sàn bên trái). */
+export const lampStories: Memo[] = [
+  { title: 'Đèn lồng bên vòng hoa', tip: 'Ngọn đèn canh cho vòng hoa trên tường.', meaning: ['Đèn lồng treo cạnh cửa từng là thứ đầu tiên một người đi xa nhìn thấy khi về làng. Chỉ một đốm sáng nhỏ trong bóng tối cũng đủ nói rằng: nhà ở đằng kia.', 'Ngọn đèn này đứng cạnh vòng hoa, như hai người cùng giữ cửa cho nhau.'], story: 'Chuyện của hai đứa về ngọn đèn này sẽ được viết ở đây.' },
+  { title: 'Đèn trên bệ lò sưởi', tip: 'Ngọn nến thức khuya hơn cả lửa.', meaning: ['Khi than trong lò đã tàn, chỉ còn ngọn nến trên bệ là thức. Người xưa để nó cháy đến khi người cuối cùng đi ngủ, như một cách nói chúc ngủ ngon không lời.', 'Một ngọn nến nhỏ không sưởi ấm được căn phòng, nhưng làm căn phòng bớt cô đơn.'], story: 'Chuyện của hai đứa về ngọn đèn này sẽ được viết ở đây.' },
+  { title: 'Đèn cạnh tủ sách', tip: 'Ngọn đèn của những buổi tối đọc chung một trang sách.', meaning: ['Ánh đèn vàng cạnh tủ sách là ánh sáng của những đêm đông dài: một cuốn truyện, một chiếc chăn, và người ngồi bên cạnh đọc to cho nhau nghe.', 'Có những trang sách chỉ trở nên đáng nhớ vì được đọc cùng ai đó.'], story: 'Chuyện của hai đứa về ngọn đèn này sẽ được viết ở đây.' },
+  { title: 'Đèn bên cửa sổ', tip: 'Ngọn đèn chờ người về qua màn tuyết.', meaning: ['Ngày xưa người ta đặt một ngọn nến bên cửa sổ trong đêm Giáng sinh để người lỡ đường nhìn thấy mà tìm được nơi trú. Đó là một phép lịch sự của mùa đông: luôn chừa một ánh sáng cho người lạ.', 'Ngoài kia tuyết rơi, trong này có một ngọn đèn đang đợi.'], story: 'Chuyện của hai đứa về ngọn đèn này sẽ được viết ở đây.' },
+  { title: 'Đèn treo trên tường', tip: 'Ngọn đèn nhỏ của góc phòng yên tĩnh.', meaning: ['Đèn treo tường là thứ ánh sáng khiêm tốn nhất của ngôi nhà: không chiếu cho ai xem, chỉ lặng lẽ làm góc tối ấm lên một chút.', 'Tình thân cũng có khi như vậy, không ồn ào mà vẫn luôn ở đó.'], story: 'Chuyện của hai đứa về ngọn đèn này sẽ được viết ở đây.' },
+  { title: 'Đèn bên bậu lò', tip: 'Ngọn đèn đón người vừa bước vào nhà.', meaning: ['Đặt một ngọn đèn ngay lối vào là cách chào người về nhà trước cả khi kịp mở lời. Ánh sáng đầu tiên chạm vào mắt bạn khi bước qua cửa thường là thứ bạn nhớ lâu nhất.', 'Ở đây, ánh sáng ấy mang màu hổ phách và mùi nến.'], story: 'Chuyện của hai đứa về ngọn đèn này sẽ được viết ở đây.' },
+]
 
 /** Chữ ở góc cảnh cây thông (chữ tạm, sẽ đổi khi Long chốt nội dung). */
 export const tree = {

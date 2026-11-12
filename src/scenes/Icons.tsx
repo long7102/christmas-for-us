@@ -8,44 +8,49 @@ const Svg = ({ children, label }: { children: ReactNode; label: string }) => (
 const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
 
 type Variant = 'coins' | 'orange' | 'tag'
+const INK = '#2e1a0c'
 
-export function StockingIcon({ main = '#a82a2a', dark = '#6f1414', light = '#d85050', variant = 'coins' }: { main?: string; dark?: string; light?: string; variant?: Variant }) {
+export function StockingIcon({ main = '#a82a2a', dark = '#6f1414', light = '#d85050', patch = '#e9dcbc', variant = 'coins' }: { main?: string; dark?: string; light?: string; patch?: string; variant?: Variant }) {
   const id = `sk${variant}`
+  const body = 'M64 52 H132 L134 120 C136 142 150 152 168 160 C198 172 196 208 164 208 C128 210 92 200 76 172 C68 158 64 140 64 120 Z'
   return (
     <Svg label="Chiếc tất">
       <defs>
-        <linearGradient id={`${id}g`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor={dark} /><stop offset=".35" stopColor={light} /><stop offset=".6" stopColor={main} /><stop offset="1" stopColor={dark} /></linearGradient>
-        <pattern id={`${id}p`} width="7" height="6" patternUnits="userSpaceOnUse"><path d="M0 0 l3.5 5 l3.5 -5" fill="none" stroke="#000" strokeOpacity=".22" strokeWidth="1.1" /></pattern>
-        <linearGradient id={`${id}c`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#fffaf0" /><stop offset="1" stopColor="#e2d4b4" /></linearGradient>
-        <clipPath id={`${id}k`}><path d="M60 46 H124 V138 Q124 158 148 168 Q182 180 176 202 Q168 214 136 208 Q68 196 60 140 Z" /></clipPath>
+        <linearGradient id={`${id}g`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor={dark} /><stop offset=".4" stopColor={main} /><stop offset=".62" stopColor={light} /><stop offset="1" stopColor={dark} /></linearGradient>
+        <pattern id={`${id}h`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke={INK} strokeOpacity=".28" strokeWidth="1.2" /></pattern>
+        <pattern id={`${id}k`} width="6" height="5" patternUnits="userSpaceOnUse"><path d="M0 0 l3 4 l3 -4" fill="none" stroke={INK} strokeOpacity=".2" strokeWidth="1" /></pattern>
+        <clipPath id={`${id}c`}><path d={body} /></clipPath>
       </defs>
-      <ellipse cx="116" cy="214" rx="64" ry="6" fill="#000" opacity=".18" />
-      <g className="ic-swing" style={{ transformOrigin: '98px 8px' }}>
-        {variant === 'orange' && (
-          <g className="ic-bob"><circle cx="92" cy="30" r="21" fill="#f08a1c" /><circle cx="92" cy="30" r="21" fill="url(#orbg)" /><circle cx="84" cy="22" r="6" fill="#ffd08a" opacity=".7" /><path d="M92 10 q8 -8 16 -4 q-4 10 -16 4z" fill="#4c8a3a" /><circle cx="116" cy="36" r="13" fill="#f4a030" /><circle cx="111" cy="31" r="4" fill="#ffe0a8" opacity=".7" /></g>
-        )}
-        {variant === 'orange' && <defs><radialGradient id="orbg" cx=".35" cy=".3" r=".8"><stop offset="0" stopColor="#fff" stopOpacity="0" /><stop offset="1" stopColor="#a84c00" stopOpacity=".55" /></radialGradient></defs>}
-        <path d="M98 6 Q86 -4 80 8 M98 6 L98 30" stroke="#7a1f18" strokeWidth="4" fill="none" strokeLinecap="round" />
-        <path d="M60 46 H124 V138 Q124 158 148 168 Q182 180 176 202 Q168 214 136 208 Q68 196 60 140 Z" fill={`url(#${id}g)`} stroke={dark} strokeWidth="2.4" />
-        <rect x="56" y="40" width="130" height="180" fill={`url(#${id}p)`} clipPath={`url(#${id}k)`} />
-        <g clipPath={`url(#${id}k)`}>
-          <ellipse cx="150" cy="198" rx="30" ry="16" fill={light} opacity=".55" transform="rotate(20 150 198)" /><path d="M126 164 Q150 172 172 192" stroke="#fff" strokeOpacity=".25" strokeWidth="2" fill="none" strokeDasharray="3 3" />
-          <path d="M60 126 H124" stroke="#fff3dc" strokeWidth="2.4" strokeDasharray="5 4" opacity=".9" /><path d="M60 70 H124" stroke="#fff3dc" strokeWidth="2.4" strokeDasharray="5 4" opacity=".9" />
-          <g stroke="#fff3dc" strokeWidth="3" strokeLinecap="round" transform="translate(92 98)"><path d="M0 -20 V20 M-17 -10 L17 10 M-17 10 L17 -10" /><path d="M-4 -14 L0 -18 L4 -14 M-4 14 L0 18 L4 14 M-15 -2 L-17 -9 L-11 -8 M15 2 L17 9 L11 8" strokeWidth="2" fill="none" /><circle r="3.4" fill="#fff3dc" /></g>
-          <path d="M60 46 V138 Q60 150 70 160" stroke="#000" strokeOpacity=".18" strokeWidth="10" fill="none" />
+      <ellipse cx="124" cy="214" rx="62" ry="5" fill={INK} opacity=".18" />
+      <g className="ic-swing" style={{ transformOrigin: '98px 12px' }}>
+        <path d="M98 50 C98 30 84 14 84 8 C84 0 100 0 100 10" fill="none" stroke={INK} strokeWidth="6" strokeLinecap="round" /><path d="M98 50 C98 30 84 14 84 8 C84 0 100 0 100 10" fill="none" stroke="#b8862e" strokeWidth="3" strokeLinecap="round" />
+        <path d={body} fill={`url(#${id}g)`} />
+        <g clipPath={`url(#${id}c)`}>
+          <rect x="60" y="50" width="150" height="170" fill={`url(#${id}k)`} />
+          <path d="M60 78 H140" stroke={patch} strokeWidth="9" opacity=".9" /><path d="M60 76 H140 M60 86 H140" stroke={INK} strokeOpacity=".4" strokeWidth="1" />
+          {Array.from({ length: 8 }, (_, i) => <path key={i} d={`M${70 + i * 8} 82 l4 -4 l4 4 l-4 4z`} fill={main} opacity=".95" />)}
+          <g stroke={patch} strokeWidth="3" strokeLinecap="round" transform="translate(98 116)"><path d="M0 -18 V18 M-16 -9 L16 9 M-16 9 L16 -9" /><path d="M-4 -13 L0 -18 L4 -13 M-4 13 L0 18 L4 13 M-15 -2 L-16 -9 L-10 -8 M15 2 L16 9 L10 8 M-15 2 L-16 9 L-10 8 M15 -2 L16 -9 L10 -8" strokeWidth="2" fill="none" /><circle r="3.4" fill={patch} stroke="none" /></g>
+          <path d="M66 140 H132" stroke={patch} strokeWidth="2.4" strokeDasharray="5 4" opacity=".9" />
+          <path d="M64 150 Q70 196 108 206 L90 210 L60 200 Z" fill={patch} opacity=".9" /><path d="M64 150 Q70 196 108 206" fill="none" stroke={INK} strokeOpacity=".45" strokeWidth="1.6" strokeDasharray="3 3" />
+          <path d="M156 164 Q196 170 194 206 L150 210 Q168 190 156 164Z" fill={patch} opacity=".9" /><path d="M156 164 Q190 172 190 204" fill="none" stroke={INK} strokeOpacity=".45" strokeWidth="1.6" strokeDasharray="3 3" />
+          <path d="M112 60 L132 60 L134 120 C136 142 150 152 168 160 C198 172 196 208 164 208 L150 208 C176 196 160 168 130 150 Z" fill={`url(#${id}h)`} />
+          <path d="M64 52 C62 100 62 140 76 172" fill="none" stroke="#fff" strokeOpacity=".2" strokeWidth="4" />
         </g>
-        <path d="M122 140 Q124 158 148 168" fill="none" stroke="#fff" strokeOpacity=".18" strokeWidth="2" />
-        <path d="M52 30 Q52 20 64 20 H122 Q136 20 136 32 V50 Q136 58 128 58 Q122 66 114 58 Q106 66 98 58 Q90 66 82 58 Q74 66 66 58 Q52 58 52 50 Z" fill={`url(#${id}c)`} stroke="#bba980" strokeWidth="2" />
-        <g stroke="#bba980" strokeOpacity=".6" strokeWidth="1.5"><path d="M64 26 V50 M76 26 V52 M88 26 V54 M100 26 V54 M112 26 V52 M124 26 V50" /></g>
-        {variant === 'tag' && (
-          <g className="ic-sway" style={{ transformOrigin: '128px 44px' }}><path d="M128 44 q14 4 12 18" stroke="#8b2a22" strokeWidth="2" fill="none" /><rect x="122" y="60" width="30" height="22" rx="3" fill="#f6ecd0" stroke="#a48d5c" strokeWidth="1.5" /><circle cx="127" cy="65" r="1.8" fill="#8b6b30" /><path d="M137 66 l3 6 6 1 -4.6 4 1.4 6 -5.8 -3.2 -5.8 3.2 1.4 -6 -4.6 -4 6 -1z" fill="#b8892e" transform="scale(.55) translate(110 50)" /></g>
+        <path d={body} fill="none" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        <path d="M56 36 Q56 28 66 28 H128 Q140 28 140 38 V52 Q140 62 130 62 H66 Q56 62 56 52 Z" fill="#f3ead2" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        <path d="M60 50 Q64 56 70 52 Q76 58 82 52 Q88 58 94 52 Q100 58 106 52 Q112 58 118 52 Q124 58 130 52 Q134 56 138 50" fill="none" stroke="#c9b98e" strokeWidth="2" />
+        <g stroke="#cdbd92" strokeWidth="1.6"><path d="M66 34 V46 M76 34 V46 M86 34 V46 M96 34 V46 M106 34 V46 M116 34 V46 M126 34 V46" /></g>
+        {variant === 'orange' && (
+          <g className="ic-bob"><circle cx="88" cy="30" r="17" fill="#d98418" stroke={INK} strokeWidth="2.4" /><path d="M78 22 q6 -6 14 -4" stroke="#f6c870" strokeWidth="4" strokeLinecap="round" fill="none" /><path d="M88 13 q7 -8 15 -4 q-3 9 -15 4z" fill="#5a7a34" stroke={INK} strokeWidth="1.6" /><circle cx="118" cy="38" r="12" fill="#e8a02c" stroke={INK} strokeWidth="2.2" /></g>
         )}
-        {variant === 'tag' && <g><path d="M62 24 q14 -14 30 -4 q-8 12 -30 4z" fill="#2b6a3e" /><path d="M82 20 q14 -14 30 -2 q-10 12 -30 2z" fill="#3f8a4d" /><g fill="#c6302a"><circle cx="86" cy="22" r="4" /><circle cx="93" cy="26" r="4" /></g></g>}
+        {variant === 'tag' && (
+          <g className="ic-sway" style={{ transformOrigin: '124px 40px' }}><path d="M124 40 q12 6 8 22" stroke="#7a2a20" strokeWidth="2.4" fill="none" /><rect x="116" y="60" width="30" height="24" rx="3" fill="#efe2bc" stroke={INK} strokeWidth="2" /><circle cx="121" cy="65" r="2" fill="#7a5a28" /><path d="M126 72 h14 M126 77 h10" stroke={INK} strokeOpacity=".6" strokeWidth="1.4" /></g>
+        )}
         {variant === 'coins' && (
-          <g>{[[84, 22, 0], [108, 18, -1.1], [96, 30, -.5]].map(([x, y, d], i) => <g key={i} className="ic-coin" style={{ animationDelay: `${d}s` }}><circle cx={x} cy={y} r="9" fill="#e8b93c" stroke="#a87a14" strokeWidth="1.6" /><circle cx={x} cy={y} r="5.4" fill="none" stroke="#a87a14" strokeWidth="1" /><path d={`M${x - 3} ${y - 5} a5 5 0 0 1 6 0`} stroke="#fff3b8" strokeWidth="1.6" fill="none" /></g>)}</g>
+          <g>{[[84, 26, 0], [106, 22, -1.1], [96, 34, -.5]].map(([x, y, d], i) => <g key={i} className="ic-coin" style={{ animationDelay: `${d}s` }}><circle cx={x} cy={y} r="10" fill="#d9a838" stroke={INK} strokeWidth="2.2" /><circle cx={x} cy={y} r="6" fill="none" stroke="#7a5a14" strokeWidth="1.2" /><path d={`M${x - 3} ${y - 6} a6 6 0 0 1 7 0`} stroke="#fff0b0" strokeWidth="1.8" fill="none" /></g>)}</g>
         )}
       </g>
-      <g className="ic-tw" fill="#fff0b8"><path d="M170 60 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3z" /><path d="M24 110 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" style={{ animationDelay: '-1s' }} /><path d="M32 176 l1.6 4.6 4.6 1.6 -4.6 1.6 -1.6 4.6 -1.6 -4.6 -4.6 -1.6 4.6 -1.6z" style={{ animationDelay: '-1.7s' }} /></g>
+      <g className="ic-tw" fill="#f7e6b0"><path d="M176 70 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3z" /><path d="M28 110 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" style={{ animationDelay: '-1s' }} /></g>
     </Svg>
   )
 }
@@ -159,27 +164,31 @@ export function LampIcon() {
   return (
     <Svg label="Ngọn đèn">
       <defs>
-        <radialGradient id="lm-glow" cx=".5" cy=".5" r=".5"><stop offset="0" stopColor="#ffd98a" stopOpacity=".85" /><stop offset=".55" stopColor="#ffb54a" stopOpacity=".28" /><stop offset="1" stopColor="#ff9a2a" stopOpacity="0" /></radialGradient>
-        <linearGradient id="lm-brass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#5a3c10" /><stop offset=".3" stopColor="#d9a84a" /><stop offset=".55" stopColor="#f6dc92" /><stop offset="1" stopColor="#6a4812" /></linearGradient>
-        <linearGradient id="lm-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffe3a0" stopOpacity=".55" /><stop offset="1" stopColor="#ffb040" stopOpacity=".25" /></linearGradient>
-        <linearGradient id="lm-wax" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#e6d4a8" /><stop offset=".5" stopColor="#fff6dc" /><stop offset="1" stopColor="#d6c394" /></linearGradient>
-        <linearGradient id="lm-fl" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor="#ff8a1e" /><stop offset="1" stopColor="#ffd25a" /></linearGradient>
+        <radialGradient id="lm-glow" cx=".5" cy=".5" r=".5"><stop offset="0" stopColor="#ffd98a" stopOpacity=".85" /><stop offset=".55" stopColor="#ffb54a" stopOpacity=".26" /><stop offset="1" stopColor="#ff9a2a" stopOpacity="0" /></radialGradient>
+        <linearGradient id="lm-iron" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#1c1410" /><stop offset=".4" stopColor="#4a3c30" /><stop offset=".6" stopColor="#6a5844" /><stop offset="1" stopColor="#1c1410" /></linearGradient>
+        <linearGradient id="lm-glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#e8c677" stopOpacity=".32" /><stop offset=".6" stopColor="#ffcf72" stopOpacity=".55" /><stop offset="1" stopColor="#ffb04a" stopOpacity=".4" /></linearGradient>
+        <linearGradient id="lm-wax" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#d6c394" /><stop offset=".5" stopColor="#f6ecc8" /><stop offset="1" stopColor="#cdb986" /></linearGradient>
+        <linearGradient id="lm-fl" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor="#e8761a" /><stop offset="1" stopColor="#ffd25a" /></linearGradient>
       </defs>
-      <circle className="ic-halo" cx="100" cy="130" r="96" fill="url(#lm-glow)" />
-      <path d="M100 30 V16" stroke="#3a2a14" strokeWidth="3" /><circle cx="100" cy="12" r="9" fill="none" stroke="url(#lm-brass)" strokeWidth="4" />
-      <path d="M62 66 Q100 18 138 66 Z" fill="url(#lm-brass)" stroke="#3a2a14" strokeWidth="2" /><path d="M76 62 Q100 34 124 62" stroke="#fff3c0" strokeOpacity=".55" strokeWidth="2.4" fill="none" />
-      <circle cx="100" cy="40" r="5" fill="url(#lm-brass)" stroke="#3a2a14" strokeWidth="1.4" />
-      <rect x="58" y="66" width="84" height="10" rx="3" fill="url(#lm-brass)" stroke="#3a2a14" strokeWidth="2" />
-      <path d="M64 76 H136 L146 172 H54 Z" fill="url(#lm-glass)" stroke="#3a2a14" strokeWidth="3" />
-      <path d="M64 76 L54 172 M136 76 L146 172 M100 76 V172 M60 122 H140" stroke="url(#lm-brass)" strokeWidth="4" fill="none" />
-      <path d="M72 86 L66 160" stroke="#fff" strokeOpacity=".4" strokeWidth="5" strokeLinecap="round" /><path d="M126 94 L130 130" stroke="#fff" strokeOpacity=".25" strokeWidth="3" strokeLinecap="round" />
-      <rect x="88" y="128" width="24" height="44" rx="3" fill="url(#lm-wax)" /><path d="M92 128 q2 12 4 4 q3 14 6 2 q3 12 7 0 v-6 h-17z" fill="#fff6dc" /><path d="M100 128 v-8" stroke="#2a1a0c" strokeWidth="2" />
-      <g className="ic-flame lamp" style={{ transformOrigin: '100px 120px' }}>
-        <path d="M100 84 C114 100 118 114 112 124 C108 130 92 130 88 124 C82 114 86 100 100 84Z" fill="url(#lm-fl)" /><path d="M100 102 C107 110 108 118 105 124 C103 127 97 127 95 124 C92 118 93 110 100 102Z" fill="#fff4c0" />
+      <circle className="ic-halo" cx="100" cy="124" r="98" fill="url(#lm-glow)" />
+      <g className="ic-swing" style={{ transformOrigin: '100px 4px' }}>
+        <path d="M100 2 V30" stroke={INK} strokeWidth="6" /><path d="M100 2 V30" stroke="#5a4a38" strokeWidth="2.6" />
+        <circle cx="100" cy="14" r="10" fill="none" stroke={INK} strokeWidth="6" /><circle cx="100" cy="14" r="10" fill="none" stroke="#6a5844" strokeWidth="2.4" />
+        <path d="M74 66 Q100 24 126 66 Z" fill="url(#lm-iron)" stroke={INK} strokeWidth="3" strokeLinejoin="round" /><path d="M84 60 Q100 38 116 60" fill="none" stroke="#8a7458" strokeOpacity=".6" strokeWidth="2" />
+        <circle cx="100" cy="38" r="5" fill="#5a4a38" stroke={INK} strokeWidth="2" />
+        <path d="M70 66 H130 L136 74 H64 Z" fill="url(#lm-iron)" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        <path d="M68 74 H132 L142 176 H58 Z" fill="url(#lm-glass)" stroke={INK} strokeWidth="3.2" strokeLinejoin="round" />
+        <path d="M68 74 L58 176 M132 74 L142 176 M100 74 V176 M63 126 H137" stroke="url(#lm-iron)" strokeWidth="5" fill="none" />
+        <path d="M63 126 H137 M100 74 V176" stroke={INK} strokeWidth="1.2" fill="none" strokeOpacity=".6" />
+        <path d="M76 86 L70 160" stroke="#fff" strokeOpacity=".4" strokeWidth="5" strokeLinecap="round" />
+        <rect x="88" y="132" width="24" height="44" rx="2" fill="url(#lm-wax)" stroke={INK} strokeWidth="1.6" /><path d="M90 132 q2 10 4 3 q3 12 6 1 q3 11 7 0 q2 8 4 -2 v-5 h-21z" fill="#fbf3d6" />
+        <path d="M100 132 v-9" stroke={INK} strokeWidth="2" />
+        <g className="ic-flame lamp" style={{ transformOrigin: '100px 124px' }}><path d="M100 86 C115 102 119 116 112 126 C108 132 92 132 88 126 C81 116 85 102 100 86Z" fill="url(#lm-fl)" stroke="#a8480c" strokeWidth="1.2" /><path d="M100 104 C107 112 108 120 105 126 C103 129 97 129 95 126 C92 120 93 112 100 104Z" fill="#fff2b8" /></g>
+        <path d="M52 176 H148 L152 190 H48 Z" fill="url(#lm-iron)" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        <path d="M54 190 H146 V198 Q100 208 54 198 Z" fill="#2a1e14" stroke={INK} strokeWidth="2.4" />
+        <path d="M100 198 V210" stroke={INK} strokeWidth="4" strokeLinecap="round" /><circle cx="100" cy="212" r="3" fill="#6a5844" stroke={INK} strokeWidth="1.6" />
       </g>
-      <g className="ic-tw" fill="#ffe3a0"><circle cx="38" cy="96" r="2.4" /><circle cx="164" cy="110" r="2" style={{ animationDelay: '-.8s' }} /><circle cx="170" cy="70" r="1.6" style={{ animationDelay: '-1.4s' }} /></g>
-      <path d="M48 172 H152 L160 188 H40 Z" fill="url(#lm-brass)" stroke="#3a2a14" strokeWidth="2.4" /><path d="M46 188 h108 v10 q-54 10 -108 0z" fill="#4a3210" /><path d="M52 200 l-6 12 M148 200 l6 12 M100 202 v10" stroke="#3a2a14" strokeWidth="4" strokeLinecap="round" />
-      <ellipse cx="100" cy="214" rx="62" ry="5" fill="#000" opacity=".2" />
+      <g className="ic-tw" fill="#ffe3a0"><circle cx="36" cy="96" r="2.4" /><circle cx="166" cy="110" r="2" style={{ animationDelay: '-.8s' }} /><circle cx="172" cy="66" r="1.6" style={{ animationDelay: '-1.4s' }} /></g>
     </Svg>
   )
 }
