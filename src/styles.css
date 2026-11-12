@@ -565,6 +565,11 @@ img { user-select: none; -webkit-user-drag: none; }
 .xf-cats .cats-veil { opacity: var(--ct, 0); }
 
 /* thổi tắt đèn lồng: cả phòng tối xuống (biến --dark do mã điều khiển) */
+.cat-bulbs { position: absolute; inset: 0; pointer-events: none; opacity: calc(var(--dark, 0) * 1.4); mix-blend-mode: screen; }
+.cat-bulbs i { position: absolute; width: 9px; height: 9px; margin: -4.5px; border-radius: 50%; animation: cat-bulb 3s infinite ease-in-out;
+  background: radial-gradient(circle, #fff7d6 0 22%, rgba(255,214,120,.8) 42%, transparent 70%); filter: drop-shadow(0 0 4px rgba(255,200,100,.9)); }
+.cat-bulbs i::after { content: ""; position: absolute; inset: -330%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,190,90,.30), rgba(255,150,60,.10) 50%, transparent); }
+@keyframes cat-bulb { 0%,100% { opacity: .72; transform: scale(.9) } 50% { opacity: 1; transform: scale(1.18) } }
 .cat-dark { position: absolute; inset: 0; pointer-events: none; background: rgba(8,3,0, calc(var(--dark, 0) * .62)); }
 /* màn hình hẹp nhưng vẫn là bố cục ngang: giữ chữ cảnh mèo ở góc dưới trái (ghi đè luật của cảnh cây thông) */
 .cats-scene.compact.wide .sec-text { top: auto; bottom: max(22px, env(safe-area-inset-bottom, 0px)); right: auto; text-align: left; }

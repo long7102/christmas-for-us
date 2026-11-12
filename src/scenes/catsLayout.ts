@@ -12,6 +12,7 @@ import portBong from '../assets/cats-port-bong.webp'
 import portBongMask from '../assets/cats-port-bong-over.png'
 import portBongCut from '../assets/cats-port-bong-mask.png'
 import portMochiCut from '../assets/cats-port-mochi-mask.png'
+import { BULBS_LAND, BULBS_PORT } from './catsBulbs'
 import type { P, R } from './treeLayout'
 
 /** Một dáng khác của bé: ảnh, mặt nạ mềm chỉ phủ chỗ khác nhau so với ảnh ngủ (không có đường cắt), thời gian giữ dáng. */
@@ -32,6 +33,8 @@ export type CatLayout = {
   lampPoly: P
   /** Khung phải luôn thấy được. */
   focus: { x1: number; y1: number; x2: number; y2: number }
+  /** Các bóng đèn nhỏ trên dây đèn (tâm, px ảnh gốc): sáng lên khi tắt đèn lớn. */
+  bulbs: [number, number][]
 }
 
 export const CAT_LAND: CatLayout = {
@@ -43,6 +46,7 @@ export const CAT_LAND: CatLayout = {
   lamp: [75, 335, 150],
   lampPoly: [[6, 118], [146, 118], [150, 452], [4, 452]],
   focus: { x1: 380, y1: 230, x2: 1420, y2: 760 },
+  bulbs: BULBS_LAND,
 }
 // Dáng của Mochi ở bản dọc chưa có (ảnh gửi không cùng khung với ảnh ngủ): bé chỉ cử động nhẹ.
 export const CAT_PORT: CatLayout = {
@@ -54,4 +58,5 @@ export const CAT_PORT: CatLayout = {
   lamp: [78, 440, 130],
   lampPoly: [[0, 292], [122, 292], [124, 590], [0, 590]],
   focus: { x1: 40, y1: 480, x2: 900, y2: 960 },
+  bulbs: BULBS_PORT,
 }
