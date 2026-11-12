@@ -17,4 +17,19 @@ export const content = {
   },
 }
 
+/** 4 món quà dưới cây thông. Giờ mở khóa theo giờ Việt Nam (+07:00). `body` để trống đến khi Long điền nội dung thật. */
+export const gifts: { id: number; title: string; unlockAt: string; body: string }[] = [
+  { id: 1, title: 'Quà Giáng sinh', unlockAt: '2026-12-24T00:00:00+07:00', body: '' },
+  { id: 2, title: 'Quà Năm mới', unlockAt: '2027-01-01T00:00:00+07:00', body: '' },
+  { id: 3, title: 'Ngày 7 tháng 1', unlockAt: '2027-01-07T00:00:00+07:00', body: '' },
+  { id: 4, title: 'Ngày 8 tháng 1', unlockAt: '2027-01-08T00:00:00+07:00', body: '' },
+]
+
+export const treeText = {
+  locked: 'Món quà này còn đang ngủ, chưa đến giờ mở đâu em.',
+  waiting: 'Còn',
+  empty: 'Món quà này đang được gói thêm một chút nữa...',
+  close: 'Đóng',
+}
+
 export const ui = { enter: 'Vào', skip: 'Bỏ qua ›' }

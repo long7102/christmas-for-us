@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { PasswordGate } from './components/PasswordGate'
 import Door from './scenes/Door'
+import Tree from './scenes/Tree'
 import { store } from './lib/storage'
 
 type Phase = 'gate' | 'door' | 'world'
@@ -16,8 +17,8 @@ export default function App() {
 
   return (
     <>
-      {/* Các cảnh sau cánh cửa sẽ được làm lại từng cảnh một. */}
-      <main className="world" aria-hidden={phase !== 'world'} />
+      {/* Các cảnh sau cánh cửa làm từng cảnh một: hiện mới có cây thông + 4 quà. */}
+      <main className="world" aria-hidden={phase !== 'world'}>{phase === 'world' && <Tree />}</main>
       {phase === 'gate' && <PasswordGate onPass={() => setPhase('door')} />}
       {phase === 'door' && <Door onOpen={() => setPhase('world')} />}
     </>
