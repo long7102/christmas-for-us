@@ -149,6 +149,14 @@ function useShed() {
   return { cv, burst }
 }
 
+/** Fill the screen (cover) unless that would crop more than ~40% of the photo; then show it whole (contain). */
+function useFit(ar: number): 'cover' | 'contain' {
+  const calc = () => { const A = innerWidth / innerHeight; const crop = A > ar ? 1 - ar / A : 1 - A / ar; return crop <= 0.4 ? 'cover' : 'contain' }
+  const [fit, setFit] = useState<'cover' | 'contain'>(calc)
+  useEffect(() => { const f = () => setFit(calc()); f(); addEventListener('resize', f); return () => removeEventListener('resize', f) }, [ar])
+  return fit
+}
+
 export default function Door({ onOpen }: { onOpen: () => void }) {
   const portrait = usePortrait()
   const g = useMemo(() => build(portrait ? PORT : LAND), [portrait])
@@ -157,6 +165,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
   const vill = useSharpened(villRaw)
   const tex = useDoorTextures(img, portrait ? PORT : LAND)
   const shed = useShed()
+  const fit = useFit(g.aspect)
 
   const root = useRef<HTMLDivElement>(null)
   const box = useRef<HTMLDivElement>(null)
@@ -189,7 +198,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       const W = innerWidth, H = innerHeight
       const arV = portrait ? 9 / 16 : 16 / 9
       const Wv = Math.max(W, H * arV), Hv = Wv / arV
-      const Wd = Math.min(W, H * g.aspect), Hd = Wd / g.aspect
+      const Wd = fit === 'cover' ? Math.max(W, H * g.aspect) : Math.min(W, H * g.aspect), Hd = Wd / g.aspect
       const c = (v.w * Wv) / (g.dw * Wd) // close-up scale at which its door matches the village door
       const lnEnd = Math.log(1 / c)
       const dBoxX = (g.ox - 0.5) * Wd, dBoxY = (g.oy - 0.5) * Hd
@@ -220,7 +229,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       at(800, () => setLine(1)); at(2900, () => setLine(2)); at(5600, () => setLine(3)); at(7600, () => setReady(true))
     }
     return () => { timers.forEach(clearTimeout); tl.kill() }
-  }, [vill, villRaw, portrait])
+  }, [vill, villRaw, portrait, fit])
 
   const finish = () => { store.set('opened', true); onOpen() }
 
@@ -235,31 +244,31 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       tl.to(box.current, { x: 0, y: 0, duration: 0.08 }, at + steps * 0.045)
     }
     const tl = gsap.timeline({ onComplete: finish })
+    // We stay where we are. The leaves open in place and STAY open, then we run in between them.
     tl.to(q('.door-cta'), { opacity: 0, y: 10, duration: 0.5 }, 0)
-      .to(box.current, { scale: 1.32, duration: 3, ease: 'power2.inOut' }, 0)
     // 1. a low rumble: the snow on the garland starts to slide
-    rumble(tl, 0.7, 3, 22)
-    tl.add(() => dust(12), 0.9).add(() => dust(14), 1.5)
-      .fromTo(q('.door-light'), { opacity: 0 }, { opacity: 0.8, duration: 2, ease: 'power1.in' }, 1.8)
-      .fromTo(q('.door-glow'), { opacity: 0 }, { opacity: 0.8, duration: 2.4, ease: 'power1.in' }, 1.8)
-    // 2. the heavy leaves creak off their latch, then swing wide with their own weight
-    tl.to(q('.door-panel-l'), { rotateY: 13, duration: 1.3, ease: 'power2.in' }, 1.4)
-      .to(q('.door-panel-r'), { rotateY: -13, duration: 1.3, ease: 'power2.in' }, 1.5)
-      .add(() => dust(24), 2.6)
-      .to(q('.door-panel-l'), { rotateY: 104, duration: 1.7, ease: 'power1.inOut' }, 2.7)
-      .to(q('.door-panel-r'), { rotateY: -104, duration: 1.7, ease: 'power1.inOut' }, 2.8)
-      .to(q('.door-shade'), { opacity: 1, duration: 1.8, ease: 'power1.inOut' }, 2.7)
-      .add(() => dust(28), 3.3)
-    // 3. they hit the wall with a thud
-    tl.to(q('.door-panel-l'), { rotateY: 97, duration: 0.5, ease: 'power2.out' }, 4.4)
-      .to(q('.door-panel-r'), { rotateY: -97, duration: 0.5, ease: 'power2.out' }, 4.5)
-    rumble(tl, 4.4, 9, 7)
-    tl.add(() => dust(18), 4.45)
-    // 4. and we run in between them toward the light
-    tl.to(box.current, { scale: 14, duration: 2.5, ease: 'power3.in' }, 4.0)
-      .set(q('.door-img, .door-panels, .door-scrim, .door-glow'), { visibility: 'hidden' }, 6.2)
-      .to(q('.door-flash'), { opacity: 0.85, duration: 1.4, ease: 'power1.in' }, 5.6)
-      .to(root.current, { opacity: 0, duration: 1.4 }, 6.6)
+    rumble(tl, 0.4, 3, 22)
+    tl.add(() => dust(12), 0.6).add(() => dust(14), 1.2)
+      .fromTo(q('.door-light'), { opacity: 0 }, { opacity: 0.8, duration: 2, ease: 'power1.in' }, 1.2)
+      .fromTo(q('.door-glow'), { opacity: 0 }, { opacity: 0.7, duration: 2.4, ease: 'power1.in' }, 1.2)
+    // 2. the heavy leaves creak off their latch, then swing open with their own weight and settle against the walls
+    tl.to(q('.door-panel-l'), { rotateY: 12, duration: 1.2, ease: 'power2.in' }, 0.9)
+      .to(q('.door-panel-r'), { rotateY: -12, duration: 1.2, ease: 'power2.in' }, 1.0)
+      .add(() => dust(22), 2.0)
+      .to(q('.door-panel-l'), { rotateY: 78, duration: 1.7, ease: 'power1.inOut' }, 2.1)
+      .to(q('.door-panel-r'), { rotateY: -78, duration: 1.7, ease: 'power1.inOut' }, 2.2)
+      .to(q('.door-shade'), { opacity: 0.55, duration: 1.8, ease: 'power1.inOut' }, 2.1)
+      .add(() => dust(26), 2.7)
+      // thud
+      .to(q('.door-panel-l'), { rotateY: 73, duration: 0.45, ease: 'power2.out' }, 3.8)
+      .to(q('.door-panel-r'), { rotateY: -73, duration: 0.45, ease: 'power2.out' }, 3.9)
+    rumble(tl, 3.8, 8, 7)
+    tl.add(() => dust(16), 3.85)
+    // 3. a beat to look at the open door, then we run in between the leaves toward the light
+    tl.to(box.current, { scale: 14, duration: 2.6, ease: 'power3.in' }, 4.6)
+      .set(q('.door-img, .door-panels, .door-scrim, .door-glow, .door-back'), { visibility: 'hidden' }, 7.0)
+      .to(q('.door-flash'), { opacity: 0.85, duration: 1.4, ease: 'power1.in' }, 6.2)
+      .to(root.current, { opacity: 0, duration: 1.4 }, 7.0)
   }
 
   const geo = portrait ? PORT : LAND
@@ -300,7 +309,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
 
       <div ref={sceneRef} className="door-scene">
         <div className="door-back" style={{ backgroundImage: `url(${img})` }} />
-        <div ref={box} className="door-box" style={{ ['--ar' as string]: g.aspect, transformOrigin: g.origin }}>
+        <div ref={box} className={`door-box ${fit}`} style={{ ['--ar' as string]: g.aspect, transformOrigin: g.origin }}>
           <div className="door-glow" />
           <div className="door-light" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }} />
           {tex && <img src={tex.frame} className="door-img" alt="" draggable={false} />}

@@ -72,8 +72,8 @@ img { user-select: none; -webkit-user-drag: none; }
 .door-line1.in { opacity: .88; }
 .door-line2 { margin: 0; font-weight: 500; font-size: clamp(1.9rem, 5.4vw, 3.6rem); color: var(--gold-soft); text-shadow: 0 0 36px rgba(242,200,121,.35); line-height: 1.15; max-width: 40rem; }
 .door-line1:not(.in) { transition-duration: .8s; }
-.door-scene { position: absolute; inset: 0; overflow: hidden; opacity: 0; z-index: 1; }
-.door-cover { position: absolute; left: 50%; top: 50%; width: max(100vw, calc(100svh * var(--ar, 1.7778))); height: max(100svh, calc(100vw / var(--ar, 1.7778))); translate: -50% -50%; }
+.door-scene { position: absolute; inset: 0; overflow: hidden; opacity: 0; z-index: 1; display: flex; align-items: center; justify-content: center; }
+.door-cover { position: absolute; left: 50%; top: 50%; width: max(100vw, calc(100svh * var(--ar, 1.7778))); height: max(100svh, calc(100vw / var(--ar, 1.7778))); transform: translate(-50%, -50%); }
 .door-vill { z-index: 0; opacity: 0; }
 .door-vill img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .door-intro.top { justify-content: flex-end; padding-bottom: clamp(40px, 9svh, 110px); }
@@ -113,5 +113,7 @@ img { user-select: none; -webkit-user-drag: none; }
 .door-box.feather { --fr: 50%; -webkit-mask-image: radial-gradient(ellipse var(--fr) var(--fr) at 50% 50%, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse var(--fr) var(--fr) at 50% 50%, #000 55%, transparent 100%); }
 
 /* the whole door photo is always visible (never cropped); the space around it is filled with a soft, dimmed copy of the same photo */
-.door-box { position: absolute; left: 50%; top: 50%; width: min(100vw, calc(100svh * var(--ar, 1.7778))); height: min(100svh, calc(100vw / var(--ar, 1.7778))); translate: -50% -50%; }
-.door-back { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(26px) brightness(.55) saturate(1.1); }
+.door-box { position: relative; flex: none; width: min(100vw, calc(100svh * var(--ar, 1.7778))); height: min(100svh, calc(100vw / var(--ar, 1.7778))); }
+.door-back { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(22px) brightness(.8) saturate(1.05); }
+.door-box.cover { width: max(100vw, calc(100svh * var(--ar, 1.7778))); height: max(100svh, calc(100vw / var(--ar, 1.7778))); }
+.door-scrim { background: linear-gradient(transparent 70%, rgba(2, 8, 18, .6)) !important; }
