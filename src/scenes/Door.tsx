@@ -303,9 +303,10 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       box.current.classList.add('feather')
       tl.fromTo(villRef.current, { opacity: 0 }, { opacity: 1, duration: 2.4, ease: 'power1.inOut' }, 0)
       at(900, () => setLine(1)); at(3000, () => setLine(2)); at(4600, () => setLine(3))
-      tl.to(proxy, { p: 1, duration: 5.6, ease: 'sine.inOut', onUpdate: apply, onComplete: () => { box.current?.classList.remove('feather'); gsap.set(villRef.current, { display: 'none' }) } }, 4.6)
+      // nút chỉ hiện khi máy quay đã tới sát cánh cửa (theo tiến độ phóng thật, không theo đồng hồ nên máy chậm cũng không hiện sớm)
+      let arrived = false
+      tl.to(proxy, { p: 1, duration: 5.6, ease: 'sine.inOut', onUpdate: () => { apply(); if (!arrived && proxy.p > 0.985) { arrived = true; setReady(true) } }, onComplete: () => { box.current?.classList.remove('feather'); gsap.set(villRef.current, { display: 'none' }); setReady(true) } }, 4.6)
         .to(villRef.current.querySelector('img'), { y: -5, duration: 0.27, yoyo: true, repeat: 20, ease: 'sine.inOut' }, 4.6)
-      at(10400, () => setReady(true))
     } else {
       if (sceneRef.current) gsap.to(sceneRef.current, { opacity: 1, duration: 2, delay: 5.6 * k })
       at(800, () => setLine(1)); at(2900, () => setLine(2)); at(5600, () => setLine(3)); at(7600, () => setReady(true))

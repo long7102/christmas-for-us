@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LONG_EMAIL, gifts, getMemory, lampStories, treeText } from '../content/content'
 import { store } from '../lib/storage'
-import { BellIcon, BowIcon, FireIcon, LampIcon, OrnamentIcon, StarIcon, StockingIcon, WreathIcon } from './Icons'
+import { BellIcon, BooksIcon, BowIcon, PineIcon, FireIcon, LampIcon, OrnamentIcon, StarIcon, StockingIcon, WreathIcon } from './Icons'
 import { sfx } from '../lib/audio'
 import { countdown, isUnlocked } from '../lib/unlock'
 
@@ -61,6 +61,8 @@ function iconFor(id: string) {
   if (id === 'stock2') return <StockingIcon main="#2c5a3c" dark="#122e1c" light="#44805a" patch="#e0d2ae" variant="tag" />
   if (id === 'wreath') return <WreathIcon />
   if (id === 'star') return <StarIcon />
+  if (id === 'books') return <BooksIcon />
+  if (id === 'pine') return <PineIcon />
   if (id === 'lamp') return <LampIcon />
   if (id === 'fire') return <FireIcon />
   if (id.startsWith('bow')) return <BowIcon />

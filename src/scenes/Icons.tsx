@@ -249,3 +249,119 @@ export function OrnamentIcon({ kind }: { kind: string }) {
     </Svg>
   )
 }
+
+/** Chồng sách cũ kiểu khắc vintage: ba cuốn bìa da gáy mạ vàng, mép giấy kẻ nét, dải ruy băng đánh dấu và chiếc thẻ buộc dây có chữ L♥H. */
+export function BooksIcon() {
+  const spineBands = (x: number, y: number, w: number, h: number, c = '#d9b25c') => (
+    <g stroke={c} strokeWidth="1.1" fill="none" opacity=".9">
+      {[0.16, 0.2, 0.8, 0.84].map((t, i) => <path key={i} d={`M${x + w * t} ${y + 1} V${y + h - 1}`} />)}
+      <path d={`M${x + w * 0.38} ${y + h / 2 - 3} h${w * 0.24} M${x + w * 0.38} ${y + h / 2 + 3} h${w * 0.24}`} />
+    </g>
+  )
+  const edge = (x: number, y: number, w: number, h: number) => (
+    <g>
+      <rect x={x} y={y} width={w} height={h} fill="#efe1bb" stroke="#6b4a22" strokeWidth="0.9" />
+      <g stroke="#9a7a45" strokeWidth="0.45" opacity=".8">{Array.from({ length: Math.floor(h / 1.7) }, (_, i) => <path key={i} d={`M${x + 1} ${y + 1.2 + i * 1.7} H${x + w - 1}`} />)}</g>
+    </g>
+  )
+  return (
+    <Svg label="Chồng sách cũ">
+      <defs>
+        <linearGradient id="bk-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3f6a4a" /><stop offset="1" stopColor="#1c3a28" /></linearGradient>
+        <linearGradient id="bk-r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9a2f33" /><stop offset="1" stopColor="#5a1519" /></linearGradient>
+        <linearGradient id="bk-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#8b6236" /><stop offset="1" stopColor="#4c3015" /></linearGradient>
+        <radialGradient id="bk-glow"><stop offset="0" stopColor="#ffe9a8" stopOpacity=".7" /><stop offset="1" stopColor="#ffc060" stopOpacity="0" /></radialGradient>
+      </defs>
+      <g transform="translate(-14 -22) scale(1.14)">
+      <ellipse cx="100" cy="196" rx="74" ry="7" fill={INK} opacity=".22" />
+      <circle className="ic-light" cx="100" cy="110" r="74" fill="url(#bk-glow)" />
+      {/* cuốn dưới: nâu */}
+      <g>
+        <path d="M30 150 H166 V186 H30 Z" fill="url(#bk-b)" stroke="#2c1a08" strokeWidth="1.2" />
+        {edge(166, 152, 8, 32)}
+        <path d="M30 186 H176 V190 H34 Z" fill="#2c1a08" opacity=".5" />
+        {spineBands(30, 150, 136, 36)}
+        <path d="M34 154 H162" stroke="#d9b25c" strokeWidth=".7" opacity=".7" />
+      </g>
+      {/* cuốn giữa: đỏ rượu, lệch nhẹ */}
+      <g transform="rotate(-2.2 100 134)">
+        <path d="M38 112 H158 V148 H38 Z" fill="url(#bk-r)" stroke="#2b0a0c" strokeWidth="1.2" />
+        {edge(158, 114, 8, 32)}
+        {spineBands(38, 112, 120, 36, '#e2c071')}
+        <circle cx="98" cy="130" r="5.5" fill="none" stroke="#e2c071" strokeWidth=".9" /><path d="M98 125.5 v9 M93.5 130 h9" stroke="#e2c071" strokeWidth=".7" />
+      </g>
+      {/* cuốn trên: xanh rêu, xoay ngược */}
+      <g transform="rotate(1.6 98 96)">
+        <path d="M46 76 H150 V110 H46 Z" fill="url(#bk-g)" stroke="#0e2316" strokeWidth="1.2" />
+        {edge(150, 78, 7, 30)}
+        {spineBands(46, 76, 104, 34, '#d9b25c')}
+        <path d="M62 93 q36 -10 72 0" fill="none" stroke="#d9b25c" strokeWidth=".7" opacity=".6" />
+      </g>
+      {/* dải ruy băng đánh dấu */}
+      <g className="ic-sway" style={{ transformOrigin: '140px 150px' }}>
+        <path d="M140 148 q4 22 -2 40 l5 -4 l5 6 q2 -20 -2 -42Z" fill="#a8242a" stroke="#5a1014" strokeWidth=".8" />
+      </g>
+      {/* thẻ buộc dây */}
+      <g className="ic-swing" style={{ transformOrigin: '60px 78px' }}>
+        <path d="M60 78 q-14 18 -10 38" fill="none" stroke="#7a5a2a" strokeWidth="1.2" strokeDasharray="2 1.2" />
+        <path d="M40 116 l10 -6 l12 8 l-4 16 l-14 -2 z" fill="#efe0b6" stroke="#6b4a22" strokeWidth=".9" />
+        <circle cx="50" cy="114" r="1.6" fill="#8a2a22" />
+        <text x="49" y="126" textAnchor="middle" fontSize="6.6" fill="#8a2a22" fontFamily="serif" fontWeight="700">L♥H</text>
+      </g>
+      </g>
+    </Svg>
+  )
+}
+
+/** Cành thông vintage: một nhánh cong phủ dày lá kim xoè quạt, hai quả thông khô treo bên dưới, chùm quả mọng đỏ có điểm sáng và nơ ruy băng. */
+export function PineIcon() {
+  const r = rng(31)
+  // thân cành: đường cong từ góc dưới trái lên phía trên phải; mỗi mắt có một quạt lá kim
+  const stem = (t: number) => ({ x: 24 + 148 * t, y: 178 - 112 * t - 26 * Math.sin(Math.PI * t) })
+  const nodes = Array.from({ length: 15 }, (_, i) => i / 14)
+  const col = ['#12331f', '#1c4d2e', '#2a6a3e', '#3a8250', '#4f9a62']
+  const fans = nodes.flatMap((t, k) => {
+    const c = stem(t), size = 34 - t * 12
+    return [-1, 1].flatMap((side) => Array.from({ length: 5 }, (_, j) => {
+      const a = -38 - t * 18 + side * (24 + j * 15) + (r() - 0.5) * 8, l = size * (0.72 + r() * 0.4) * (j === 2 ? 1.05 : 1)
+      const rad = (a * Math.PI) / 180
+      return { x: c.x, y: c.y, x2: c.x + Math.cos(rad) * l, y2: c.y + Math.sin(rad) * l, c: col[(k + j + (side > 0 ? 2 : 0)) % 5] }
+    }))
+  })
+  const cone = (cx: number, cy: number, a: number, s = 1) => (
+    <g transform={`translate(${cx} ${cy}) rotate(${a}) scale(${s})`}>
+      <path d="M0 -3 C13 -3 20 14 14 32 C10 44 -10 44 -14 32 C-20 14 -13 -3 0 -3Z" fill="#7d4c22" stroke="#3a1f0a" strokeWidth="1.3" />
+      {[4, 11, 18, 25, 32, 39].map((y, i) => <path key={i} d={`M${-13 + i * 1.3} ${y} q${13 - i * 1.3} 7 ${26 - i * 2.6} 0`} stroke="#3a1f0a" strokeWidth="1" fill="none" />)}
+      {[4, 11, 18, 25, 32].map((y, i) => <path key={'h' + i} d={`M${-9 + i} ${y + 1} q7 3 12 -1`} stroke="#dba76a" strokeWidth=".9" fill="none" opacity=".65" />)}
+      <path d="M-3 -3 q3 -9 6 0" stroke="#3a1f0a" strokeWidth="1.5" fill="none" />
+    </g>
+  )
+  const berries: [number, number][] = [[0, 0], [12, 2], [6, 12], [-8, 9], [19, 13], [-2, 21]]
+  return (
+    <Svg label="Cành thông và quả đỏ">
+      <defs>
+        <radialGradient id="pn-glow"><stop offset="0" stopColor="#ffe9a8" stopOpacity=".5" /><stop offset="1" stopColor="#ffc060" stopOpacity="0" /></radialGradient>
+        <radialGradient id="pn-b" cx=".35" cy=".3" r=".8"><stop offset="0" stopColor="#f26a62" /><stop offset=".6" stopColor="#b3201f" /><stop offset="1" stopColor="#6e0f10" /></radialGradient>
+        <linearGradient id="pn-rib" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#c3333a" /><stop offset="1" stopColor="#7a1418" /></linearGradient>
+      </defs>
+      <ellipse cx="100" cy="204" rx="72" ry="6" fill={INK} opacity=".2" />
+      <circle className="ic-light" cx="104" cy="112" r="84" fill="url(#pn-glow)" />
+      <g className="ic-sway" style={{ transformOrigin: '30px 176px' }}>
+        <path d={`M${stem(0).x} ${stem(0).y} ${nodes.slice(1).map((t) => `L${stem(t).x} ${stem(t).y}`).join(' ')}`} stroke="#3a2412" strokeWidth="3.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        {fans.map((f, i) => <path key={i} d={`M${f.x} ${f.y} L${f.x2} ${f.y2}`} stroke={f.c} strokeWidth="1.9" strokeLinecap="round" />)}
+        {cone(76, 124, -14, 1.05)}
+        {cone(126, 98, 12, 0.88)}
+        <g transform="translate(112 62)">
+          <path d="M-4 6 q-22 -14 -40 -2 q16 18 40 2Z" fill="#2b6a3d" stroke="#12301c" strokeWidth=".8" /><path d="M-6 5 q-18 -6 -34 -2" stroke="#12301c" strokeWidth=".6" fill="none" />
+          {berries.map(([x, y], i) => <g key={i}><circle cx={x} cy={y} r="8" fill="url(#pn-b)" stroke="#5a0d0f" strokeWidth=".9" /><circle cx={x - 2.6} cy={y - 2.8} r="2.2" fill="#ffe6da" opacity=".9" /><path d={`M${x} ${y - 8} l1.5 -3.5`} stroke="#3a2412" strokeWidth="1" /></g>)}
+        </g>
+        <g transform="translate(40 168) rotate(-12)">
+          <path d="M0 0 q-20 -18 -34 -4 q8 20 34 4Z" fill="url(#pn-rib)" stroke="#5a1014" strokeWidth="1" />
+          <path d="M0 0 q20 -18 34 -4 q-8 20 -34 4Z" fill="url(#pn-rib)" stroke="#5a1014" strokeWidth="1" />
+          <circle cx="0" cy="0" r="4.6" fill="#a8242a" stroke="#5a1014" strokeWidth=".9" />
+          <path d="M-3 4 q-6 14 -16 22 M3 4 q6 14 14 22" stroke="#a8242a" strokeWidth="3.6" fill="none" strokeLinecap="round" />
+        </g>
+      </g>
+    </Svg>
+  )
+}
