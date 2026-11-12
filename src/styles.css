@@ -548,7 +548,7 @@ img { user-select: none; -webkit-user-drag: none; }
 }
 
 /* chuyển cảnh chỉ để xem: chữ cảnh cũ mờ đi ngay từ đầu, chữ cảnh mới chỉ hiện khi vòng sáng đã gần phủ hết */
-.xf-tree .sec-text, .xf-tree .tr-sound, .xf-tree .tr-tip { opacity: var(--tt, 1); }
+.xf-tree .sec-text, .xf-tree .tr-sound, .xf-tree .tr-lights, .xf-tree .tr-tip { opacity: var(--tt, 1); }
 .xf-cats .sec-text { opacity: var(--ct, 0); }
 /* chữ cảnh mèo tự bỏ bớt cho vừa khít khoảng trống phía trên hai bé */
 .cats-scene.wide .sec-text[data-fit="1"] .sec-hint, .cats-scene.wide .sec-text[data-fit="1"] .sec-orn { display: none; }
@@ -577,3 +577,21 @@ img { user-select: none; -webkit-user-drag: none; }
 .cats-scene.compact.wide .sec-text[data-fit="2"] .sec-hint, .cats-scene.compact.wide .sec-text[data-fit="2"] .sec-orn,
 .cats-scene.compact.wide .sec-text[data-fit="3"] .sec-hint, .cats-scene.compact.wide .sec-text[data-fit="3"] .sec-orn,
 .cats-scene.compact.wide .sec-text[data-fit="4"] .sec-hint, .cats-scene.compact.wide .sec-text[data-fit="4"] .sec-orn { display: none; }
+
+/* công tắc đèn ở cảnh cây thông: tắt hết đèn, chỉ còn ánh lửa bếp, tuyết và ánh sáng ngoài cửa sổ */
+.tr-lights { position: absolute; z-index: 7; top: calc(max(16px, env(safe-area-inset-top, 0px)) + 54px); right: max(16px, env(safe-area-inset-right, 0px)); width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; cursor: pointer; color: #f6dca4; background: rgba(40,22,10,.55); border: 1px solid rgba(232,184,106,.4); }
+.tr-lights:hover { background: rgba(90,54,24,.7); }
+.tr-dark { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1s ease;
+  background: radial-gradient(ellipse 34% 52% at 9% 72%, rgba(6,2,0,.02) 0%, rgba(6,2,0,.62) 58%, rgba(4,1,0,.82) 100%); }
+.lights-off .tr-dark { opacity: 1; }
+.lights-off .tr-cue { display: none; }
+/* tắt đèn lớn thì đèn nhỏ trên cây và đèn lồng vẫn sáng, nổi lên trong bóng tối */
+.lights-off .tr-tw { animation-name: tr-twk-dark; width: 12px; height: 12px; margin: -6px; filter: drop-shadow(0 0 5px rgba(255,214,120,.9)); }
+.lights-off .tr-lamp { filter: brightness(1.45) saturate(1.15); }
+/* ánh sáng của đèn nhỏ loang ra tường, kệ, cành thông quanh nó (bóng càng xa càng tối) */
+.lights-off .tr-lamp::after { content: ""; position: absolute; inset: -190%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255,176,80,.34), rgba(255,140,50,.13) 45%, transparent); }
+.lights-off .tr-tw::after { content: ""; position: absolute; inset: -240%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255,214,130,.26), rgba(255,190,100,.08) 50%, transparent); }
+
+@keyframes tr-twk-dark { 0%,100%{opacity:.55;transform:scale(.8)} 50%{opacity:1;transform:scale(1.35)} }

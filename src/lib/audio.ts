@@ -194,16 +194,20 @@ class Sfx {
   }
 
   /** Chuông leng keng rất nhẹ khi vòng kẹo Giáng sinh loang ra. */
+  /** Chuông leng keng: sáu nốt chuông gió, mỗi nốt có thêm các hoạ âm lệch kiểu kim loại nên nghe rõ và vang. */
   chime() {
     if (!this.ctx || !this.master || this.ctx.state !== 'running') return
-    const c = this.ctx, t0 = c.currentTime
-    const notes = [1318.5, 1568, 1975.5, 2637]
+    const c = this.ctx, t0 = c.currentTime + 0.02
+    const bus = c.createGain(); bus.gain.value = 1
+    const comp = c.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3
+    bus.connect(comp); comp.connect(this.master)
+    const notes = [1046.5, 1318.5, 1568, 2093, 1568, 2637]
     notes.forEach((fr, i) => {
-      const t = t0 + i * 0.13
-      for (const [mul, vol] of [[1, 0.05], [2.01, 0.018], [3.02, 0.008]] as const) {
+      const t = t0 + i * 0.14 + (i % 2) * 0.012
+      for (const [mul, vol, dec] of [[1, 0.2, 2.2], [2.76, 0.09, 1.2], [5.4, 0.035, 0.6]] as const) {
         const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = fr * mul
-        const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4)
-        o.connect(g); g.connect(this.master!); o.start(t); o.stop(t + 1.5)
+        const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dec)
+        o.connect(g); g.connect(bus); o.start(t); o.stop(t + dec + 0.05)
       }
     })
   }
