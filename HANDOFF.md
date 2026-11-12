@@ -80,3 +80,7 @@ npx tsc -b        # kiểm tra kiểu
 - Chuyển cảnh mèo -> hộp nhạc (`WorldScroll.tsx`): màn ánh sáng vàng mặt nạ mềm kéo từ dưới lên (`--by`, `.xf-box`), dải sáng ở mép, nốt nhạc và tia sáng bay lên (`Notes`), `sfx.sparkle()` khi bắt đầu, `sfx.stageBox()` hoà âm (tắt lửa/gừ gừ, nhạc nền to lên). Hằng số SPAN2, HOLD, END; chiều cao `.xf` tính trong mã.
 - Chữ hộp nhạc trong content.ts mục `musicbox` là nháp của em. Vùng bấm sách và cành thông là đa giác vẽ tay (chưa grabCut).
 - Chưa có: bản dọc riêng của ảnh hộp nhạc (đang dùng cùng ảnh ngang, cắt theo hộp), nhạc thật, tiếng đã nghe thử.
+
+### Thứ tự cảnh mới (Long yêu cầu: hộp nhạc đứng TRÊN cây thông)
+- Sau cánh cửa: hộp nhạc (cảnh đầu, đứng yên HOLD0) -> màn ánh sáng vàng kéo từ dưới lên (SPAN2, mặt nạ ở `.xf-tree`) -> cây thông (đứng yên HOLD) -> vòng kẹo (SPAN) -> hai chú mèo. Mọi hằng số và công thức q/p ở `WorldScroll.tsx`; mục "Chuyển cảnh mèo -> hộp nhạc" ở trên nay là hộp nhạc -> cây thông. Hộp nhạc có nút loa + bóng đèn riêng (vì cây thông ẩn lúc đầu).
+- Xoay giả vũ công đã bỏ (trông dẹt): tạm chỉ lắc nhẹ. Chờ Long gửi chuỗi ảnh vũ công quay 8 góc (45..315) + ảnh hộp đóng + hộp hé mở 35 và 70 độ, cùng khung 1672x941 với ảnh gốc. Hộp nhạc sẽ kiểu playlist (đóng/mở, danh sách bài), không phải nhạc thật.
