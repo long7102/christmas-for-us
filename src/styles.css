@@ -471,3 +471,24 @@ img { user-select: none; -webkit-user-drag: none; }
 .lt-body { padding-bottom: 40px; }
 .lt-reply textarea { min-height: 150px; }
 .lt-qr svg { width: 140px; height: 140px; }
+
+/* ===== Cảnh hai chú mèo ===== */
+.cats-scene { animation: none; }
+.cats-scene .tr-warm.cat-warm { background: radial-gradient(ellipse at 8% 30%, rgba(255,150,50,.3), transparent 55%); }
+.cat-breath { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; background-size: 100% 100%; filter: brightness(1.16) saturate(1.05) contrast(1.02); animation: cat-breath 4.6s infinite ease-in-out; transition: opacity .4s; }
+.cat-breath.hide { opacity: 0; }
+.cat-breath.fake { animation: cat-fake 3.4s ease-in-out both; }
+@keyframes cat-breath { 0%, 100% { transform: scale(1, 1) } 50% { transform: scale(1.004, 1.014) } }
+@keyframes cat-fake { 0% { transform: scale(1, 1) } 28% { transform: scale(1.07, 1.1) translateY(-4px) } 62% { transform: scale(1.07, 1.1) translateY(-4px) } 100% { transform: scale(1, 1) } }
+.cat-over { position: absolute; pointer-events: none; opacity: 0; transition: opacity 1s ease; filter: brightness(1.16) saturate(1.05) contrast(1.02);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent); -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent); mask-composite: intersect; }
+.cat-over.on { opacity: 1; transition-duration: .6s; }
+.cats-scene .tr-hs[aria-busy="true"] { cursor: default; }
+@media (prefers-reduced-motion: reduce) { .cat-breath { animation: none; } }
+
+/* mũi tên mời cuộn xuống cảnh kế tiếp */
+.scroll-cue { position: absolute; z-index: 8; left: max(22px, env(safe-area-inset-left, 0px)); top: calc(100dvh - 66px); width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: #f6dca4; background: rgba(40,22,10,.55); border: 1px solid rgba(232,184,106,.45); text-decoration: none; animation: cue-bob 2.4s ease-in-out infinite; }
+.scroll-cue:hover { background: rgba(90,54,24,.75); }
+@keyframes cue-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(5px) } }
+@media (max-aspect-ratio: 7/10) { .scroll-cue { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); top: 72px; } }

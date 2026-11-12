@@ -153,7 +153,7 @@ function Embers({ r, kick }: { r: R; kick: number }) {
 }
 
 /** Bụi sáng trôi trong không khí ấm của căn phòng. */
-function Dust({ w, h }: { w: number; h: number }) {
+export function Dust({ w, h }: { w: number; h: number }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
@@ -182,7 +182,7 @@ function Dust({ w, h }: { w: number; h: number }) {
 }
 
 /** Ánh đèn lồng / nến chập chờn. */
-function Lamps({ lamps, flare }: { lamps: Layout['lamps']; flare: Set<number> }) {
+export function Lamps({ lamps, flare }: { lamps: Layout['lamps']; flare: Set<number> }) {
   return (
     <>
       {lamps.map(([x, y, r], i) => (

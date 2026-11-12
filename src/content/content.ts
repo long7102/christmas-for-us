@@ -142,6 +142,16 @@ export const tree = {
   hint: 'Em chạm vào hộp quà, tất, vòng hoa, ngôi sao hay đèn để xem điều gì xảy ra.',
 }
 
+/** Chữ ở góc cảnh hai chú mèo. Thông tin hai bé lấy từ ảnh Long gửi; chuyện riêng sẽ thêm khi Long viết. */
+export const cats = {
+  title: 'Bông và Mochi',
+  tagline: 'Có những buổi tối chỉ cần nằm cạnh nhau.',
+  body: 'Một chiếc ghế ấm, một ngọn đèn nhỏ và một người bạn ngủ ngay bên cạnh. Hai bé biết điều đó từ lâu rồi, nên giữa mùa đông chẳng bé nào vội thức dậy.',
+  hint: 'Em rê chuột vào từng bé, rồi chạm nhẹ xem bé có chịu thức dậy không.',
+  bong: { title: 'Bông', tip: 'Mèo cái, lông trắng pha xám, mắt màu hổ phách. Bấm để bé duỗi người.' },
+  mochi: { title: 'Mochi', tip: 'Mèo cái, lông xám vằn đen, mắt xanh vàng. Bấm để bé duỗi người.' },
+}
+
 export const treeText = {
   locked: 'Món quà này còn đang ngủ, chưa đến giờ mở đâu em.',
   waiting: 'Còn',

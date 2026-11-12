@@ -45,3 +45,11 @@ npx tsc -b        # kiểm tra kiểu
 - `will-change: transform` làm ảnh bị dựng ở độ phân giải thấp khi zoom, gây nhòe. Không dùng cho lớp phóng to.
 - `filter`/`clip-path` trên phần tử con của `preserve-3d` có thể làm phẳng 3D; kiểm tra bằng ảnh chụp.
 - Tên tệp ảnh Canva trả về chỉ là bản nhỏ (~200px); không dùng làm ảnh chính thức.
+
+## Cảnh 4: hai chú mèo (Bông và Mochi)
+- `src/scenes/Cats.tsx` + `catsLayout.ts`, nối sau cảnh cây thông trong `App.tsx` (cuộn xuống, có mũi tên `.scroll-cue`). Ảnh: `cats-land/port.webp` (ngủ), `cats-land/port-bong.webp` (Bông duỗi người). Ảnh Long tạo bằng công cụ khác, camera + sofa trùng khít nên chuyển mờ trong khung `bongRegion` là khớp.
+- Bông (trắng pha xám) bên trái, Mochi (xám vằn) bên phải, cả hai là mèo cái. Viền từng bé tách bằng grabCut rồi chia tay theo đường cắt ở cằm Bông.
+- Hover: ô nhỏ tên + thông tin. Bấm: bé đó duỗi người (chuyển mờ sang ảnh duỗi) rồi ngủ lại sau khoảng 3,6 giây.
+- Mochi CHƯA có ảnh duỗi người. Khi Long gửi, đặt `src/assets/cats-land-mochi.webp` và `cats-port-mochi.webp` (cùng cỡ, chỉnh từ ảnh ngủ): mã tự nhận (import.meta.glob), chưa có thì chạy động tác nhẹ thay thế. Cần chỉnh `mochiRegion` nếu tư thế rộng hơn.
+- Ảnh "Bông ngồi tỉnh táo" (cats-land-awake) Long gửi nhưng chưa dùng.
+- Chữ tạm trong `content.ts` mục `cats`; chuyện riêng của hai bé chờ Long viết.
