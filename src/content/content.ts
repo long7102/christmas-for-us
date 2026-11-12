@@ -145,11 +145,12 @@ export const tree = {
 /** Chữ ở góc cảnh hai chú mèo. Thông tin hai bé lấy từ ảnh Long gửi; chuyện riêng sẽ thêm khi Long viết. */
 export const cats = {
   title: 'Bông và Mochi',
-  tagline: 'Có những buổi tối chỉ cần nằm cạnh nhau.',
-  body: 'Một chiếc ghế ấm, một ngọn đèn nhỏ và một người bạn ngủ ngay bên cạnh. Hai bé biết điều đó từ lâu rồi, nên giữa mùa đông chẳng bé nào vội thức dậy.',
-  hint: 'Em rê chuột vào từng bé, rồi chạm nhẹ xem bé có chịu thức dậy không.',
-  bong: { title: 'Bông', tip: 'Mèo cái, lông trắng pha xám, mắt màu hổ phách. Bấm để bé duỗi người.' },
-  mochi: { title: 'Mochi', tip: 'Mèo cái, lông xám vằn đen, mắt xanh vàng. Bấm để bé duỗi người.' },
+  tagline: 'Hai bé được thương, hai đứa mình cũng vậy.',
+  // [nháp] lời Long, chờ Long sửa lại
+  body: 'Bông là bé của anh, Mochi là bé của em. Hai bé được ôm, được nuông, được ngủ ở chỗ ấm nhất nhà. Có lẽ vì hai bé thấy cách hai đứa mình thương nhau: lặng lẽ, đều đặn, và chẳng cần nói thành lời.',
+  hint: 'Em rê chuột vào từng bé, rồi bấm xem bé đổi dáng nhé.',
+  bong: { title: 'Bông · bé của anh', tip: 'Cô nàng trắng pha xám, được anh thương từng cái ôm. Bấm để bé đổi dáng.' },
+  mochi: { title: 'Mochi · bé của em', tip: 'Cô nàng xám vằn, được em nuông chiều hết mực. Bấm để bé đổi dáng.' },
 }
 
 export const treeText = {

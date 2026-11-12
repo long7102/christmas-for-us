@@ -18,7 +18,7 @@ function Over({ L, r, src, on }: { L: CatLayout; r: R; src: string; on: boolean 
   )
 }
 
-export default function Cats() {
+export default function Cats({ active = true }: { active?: boolean }) {
   const sec = useRef<HTMLElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const txt = useRef<HTMLDivElement>(null)
@@ -81,7 +81,7 @@ export default function Cats() {
         <div className="tr-stage" style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img src={L.src} alt="Bông và Mochi ngủ cạnh nhau trên ghế sofa" draggable={false} />
           <Lamps lamps={L.lamps} flare={new Set()} />
-          <Dust w={L.w} h={L.h} />
+          {active && <Dust w={L.w} h={L.h} />}
           <div className="tr-warm cat-warm" />
 
           {/* mỗi bé thở nhẹ khi ngủ; bé nào đang duỗi thì lớp này ẩn đi */}

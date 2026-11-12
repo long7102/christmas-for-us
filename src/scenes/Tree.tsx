@@ -220,7 +220,7 @@ function Twinkles({ t }: { t: Layout['tree'] }) {
 
 const FLARE_MS = 2400
 
-export default function Tree() {
+export default function Tree({ paused = false }: { paused?: boolean }) {
   const sec = useRef<HTMLElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const txt = useRef<HTMLDivElement>(null)
@@ -340,13 +340,13 @@ export default function Tree() {
       <div className="sec-frame" ref={host}>
         <div className={`tr-stage${flash ? ' flash' : ''}`} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img src={L.src} alt="Cây thông Giáng sinh và bốn món quà" draggable={false} />
-          <WindowSnow r={L.win} />
+          {!paused && <WindowSnow r={L.win} />}
           <Fire r={L.fire} flare={fireOn} />
-          <Flames r={L.fire} flare={fireOn} />
-          <Embers r={L.fire} kick={kick} />
+          {!paused && <Flames r={L.fire} flare={fireOn} />}
+          {!paused && <Embers r={L.fire} kick={kick} />}
           <Lamps lamps={L.lamps} flare={lampOn} />
           <Twinkles t={L.tree} />
-          <Dust w={L.w} h={L.h} />
+          {!paused && <Dust w={L.w} h={L.h} />}
           <div className="tr-warm" />
 
           {/* hộp quà sáng hơn một chút */}
