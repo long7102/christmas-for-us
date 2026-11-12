@@ -305,10 +305,13 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
     const [hx, hy, hw, hh] = side === 'l' ? geo.handleL : geo.handleR
     const ox = side === 'l' ? sh.x0 : sh.cx
     const url = (dark: boolean) => (side === 'l' ? (dark ? tex.hlDark : tex.hl) : dark ? tex.hrDark : tex.hr)
+    const hd = Math.max(6, geo.hw * rs * 0.085) // how far the handle stands off the wood
+    const hn = Math.min(24, Math.round(hd / 0.8))
     return (
       <div className="hnd" style={{ left: `${((hx - ox) / sh.bw) * 100}%`, top: `${((hy - sh.y0) / sh.bh) * 100}%`, width: `${(hw / sh.bw) * 100}%`, height: `${(hh / sh.bh) * 100}%` }}>
-        {Array.from({ length: 5 }, (_, k) => (
-          <i key={k} className="slice" style={{ backgroundImage: `url(${k === 4 ? url(false) : url(true)})`, transform: `translateZ(calc(var(--depth) * ${(0.05 + k * 0.07).toFixed(3)}))` }} />
+        {/* one solid extruded object: slices 0.8px apart fuse into a continuous body, bright face on top */}
+        {Array.from({ length: hn + 1 }, (_, k) => (
+          <i key={k} className="slice" style={{ backgroundImage: `url(${k === hn ? url(false) : url(true)})`, transform: `translateZ(${(Math.max(rs, 0.4) * 0 + (k / hn) * hd + 1).toFixed(2)}px)` }} />
         ))}
       </div>
     )
