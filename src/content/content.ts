@@ -73,6 +73,16 @@ export const memories: Record<string, { title: string; tip: string; meaning: str
     meaning: ['Theo truyền thuyết, ba nhà thông thái đã đi theo một ngôi sao sáng suốt nhiều đêm để tìm đến nơi đứa trẻ Giáng sinh ra đời. Từ đó, ngôi sao được đặt trên đỉnh cây: cao nhất và sáng nhất.', 'Dù đêm có dài đến đâu, ai đang lạc đường cũng có một điểm sáng để hướng về.'],
     story: 'Chuyện của hai đứa về ngôi sao sẽ được viết ở đây.',
   },
+  books: {
+    title: 'Chồng sách cũ', tip: 'Mấy cuốn sách bìa da, gáy mạ vàng đã sờn. Bấm để đọc.',
+    meaning: ['Ở Iceland có một thói quen rất dễ thương mang tên Jólabókaflóð, nghĩa là "cơn lũ sách đêm Giáng sinh": tối 24, mỗi người tặng nhau một cuốn sách, rồi cả nhà nằm đọc đến khuya với một cốc sô-cô-la nóng.', 'Sách bìa da cũ không cần gì nhiều, chỉ cần một ngọn đèn vàng và một người ngồi cạnh. Mỗi cuốn sờn gáy là một cuốn từng được mở ra rất nhiều lần.'],
+    story: 'Chuyện của hai đứa về những cuốn sách sẽ được viết ở đây.',
+  },
+  pine: {
+    title: 'Cành thông và quả đỏ', tip: 'Quả thông khô, quả mọng đỏ, mùi của mùa đông. Bấm để đọc.',
+    meaning: ['Cành thông xanh quanh năm nên từ rất xa xưa người ta mang vào nhà giữa mùa đông, như một lời hứa rằng sự sống vẫn còn đó. Quả thông khô cũng vậy: nó giữ những hạt giống bên trong, chờ đến mùa ấm áp sẽ mở ra.', 'Một chùm quả mọng đỏ đặt giữa màu xanh sẫm khiến cả mùa đông bỗng có màu. Chỉ một cành nhỏ thôi, cũng đủ để cả căn phòng thơm mùi rừng.'],
+    story: 'Chuyện của hai đứa về cành thông sẽ được viết ở đây.',
+  },
   fire: {
     title: 'Bếp lửa', tip: 'Bếp lửa là nơi mình sưởi ấm cho nhau.',
     meaning: ['Từ xưa, bếp lửa là trái tim của ngôi nhà: mọi người quây quần quanh nó vào những đêm đông. Cái ấm của lửa không chỉ là hơi nóng, mà là việc ngồi gần nhau, kể chuyện cho nhau nghe, hay chỉ lặng im mà vẫn thấy yên lòng.', 'Sưởi ấm nhau nghĩa là cùng nhau giữ cho căn nhà không bao giờ lạnh.'],
@@ -186,6 +196,4 @@ export const musicbox = {
   dancer: { title: 'Cô vũ công', tip: 'Bấm để vặn khoá, cô nàng sẽ xoay một điệu nhỏ.', tipOn: 'Bấm để dừng điệu nhạc.' },
   box: { title: 'Chiếc hộp nhạc', tip: 'Gỗ óc chó cũ, bộ lược đồng bên trong. Bấm để vặn khoá.', tipOn: 'Bấm để dừng điệu nhạc.' },
   lamp: { title: 'Ngọn đèn lồng', tipOn: 'Bấm để thổi tắt đèn.', tipOff: 'Bấm để thắp đèn lại.' },
-  books: { title: 'Chồng sách cũ', tip: 'Mấy cuốn sách bìa da, gáy mạ vàng đã sờn.' },
-  pine: { title: 'Cành thông', tip: 'Quả mọng đỏ và quả thông khô, mùi của mùa đông.' },
-}
+  }

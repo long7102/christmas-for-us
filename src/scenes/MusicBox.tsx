@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { musicbox as copy } from '../content/content'
+import { getMemory, musicbox as copy } from '../content/content'
+import { ModalView, type Modal } from './Letter'
 import { reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
 import { lights, useLights } from '../lib/lights'
@@ -29,6 +30,7 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
   const [playing, setPlaying] = useState(false)
   const [tip, setTip] = useState<{ title: string; text: string; b: { x: number; y: number; w: number; h: number } } | null>(null)
   const lightsOn = useLights()
+  const [modal, setModal] = useState<Modal>(null)
   const [snd, setSnd] = useState(() => sfx.running && !sfx.muted)
   const st = useRef({ play: false, th: 0, w: 0, until: 0 })
   const timers = useRef<number[]>([])
@@ -160,10 +162,14 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
           </div>
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
-            {([['books', copy.books.title, copy.books.tip], ['pine', copy.pine.title, copy.pine.tip]] as const).map(([id, t, x]) => (
-              <polygon key={id} className="cat-hs" points={pts(L.polys[id])} tabIndex={0} role="button" aria-label={t}
-                onMouseEnter={() => show(t, x, L.polys[id])} onMouseLeave={() => setTip(null)} onFocus={() => show(t, x, L.polys[id])} onBlur={() => setTip(null)} />
-            ))}
+            {(['books', 'pine'] as const).map((id) => {
+              const m = getMemory(id)!, open = () => { setTip(null); setModal({ kind: 'memory', id }) }
+              return (
+                <polygon key={id} className="cat-hs" points={pts(L.polys[id])} tabIndex={0} role="button" aria-label={m.title}
+                  onMouseEnter={() => show(m.title, m.tip, L.polys[id])} onMouseLeave={() => setTip(null)} onFocus={() => show(m.title, m.tip, L.polys[id])} onBlur={() => setTip(null)}
+                  onClick={open} onKeyDown={key(open)} />
+              )
+            })}
             <polygon className="cat-hs" points={pts(L.lanternPoly)} tabIndex={0} role="button" aria-label="Đèn lồng"
               onMouseEnter={() => show(copy.lamp.title, lightsOn ? copy.lamp.tipOn : copy.lamp.tipOff, L.lanternPoly)} onMouseLeave={() => setTip(null)}
               onFocus={() => show(copy.lamp.title, lightsOn ? copy.lamp.tipOn : copy.lamp.tipOff, L.lanternPoly)} onBlur={() => setTip(null)} onClick={toggleLamp} onKeyDown={key(toggleLamp)} />
@@ -193,6 +199,7 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
         <svg viewBox="0 0 24 24" width="22" height="22" fill={lightsOn ? 'currentColor' : 'none'} fillOpacity=".25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" />{lightsOn && <path d="M12 1v0M4 6L3 5M20 6l1-1M2 12H1M23 12h-1" strokeWidth="1.4" />}</svg>
       </button>
 
+      {modal && <ModalView modal={modal} onClose={() => setModal(null)} />}
       {tip && (() => {
         const W = sec.current?.clientWidth ?? 800
         const cx = Math.min(Math.max(g.x + (tip.b.x + tip.b.w / 2) * g.s, 150), W - 150)

@@ -52,7 +52,7 @@ function Postmark({ text }: { text: string }) {
   )
 }
 
-const PAPER: Record<string, string> = { window: 'star', curtainL: 'g1', curtainR: 'g4', painting: 'wreath', painting2: 'stock1', shelf: 'stock1', basket: 'stock0', tools: 'fire', garland: 'wreath', chair: 'g2', rug: 'g1', tree: 'stock2' }
+const PAPER: Record<string, string> = { books: 'stock1', pine: 'wreath', window: 'star', curtainL: 'g1', curtainR: 'g4', painting: 'wreath', painting2: 'stock1', shelf: 'stock1', basket: 'stock0', tools: 'fire', garland: 'wreath', chair: 'g2', rug: 'g1', tree: 'stock2' }
 const paperFor = (id: string) => (id.startsWith('bow') ? 'g4' : id.startsWith('bell') ? 'lamp' : PAPER[id] ?? id)
 
 function iconFor(id: string) {
