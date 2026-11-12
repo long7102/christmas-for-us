@@ -19,6 +19,10 @@ class Sfx {
   private purrOn = false
   private mixV = 0
   private boxV = 0
+  private fx?: GainNode
+  private amb?: GainNode
+  private fadeK = 1
+  vol = { music: store.get('vol-music', 1), amb: store.get('vol-amb', 1), fx: store.get('vol-fx', 1) }
   private userPaused = false
   private curUrl = musicUrl
   private endCb?: () => void
@@ -42,6 +46,8 @@ class Sfx {
       this.master = this.ctx.createGain()
       this.master.gain.value = this.muted ? 0 : 1
       this.master.connect(this.ctx.destination)
+      this.fx = this.ctx.createGain(); this.fx.gain.value = this.vol.fx; this.fx.connect(this.fx!)
+      this.amb = this.ctx.createGain(); this.amb.gain.value = this.vol.amb; this.amb.connect(this.fx!)
       const n = this.ctx.createBuffer(1, this.ctx.sampleRate * 3, this.ctx.sampleRate)
       const d = n.getChannelData(0); let b0 = 0, b1 = 0, b2 = 0
       for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b0 = 0.99765 * b0 + w * 0.099; b1 = 0.963 * b1 + w * 0.2965; b2 = 0.57 * b2 + w * 1.0526; d[i] = (b0 + b1 + b2 + w * 0.1848) * 0.2 }
@@ -62,13 +68,32 @@ class Sfx {
   /** Nhạc nền (Sugar Plum Fairy). Chỉ phát sau thao tác đầu tiên của người xem. */
   startMusic() {
     if (!this.music) {
-      const a = new Audio(musicUrl); a.loop = true; a.volume = 0.42; a.preload = 'auto'; this.music = a
+      const a = new Audio(musicUrl); a.loop = true; a.volume = 0.42 * this.vol.music; a.preload = 'auto'; this.music = a
       a.addEventListener('play', () => this.emit()); a.addEventListener('pause', () => this.emit()); a.addEventListener('ended', () => this.endCb?.())
     }
     this.music.muted = this.muted
     if (this.music.paused && !this.userPaused) this.music.play().catch(() => {})
   }
 
+  private applyMusicVol() {
+    if (this.music) this.music.volume = Math.min(1, Math.max(0, (0.42 - 0.14 * this.mixV + 0.2 * this.boxV) * this.vol.music * this.fadeK))
+  }
+  /** Chỉnh âm lượng từng nhóm: nhạc, âm nền (gió, lửa, gừ gừ), hiệu ứng (chuông, meo, tiếng bấm). */
+  setVolume(kind: 'music' | 'amb' | 'fx', v: number) {
+    v = Math.min(1, Math.max(0, v)); this.vol[kind] = v; store.set(`vol-${kind}`, v)
+    if (kind === 'music') this.applyMusicVol()
+    if (kind === 'amb' && this.amb && this.ctx) this.amb.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05)
+    if (kind === 'fx' && this.fx && this.ctx) this.fx.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05)
+    this.emit()
+  }
+  /** Mờ dần về 0 hoặc lên lại (đổi bài không bị cắt phụt). */
+  private fade(to: number, ms: number) {
+    return new Promise<void>((res) => {
+      const from = this.fadeK, t0 = performance.now()
+      const step = () => { const k = Math.min(1, (performance.now() - t0) / ms); this.fadeK = from + (to - from) * k; this.applyMusicVol(); k < 1 ? requestAnimationFrame(step) : res() }
+      step()
+    })
+  }
   /** Điều khiển nhạc từ hộp nhạc (danh sách phát). */
   get musicPlaying() { return !!this.music && !this.music.paused && !this.muted }
   /** Đổi bài (url) và phát. onEnd: gọi khi hết bài (để sang bài kế); không có onEnd thì lặp lại bài. */
@@ -76,7 +101,12 @@ class Sfx {
     this.startMusic()
     const a = this.music!
     this.endCb = onEnd; a.loop = !onEnd
-    if (url !== this.curUrl) { this.curUrl = url; a.src = url; a.currentTime = 0 }
+    if (url !== this.curUrl) {
+      this.curUrl = url
+      const was = !a.paused
+      void (was ? this.fade(0, 450) : Promise.resolve()).then(() => { a.src = url; a.currentTime = 0; this.playMusic(); return this.fade(1, 900) })
+      return
+    }
     this.playMusic()
   }
   get track() { return this.curUrl }
@@ -91,7 +121,7 @@ class Sfx {
   private syncFire() {
     if (!this.ctx || !this.master || this.ctx.state !== 'running') return
     if (this.fireOn && !this.fireGain) {
-      const c = this.ctx, g = c.createGain(); g.gain.value = 0; g.connect(this.master); this.fireGain = g
+      const c = this.ctx, g = c.createGain(); g.gain.value = 0; g.connect(this.amb!); this.fireGain = g
       const r = this.src(), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520
       const rg = c.createGain(); rg.gain.value = 0.16
       const lfo = c.createOscillator(), ld = c.createGain(); lfo.frequency.value = 0.35; ld.gain.value = 0.07; lfo.connect(ld); ld.connect(rg.gain); lfo.start()
@@ -128,7 +158,7 @@ class Sfx {
       const n = c.createBufferSource(); n.buffer = this.noise
       const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2200 + Math.random() * 3800; f.Q.value = 0.6 + Math.random() * 0.8
       const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol * (0.35 + Math.random() * 0.65), t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + len)
-      n.connect(f); f.connect(g); g.connect(this.master); n.start(t, Math.random() * 2); n.stop(t + len + 0.02)
+      n.connect(f); f.connect(g); g.connect(this.fx!); n.start(t, Math.random() * 2); n.stop(t + len + 0.02)
     }
   }
   crackleBurst() { if (!this.ctx) return; for (let i = 0; i < 14; i++) setTimeout(() => this.pop(1), i * (25 + Math.random() * 70)) }
@@ -140,7 +170,7 @@ class Sfx {
     if (!this.ctx || !this.master || this.ctx.state !== 'running') return
     const c = this.ctx
     if (!this.purrGain) {
-      const out = c.createGain(); out.gain.value = 0; out.connect(this.master); this.purrGain = out
+      const out = c.createGain(); out.gain.value = 0; out.connect(this.amb!); this.purrGain = out
       const am = c.createGain(); am.gain.value = 0.5
       const lfo = c.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 25
       const ld = c.createGain(); ld.gain.value = 0.5; lfo.connect(ld); ld.connect(am.gain); lfo.start()
@@ -178,10 +208,10 @@ class Sfx {
     const a = c.createGain(), b = c.createGain(); a.gain.value = 1; b.gain.setValueAtTime(0.2, t); b.gain.linearRampToValueAtTime(0.6, t + 0.35); b.gain.linearRampToValueAtTime(0.35, t + dur)
     const env = c.createGain(); env.gain.setValueAtTime(0.0001, t)
     env.gain.linearRampToValueAtTime(0.09, t + 0.12); env.gain.linearRampToValueAtTime(0.2, t + 0.4); env.gain.linearRampToValueAtTime(0.17, t + 0.9); env.gain.exponentialRampToValueAtTime(0.0001, t + dur)
-    o.connect(f1); o.connect(f2); f1.connect(a); f2.connect(b); a.connect(env); b.connect(env); env.connect(this.master)
+    o.connect(f1); o.connect(f2); f1.connect(a); f2.connect(b); a.connect(env); b.connect(env); env.connect(this.fx!)
     const n = this.src(), nf = c.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 2600; nf.Q.value = 1
     const ng = c.createGain(); ng.gain.setValueAtTime(0.0001, t); ng.gain.linearRampToValueAtTime(0.02, t + 0.3); ng.gain.linearRampToValueAtTime(0.045, t + dur * 0.85); ng.gain.exponentialRampToValueAtTime(0.0001, t + dur)
-    n.connect(nf); nf.connect(ng); ng.connect(this.master); n.start(t, Math.random()); n.stop(t + dur + 0.05)
+    n.connect(nf); nf.connect(ng); ng.connect(this.fx!); n.start(t, Math.random()); n.stop(t + dur + 0.05)
     o.start(t); o.stop(t + dur + 0.05)
   }
 
@@ -190,7 +220,7 @@ class Sfx {
     m = Math.min(1, Math.max(0, m))
     if (Math.abs(m - this.mixV) < 0.01) return
     this.mixV = m
-    if (this.music) this.music.volume = 0.42 - 0.14 * m + 0.2 * this.boxV
+    this.applyMusicVol()
     this.syncFire(); this.syncPurr()
   }
 
@@ -199,7 +229,7 @@ class Sfx {
     n = Math.min(1, Math.max(0, n))
     if (Math.abs(n - this.boxV) < 0.01) return
     this.boxV = n
-    if (this.music) this.music.volume = 0.42 - 0.14 * this.mixV + 0.2 * n
+    this.applyMusicVol()
     if (this.fireGain && this.ctx) this.fireGain.gain.setTargetAtTime(this.fireOn ? (1 - 0.85 * this.mixV) * (1 - n) : 0, this.ctx.currentTime, 0.3)
     if (this.purrGain && this.ctx) this.purrGain.gain.setTargetAtTime(this.purrOn ? 0.1 * this.mixV * (1 - n) : 0, this.ctx.currentTime, 0.5)
   }
@@ -212,10 +242,10 @@ class Sfx {
       const t = t0 + i * (0.09 + i * 0.012)
       const n = this.src(false), f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2200 + (i % 2) * 500; f.Q.value = 4
       const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.22, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035)
-      n.connect(f); f.connect(g); g.connect(this.master); n.start(t, Math.random() * 2); n.stop(t + 0.05)
+      n.connect(f); f.connect(g); g.connect(this.fx!); n.start(t, Math.random() * 2); n.stop(t + 0.05)
       const o = c.createOscillator(); o.type = 'triangle'; o.frequency.value = 180 + i * 6
       const og = c.createGain(); og.gain.setValueAtTime(0.0001, t); og.gain.linearRampToValueAtTime(0.08, t + 0.004); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.06)
-      o.connect(og); og.connect(this.master); o.start(t); o.stop(t + 0.08)
+      o.connect(og); og.connect(this.fx!); o.start(t); o.stop(t + 0.08)
     }
   }
 
@@ -226,7 +256,7 @@ class Sfx {
     for (const [mul, v, dec] of [[1, 1, 1.6], [2.0, 0.35, 0.8], [4.1, 0.12, 0.3]] as const) {
       const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = freq * mul
       const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol * v, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + dec)
-      o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dec + 0.05)
+      o.connect(g); g.connect(this.fx!); o.start(t); o.stop(t + dec + 0.05)
     }
   }
 
@@ -242,7 +272,7 @@ class Sfx {
     const c = this.ctx, t = c.currentTime
     const n = this.src(false), f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.8; f.frequency.setValueAtTime(1800, t); f.frequency.exponentialRampToValueAtTime(500, t + 0.5)
     const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.28, t + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55)
-    n.connect(f); f.connect(g); g.connect(this.master); n.start(t, Math.random()); n.stop(t + 0.6)
+    n.connect(f); f.connect(g); g.connect(this.fx!); n.start(t, Math.random()); n.stop(t + 0.6)
   }
 
   /** Thắp đèn lại: que diêm quẹt khẽ rồi tiếng bùng lên dịu. */
@@ -251,10 +281,10 @@ class Sfx {
     const c = this.ctx, t = c.currentTime
     const scr = this.src(false), sf = c.createBiquadFilter(); sf.type = 'highpass'; sf.frequency.value = 2600
     const sg = c.createGain(); sg.gain.setValueAtTime(0.0001, t); sg.gain.linearRampToValueAtTime(0.1, t + 0.03); sg.gain.exponentialRampToValueAtTime(0.0001, t + 0.22)
-    scr.connect(sf); sf.connect(sg); sg.connect(this.master); scr.start(t, Math.random()); scr.stop(t + 0.25)
+    scr.connect(sf); sf.connect(sg); sg.connect(this.fx!); scr.start(t, Math.random()); scr.stop(t + 0.25)
     const n = this.src(false), f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.9; f.frequency.setValueAtTime(300, t + 0.22); f.frequency.exponentialRampToValueAtTime(2200, t + 0.7)
     const g = c.createGain(); g.gain.setValueAtTime(0.0001, t + 0.22); g.gain.linearRampToValueAtTime(0.2, t + 0.38); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.95)
-    n.connect(f); f.connect(g); g.connect(this.master); n.start(t + 0.22, Math.random()); n.stop(t + 1)
+    n.connect(f); f.connect(g); g.connect(this.fx!); n.start(t + 0.22, Math.random()); n.stop(t + 1)
   }
 
   /** Chuông leng keng rất nhẹ khi vòng kẹo Giáng sinh loang ra. */
@@ -264,7 +294,7 @@ class Sfx {
     const c = this.ctx, t0 = c.currentTime + 0.02
     const bus = c.createGain(); bus.gain.value = 1
     const comp = c.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3
-    bus.connect(comp); comp.connect(this.master)
+    bus.connect(comp); comp.connect(this.fx!)
     const notes = [1046.5, 1318.5, 1568, 2093, 1568, 2637]
     notes.forEach((fr, i) => {
       const t = t0 + i * 0.14 + (i % 2) * 0.012
@@ -281,7 +311,7 @@ class Sfx {
   /** Cold wind howling outside: two whistling bands that drift, plus a low rumble. */
   startWind() {
     if (!this.ctx || !this.master || this.windGain) return
-    const c = this.ctx, g = c.createGain(); g.gain.value = 0; g.connect(this.master); this.windGain = g
+    const c = this.ctx, g = c.createGain(); g.gain.value = 0; g.connect(this.amb!); this.windGain = g
     const band = (freq: number, q: number, lfo: number, depth: number, vol: number) => {
       const s = this.src(), f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q
       const o = c.createOscillator(), od = c.createGain(); o.frequency.value = lfo; od.gain.value = depth; o.connect(od); od.connect(f.frequency); o.start()
@@ -307,7 +337,7 @@ class Sfx {
     const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(420, t); bp.frequency.linearRampToValueAtTime(760, t + dur); bp.Q.value = 6
     const n = this.src(), nf = c.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 900; nf.Q.value = 3
     const g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + dur * 0.25); g.gain.linearRampToValueAtTime(vol * 0.7, t + dur * 0.8); g.gain.linearRampToValueAtTime(0, t + dur)
-    o.connect(bp); bp.connect(g); n.connect(nf); nf.connect(g); g.connect(this.master)
+    o.connect(bp); bp.connect(g); n.connect(nf); nf.connect(g); g.connect(this.fx!)
     o.start(t); o.stop(t + dur + 0.05); n.start(t, Math.random()); n.stop(t + dur + 0.05)
   }
 
@@ -317,10 +347,10 @@ class Sfx {
     const c = this.ctx, t = c.currentTime
     const o = c.createOscillator(); o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(34, t + 0.5)
     const g = c.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.7)
-    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + 0.75)
+    o.connect(g); g.connect(this.fx!); o.start(t); o.stop(t + 0.75)
     const n = this.src(false), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500
     const ng = c.createGain(); ng.gain.setValueAtTime(vol * 0.7, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.4)
-    n.connect(lp); lp.connect(ng); ng.connect(this.master); n.start(t); n.stop(t + 0.45)
+    n.connect(lp); lp.connect(ng); ng.connect(this.fx!); n.start(t); n.stop(t + 0.45)
   }
 
   /** Rush of air as we run through. */
@@ -329,7 +359,7 @@ class Sfx {
     const c = this.ctx, t = c.currentTime
     const n = this.src(), f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(3200, t + dur)
     const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.85); g.gain.linearRampToValueAtTime(0, t + dur + 0.4)
-    n.connect(f); f.connect(g); g.connect(this.master); n.start(t, Math.random()); n.stop(t + dur + 0.5)
+    n.connect(f); f.connect(g); g.connect(this.fx!); n.start(t, Math.random()); n.stop(t + dur + 0.5)
   }
 }
 export const sfx = new Sfx()
