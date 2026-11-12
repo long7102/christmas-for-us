@@ -3,11 +3,21 @@ import { PasswordGate } from './components/PasswordGate'
 import Door from './scenes/Door'
 import WorldScroll from './scenes/WorldScroll'
 import { store } from './lib/storage'
+import { Loader } from './components/Loader'
+import { preloadScenes } from './lib/preload'
+import { startPerfWatch } from './lib/perf'
+import { useRipple } from './lib/ripple'
 
 type Phase = 'gate' | 'door' | 'world'
 
 export default function App() {
   const [phase, setPhase] = useState<Phase>(() => (store.get('unlocked', false) ? 'door' : 'gate'))
+
+  useRipple()
+  // tải sẵn ảnh các cảnh sau khi người xem còn ở cổng hoặc cánh cửa
+  useEffect(() => { const t = setTimeout(preloadScenes, 2500); return () => clearTimeout(t) }, [])
+  // đo tốc độ khung hình khi vào thế giới, máy yếu thì bật chế độ nhẹ
+  useEffect(() => (phase === 'world' ? startPerfWatch() : undefined), [phase])
 
   // Scroll stays locked until the door is opened.
   useEffect(() => {
@@ -17,6 +27,7 @@ export default function App() {
 
   return (
     <>
+      <Loader />
       {/* Các cảnh sau cánh cửa làm từng cảnh một: hiện có cây thông + 4 quà và hai chú mèo. */}
       <main className="world" aria-hidden={phase !== 'world'}>{phase === 'world' && <WorldScroll />}</main>
       {phase === 'gate' && <PasswordGate onPass={() => setPhase('door')} />}

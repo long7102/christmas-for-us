@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { gifts, getMemory, lampStories, tree as treeCopy } from '../content/content'
-import { reducedMotion } from '../lib/device'
+import { reducedMotion, isLite } from '../lib/device'
 import { sfx } from '../lib/audio'
 import { lights, useLights } from '../lib/lights'
+import SoundControl from '../components/SoundControl'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
@@ -66,7 +67,7 @@ function Flames({ r, flare }: { r: R; flare: boolean }) {
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       const boost = fl.current ? 2.2 : 1
-      acc += dt * (reducedMotion() ? 40 : 110) * boost
+      acc += dt * (reducedMotion() || isLite() ? 40 : 110) * boost
       while (acc > 1) { acc -= 1
         const edge = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
         ps.push({ x: cx + edge * 2 * spread, y: baseY + Math.random() * 4, vx: (Math.random() - 0.5) * 14, vy: -(r.h * (1.0 + Math.random() * 0.9)) * boost, life: 0, max: 0.55 + Math.random() * 0.55, s: r.w * (0.1 + Math.random() * 0.09) })
@@ -127,7 +128,7 @@ function Embers({ r, kick }: { r: R; kick: number }) {
     let raf = 0, last = performance.now(), nextPop = 600, acc = 0
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
-      acc += dt * (reducedMotion() ? 2 : 6)
+      acc += dt * (reducedMotion() || isLite() ? 2 : 6)
       while (acc > 1) { acc -= 1; es.push(spawn(false)) }
       nextPop -= dt * 1000
       if (nextPop < 0) { nextPop = 900 + Math.random() * 2600; const n = 4 + Math.floor(Math.random() * 6); for (let i = 0; i < n; i++) es.push(spawn(true)) }
@@ -159,7 +160,7 @@ export function Dust({ w, h }: { w: number; h: number }) {
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
     const K = 0.5, W = (cv.width = w * K), H = (cv.height = h * K)
-    const n = reducedMotion() ? 18 : 55
+    const n = reducedMotion() || isLite() ? 14 : 55
     const ms = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 0.8 + Math.random() * 1.6, sp: 2 + Math.random() * 6, ph: Math.random() * 6.28, tw: 0.4 + Math.random() * 0.9 }))
     let raf = 0, last = performance.now()
     const frame = (t: number) => {
@@ -238,10 +239,9 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
   const [opening, setOpening] = useState<number | null>(null)
   const [, tick] = useState(0)
   const lightsOn = useLights()
-  const [snd, setSnd] = useState(() => sfx.running && !sfx.muted)
   useEffect(() => {
     sfx.fire(true)
-    const sync = () => { sfx.fire(true); setSnd(sfx.running && !sfx.muted) }
+    const sync = () => { sfx.fire(true) }
     const off = sfx.subscribe(sync)
     return () => { off(); sfx.fire(false) }
   }, [])
@@ -423,9 +423,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
         </div>
       </div>
 
-      <button className="tr-sound" aria-label={snd ? 'Tắt âm thanh' : 'Bật âm thanh'} onClick={() => { if (!sfx.running) { sfx.setMuted(false); sfx.unlock() } else sfx.setMuted(!sfx.muted); setSnd(sfx.running && !sfx.muted) }}>
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 9v6h4l5 4V5L8 9z" />{snd ? <><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" /></> : <path d="M17 9l5 6M22 9l-5 6" />}</svg>
-      </button>
+      <SoundControl where="tr" />
       <button className="tr-lights" aria-label={lightsOn ? 'Tắt đèn' : 'Bật đèn'} title={lightsOn ? 'Tắt đèn, chỉ còn ánh lửa' : 'Bật đèn lại'} onClick={() => lights.toggle()}>
         <svg viewBox="0 0 24 24" width="22" height="22" fill={lightsOn ? 'currentColor' : 'none'} fillOpacity=".25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" />{lightsOn && <path d="M12 1v0M4 6L3 5M20 6l1-1M2 12H1M23 12h-1" strokeWidth="1.4" />}</svg>
       </button>
