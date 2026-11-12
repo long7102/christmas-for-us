@@ -186,7 +186,7 @@ export function Lamps({ lamps, flare }: { lamps: Layout['lamps']; flare: Set<num
   return (
     <>
       {lamps.map(([x, y, r], i) => (
-        <i key={i} className={`tr-lamp${flare.has(i) ? ' flare' : ''}`} style={{ left: x - r, top: y - r, width: r * 2, height: r * 2, animationDuration: `${1.6 + (i % 4) * 0.45}s`, animationDelay: `-${i * 0.37}s` }} />
+        <i key={i} className={`tr-lamp${flare.has(i) ? ' flare' : ''}`} style={{ left: x - r, top: y - r, width: r * 2, height: r * 2, animationDuration: `${3.6 + (i % 4) * 0.9}s`, animationDelay: `-${i * 0.37}s` }} />
       ))}
     </>
   )

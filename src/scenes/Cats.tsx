@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { cats as copy } from '../content/content'
 import { reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
@@ -31,23 +31,26 @@ function Glow({ L, cat, on }: { L: CatLayout; cat: Cat; on: boolean }) {
   )
 }
 
-/** Ánh sáng căn phòng bập bùng theo bếp lửa (bếp nằm ngoài khung ảnh, bên trái) và đèn lồng chập chờn nhanh hơn. */
+/**
+ * Ánh sáng chập chờn chậm và dịu (tránh mỏi mắt): đèn lồng đổi nhịp mỗi ~0,4 đến 1 giây, ánh sáng cả phòng lấy theo bếp lửa
+ * (ngoài khung ảnh, bên trái) nhưng bị ngọn đèn lồng kéo theo nên hai thứ sáng tối cùng nhau.
+ */
 function useFlicker(stage: React.RefObject<HTMLDivElement | null>, active: boolean) {
   useEffect(() => {
     const el = stage.current
     if (!el || !active) return
-    if (reducedMotion()) { el.style.setProperty('--fl', '.7'); el.style.setProperty('--fl2', '.75'); return }
+    if (reducedMotion()) { el.style.setProperty('--fl', '.8'); el.style.setProperty('--fl2', '.85'); return }
     let raf = 0, last = performance.now()
-    let fl = 0.7, tf = 0.7, nf = 0, f2 = 0.75, t2 = 0.75, n2 = 0
+    let fire = 0.8, tFire = 0.8, nFire = 0, lamp = 0.85, tLamp = 0.85, nLamp = 0
     const frame = (t: number) => {
       const dt = Math.min(0.06, (t - last) / 1000); last = t
-      nf -= dt; n2 -= dt
-      if (nf <= 0) { nf = 0.07 + Math.random() * 0.22; tf = Math.random() < 0.16 ? 0.12 + Math.random() * 0.22 : 0.55 + Math.random() * 0.45 }
-      if (n2 <= 0) { n2 = 0.04 + Math.random() * 0.15; t2 = Math.random() < 0.28 ? 0.1 + Math.random() * 0.3 : 0.6 + Math.random() * 0.4 }
-      fl += (tf - fl) * (1 - Math.exp(-dt / 0.07))
-      f2 += (t2 - f2) * (1 - Math.exp(-dt / 0.035))
-      el.style.setProperty('--fl', fl.toFixed(3))
-      el.style.setProperty('--fl2', f2.toFixed(3))
+      nFire -= dt; nLamp -= dt
+      if (nFire <= 0) { nFire = 0.5 + Math.random() * 0.9; tFire = Math.random() < 0.12 ? 0.5 + Math.random() * 0.15 : 0.72 + Math.random() * 0.28 }
+      if (nLamp <= 0) { nLamp = 0.35 + Math.random() * 0.65; tLamp = Math.random() < 0.12 ? 0.55 + Math.random() * 0.12 : 0.78 + Math.random() * 0.22 }
+      fire += (tFire - fire) * (1 - Math.exp(-dt / 0.3))
+      lamp += (tLamp - lamp) * (1 - Math.exp(-dt / 0.16))
+      el.style.setProperty('--fl2', lamp.toFixed(3))
+      el.style.setProperty('--fl', (0.55 * fire + 0.45 * lamp).toFixed(3))
       raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
@@ -146,7 +149,18 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
   const lampRight = (L.lamp[0] + L.lamp[2] * 0.55) * g.s + g.x
   const headLeft = (mode === 'wide' ? 640 : 0) * g.s + g.x
   const left = Math.max(26, lampRight + 8)
-  const textStyle = mode === 'wide' ? { left, width: Math.max(250, Math.min(430, headLeft - left - 24)) } : undefined
+  const textWidth = mode === 'wide' ? Math.max(250, Math.min(430, headLeft - left - 24)) : 0
+  const avail = mode === 'wide' ? (L.bong.poly.reduce((m, q) => Math.min(m, q[1]), 1e9) + 40) * g.s + g.y - 26 - 14 : 0
+  // chữ phải nằm gọn trên đầu hai bé: nếu chỗ trống ít thì bỏ bớt từng phần cho vừa khít
+  useLayoutEffect(() => {
+    const el = txt.current
+    if (!el) return
+    if (mode !== 'wide') { el.dataset.fit = '0'; return }
+    let lvl = 0
+    for (; lvl < 5; lvl++) { el.dataset.fit = String(lvl); if (el.offsetHeight <= avail) break }
+    el.dataset.fit = String(Math.min(lvl, 4))
+  }, [mode, avail, textWidth, g.s])
+  const textStyle = mode === 'wide' ? { left, width: textWidth } : undefined
 
   return (
     <section id="cats" className={`tree-scene cats-scene ${mode} ${compact ? 'compact' : ''}${busy ? ' busy' : ''}`} ref={sec}>
@@ -169,6 +183,7 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
           {cats.map((c) => <Glow key={c.id} L={L} cat={c.cat} on={hov === c.id && !busy} />)}
 
           {/* đèn lồng chập chờn */}
+          <i className="cat-lamp halo" style={{ left: L.lamp[0] - L.lamp[2] * 3.4, top: L.lamp[1] - L.lamp[2] * 3.4, width: L.lamp[2] * 6.8, height: L.lamp[2] * 6.8 }} />
           <i className="cat-lamp" style={{ left: L.lamp[0] - L.lamp[2], top: L.lamp[1] - L.lamp[2], width: L.lamp[2] * 2, height: L.lamp[2] * 2 }} />
           <i className="cat-lamp core" style={{ left: L.lamp[0] - L.lamp[2] * 0.32, top: L.lamp[1] - L.lamp[2] * 0.32, width: L.lamp[2] * 0.64, height: L.lamp[2] * 0.64 }} />
           <div className="cat-dim" />

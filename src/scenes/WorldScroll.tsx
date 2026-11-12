@@ -101,8 +101,10 @@ export default function WorldScroll() {
       st.setProperty('--ring', String(Math.min(1, Math.sin(Math.PI * p) * 2.2) * (p > 0.003 ? 1 : 0)))
       st.setProperty('--bloom', String(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, p)), 2) * 0.75))
       st.setProperty('--cv', p > 0.003 ? 'visible' : 'hidden')
-      st.setProperty('--cpe', p > 0.7 ? 'auto' : 'none')
-      st.setProperty('--tpe', p < 0.4 ? 'auto' : 'none')
+      st.setProperty('--cpe', p > 0.985 ? 'auto' : 'none')
+      st.setProperty('--tpe', p < 0.012 ? 'auto' : 'none')
+      st.setProperty('--tt', String(1 - smooth(0.0, 0.16, p)))
+      st.setProperty('--ct', String(smooth(0.78, 0.97, p)))
       st.setProperty('--cue', String(1 - smooth(0, 0.06, p)))
       setSeen((o) => { const n = { tree: p < 0.92, cats: p > 0.003, near: p > 0.6 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near ? o : n })
     }
