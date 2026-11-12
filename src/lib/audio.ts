@@ -93,6 +93,19 @@ class Sfx {
     const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.5 * vol, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + len)
     n.connect(bp); bp.connect(g); g.connect(this.fireGain); n.start(t, Math.random() * 2); n.stop(t + len + 0.02)
   }
+  /** Tiếng giấy sột soạt khi mở / gấp thư. */
+  rustle(dur = 0.55, vol = 0.5) {
+    if (!this.ctx || !this.master || !this.noise || this.ctx.state !== 'running') return
+    const c = this.ctx, t0 = c.currentTime
+    const hits = 7 + Math.floor(Math.random() * 4)
+    for (let i = 0; i < hits; i++) {
+      const t = t0 + (i / hits) * dur + Math.random() * 0.03, len = 0.04 + Math.random() * 0.08
+      const n = c.createBufferSource(); n.buffer = this.noise
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2200 + Math.random() * 3800; f.Q.value = 0.6 + Math.random() * 0.8
+      const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol * (0.35 + Math.random() * 0.65), t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + len)
+      n.connect(f); f.connect(g); g.connect(this.master); n.start(t, Math.random() * 2); n.stop(t + len + 0.02)
+    }
+  }
   crackleBurst() { if (!this.ctx) return; for (let i = 0; i < 14; i++) setTimeout(() => this.pop(1), i * (25 + Math.random() * 70)) }
 
   private src(loop = true) { const s = this.ctx!.createBufferSource(); s.buffer = this.noise!; s.loop = loop; s.loopStart = 0; return s }

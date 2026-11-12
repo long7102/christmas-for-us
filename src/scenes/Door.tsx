@@ -1,3 +1,4 @@
+import { DoorSnow } from './DoorSnow'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { SnowParticles } from '../components/SnowParticles'
@@ -434,6 +435,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
           <div className="door-glow" />
           <div className="door-light" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }} />
           {tex && <img src={tex.frame} className="door-img" alt="" draggable={false} />}
+          <DoorSnow geo={portrait ? PORT : LAND} />
           <div ref={panels} className="door-panels" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }}>
             <div className="door-recess">{leaf('l')}{leaf('r')}</div>
           </div>
@@ -442,9 +444,13 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       </div>
 
       <div className={`door-intro ${vill ? 'top' : ''}`}>
-        <p className={`door-line1 reveal ${line === 1 || line === 2 ? 'in' : ''}`}>{content.door.line1}</p>
-        <h1 className={`door-line2 ${line === 2 ? 'in' : ''}`}><span className="mask-line"><span>{content.door.line2}</span></span></h1>
+        <div className={`door-plate ${line >= 1 ? 'in' : ''}`}>
+          <p className={`door-line1 reveal ${line === 1 || line === 2 ? 'in' : ''}`}>{content.door.line1}</p>
+          <h1 className={`door-line2 ${line === 2 ? 'in' : ''}`}><span className="mask-line"><span>{content.door.line2}</span></span></h1>
+          <div className="door-orn bot" aria-hidden><i /><b>✦</b><i /></div>
+        </div>
       </div>
+      {!opening && <div className="door-breath" aria-hidden><i /><i /><i /></div>}
 
       <SnowParticles density={vill ? 1.4 : 1.1} />
       <canvas ref={shed.cv} className="door-shed" />

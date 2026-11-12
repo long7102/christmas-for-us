@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { gifts, lampStories, memories, tree as treeCopy } from '../content/content'
+import { gifts, getMemory, lampStories, tree as treeCopy } from '../content/content'
 import { reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
 import { store } from '../lib/storage'
@@ -7,36 +7,93 @@ import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
 import { LAND, PORT, polyBox, type Layout, type P, type R } from './treeLayout'
 
-/** Tuyết rơi sau cửa sổ (canvas nhỏ, chỉ vẽ trong ô kính). */
+/** Tuyết rơi ngoài cửa sổ: nhiều lớp xa gần, gió thổi chéo, bông to mờ ở gần, lớp tuyết đọng trên bậu cửa. */
 function WindowSnow({ r }: { r: R }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
     const K = 2, W = (cv.width = r.w * K), H = (cv.height = r.h * K)
-    const n = reducedMotion() ? 25 : 90
-    const fl = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, z: 0.4 + Math.random() * 0.9, ph: Math.random() * 6.28 }))
-    let raf = 0, last = performance.now()
+    const n = reducedMotion() ? 40 : 150
+    const fl = Array.from({ length: n }, () => { const z = Math.pow(Math.random(), 1.6); return { x: Math.random() * W, y: Math.random() * H, z, ph: Math.random() * 6.28, sw: 0.5 + Math.random() } })
+    let raf = 0, last = performance.now(), gust = 0
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
+      gust = 14 + Math.sin(t / 2600) * 9 + Math.sin(t / 900) * 3
       ctx.clearRect(0, 0, W, H)
       for (const f of fl) {
-        f.y += (22 + 30 * f.z) * K * dt * 0.6
-        f.x += Math.sin(t / 1100 + f.ph) * 10 * K * dt + 5 * K * dt
-        if (f.y > H + 6) { f.y = -6; f.x = Math.random() * W }
-        if (f.x > W + 6) f.x = -6
-        const rad = (1 + 1.8 * f.z) * K * 0.7
-        ctx.globalAlpha = 0.45 + 0.4 * f.z
-        ctx.fillStyle = '#eaf3ff'
-        ctx.beginPath(); ctx.arc(f.x, f.y, rad, 0, 6.283); ctx.fill()
+        const sp = 10 + 26 * f.z
+        f.y += sp * K * dt * 0.7
+        f.x += (gust * (0.4 + f.z) + Math.sin(t / 700 * f.sw + f.ph) * 9 * (0.4 + f.z)) * K * dt * 0.7
+        if (f.y > H + 12) { f.y = -12; f.x = Math.random() * W }
+        if (f.x > W + 12) f.x = -12
+        const rad = (0.55 + 1.35 * f.z) * K * 0.55
+        ctx.globalAlpha = 0.2 + 0.5 * f.z
+        if (f.z > 0.75) ctx.filter = 'blur(.8px)'
+        const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, rad * 1.6)
+        g.addColorStop(0, '#f2f7ff'); g.addColorStop(0.55, 'rgba(190,212,245,.75)'); g.addColorStop(1, 'rgba(170,196,236,0)')
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, rad * 1.6, 0, 6.283); ctx.fill()
+        ctx.filter = 'none'
+      }
+      ctx.globalAlpha = 1
+      raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+    const vis = () => { cancelAnimationFrame(raf); if (!document.hidden) { last = performance.now(); raf = requestAnimationFrame(frame) } }
+    document.addEventListener('visibilitychange', vis)
+    return () => { cancelAnimationFrame(raf); document.removeEventListener('visibilitychange', vis) }
+  }, [r.w, r.h])
+  return (
+    <>
+      <canvas ref={ref} className="tr-snow" style={{ left: r.x, top: r.y, width: r.w, height: r.h }} />
+      <div className="tr-sill" style={{ left: r.x - 6, top: r.y + r.h - 14, width: r.w + 12, height: 22 }} />
+    </>
+  )
+}
+
+/** Ngọn lửa thật: hạt lửa xếp chồng cộng sáng, nổi lên và co dần, đỏ ở chân, vàng trắng ở lõi. */
+function Flames({ r, flare }: { r: R; flare: boolean }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  const fl = useRef(flare); fl.current = flare
+  const W = Math.round(r.w * 1.5), H = Math.round(r.h * 1.5), ox = r.x - r.w * 0.25, oy = r.y - r.h * 0.55
+  useEffect(() => {
+    const cv = ref.current!, ctx = cv.getContext('2d')!
+    cv.width = W; cv.height = H
+    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number }
+    const ps: P[] = []
+    const baseY = r.y - oy + r.h * 0.9, cx = r.x - ox + r.w * 0.5, spread = r.w * 0.34
+    let raf = 0, last = performance.now(), acc = 0
+    const frame = (t: number) => {
+      const dt = Math.min(0.05, (t - last) / 1000); last = t
+      const boost = fl.current ? 2.2 : 1
+      acc += dt * (reducedMotion() ? 40 : 110) * boost
+      while (acc > 1) { acc -= 1
+        const edge = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        ps.push({ x: cx + edge * 2 * spread, y: baseY + Math.random() * 4, vx: (Math.random() - 0.5) * 14, vy: -(r.h * (1.0 + Math.random() * 0.9)) * boost, life: 0, max: 0.55 + Math.random() * 0.55, s: r.w * (0.1 + Math.random() * 0.09) })
+      }
+      ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter'
+      for (let i = ps.length - 1; i >= 0; i--) {
+        const p = ps[i]; p.life += dt
+        if (p.life > p.max) { ps.splice(i, 1); continue }
+        const k = p.life / p.max
+        p.x += (p.vx + Math.sin(t / 130 + i * 1.7) * 26 * k + Math.sin(t / 53 + i) * 8) * dt - (p.x - cx) * 0.9 * dt * k
+        p.y += p.vy * dt * (1 - k * 0.55)
+        const rad = p.s * (1 - k * 0.8) * (fl.current ? 1.25 : 1)
+        const a = (1 - k) * 0.5
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad)
+        if (k < 0.3) { g.addColorStop(0, `rgba(255,248,210,${a})`); g.addColorStop(0.4, `rgba(255,200,90,${a * 0.8})`) }
+        else if (k < 0.65) { g.addColorStop(0, `rgba(255,190,70,${a})`); g.addColorStop(0.5, `rgba(255,120,30,${a * 0.7})`) }
+        else { g.addColorStop(0, `rgba(240,80,20,${a})`); g.addColorStop(0.5, `rgba(180,40,10,${a * 0.5})`) }
+        g.addColorStop(1, 'rgba(120,20,0,0)')
+        ctx.fillStyle = g; ctx.fillRect(p.x - rad, p.y - rad, rad * 2, rad * 2)
       }
       raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
-    const vis = () => { if (document.hidden) cancelAnimationFrame(raf); else { last = performance.now(); raf = requestAnimationFrame(frame) } }
+    const vis = () => { cancelAnimationFrame(raf); if (!document.hidden) { last = performance.now(); raf = requestAnimationFrame(frame) } }
     document.addEventListener('visibilitychange', vis)
     return () => { cancelAnimationFrame(raf); document.removeEventListener('visibilitychange', vis) }
-  }, [r.w, r.h])
-  return <canvas ref={ref} className="tr-snow" style={{ left: r.x, top: r.y, width: r.w, height: r.h }} />
+  }, [r, ox, oy, W, H])
+  return <canvas ref={ref} className="tr-flames" style={{ left: ox, top: oy, width: W, height: H }} />
 }
 
 function Fire({ r, flare }: { r: R; flare: boolean }) {
@@ -44,7 +101,6 @@ function Fire({ r, flare }: { r: R; flare: boolean }) {
     <>
       <div className={`tr-fireglow${flare ? ' flare' : ''}`} style={{ left: r.x - r.w * 1.6, top: r.y - r.h * 0.9, width: r.w * 4.2, height: r.h * 2.6 }} />
       <div className="tr-fire" style={{ left: r.x, top: r.y, width: r.w, height: r.h }}>
-        <i /><i /><i />
       </div>
     </>
   )
@@ -171,6 +227,8 @@ export default function Tree() {
   const [mode, setMode] = useState<'wide' | 'tall'>(() => (innerWidth / innerHeight < 0.7 ? 'tall' : 'wide'))
   const [compact, setCompact] = useState(() => innerWidth < 1100)
   const L = mode === 'tall' ? PORT : LAND
+  const lite = mode === 'tall' || compact && innerWidth < 760
+  const spots = lite ? L.spots.filter((q) => q.id === 'star' || q.id === 'fire' || q.id.startsWith('stock')) : L.spots
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [modal, setModal] = useState<Modal>(null)
   const [hov, setHov] = useState<number | null>(null)
@@ -257,7 +315,7 @@ export default function Tree() {
       const gf = gifts[i!]
       setTip({ title: gf.title, text: isUnlocked(gf.unlockAt) ? 'Đã đến ngày, bấm để mở.' : 'Chưa đến ngày mở, bấm để xem còn bao lâu.', b: polyBox(poly) })
     } else {
-      const m = memories[id]
+      const m = getMemory(id)
       if (m) setTip({ title: m.title, text: m.tip, b: polyBox(poly) })
     }
   }
@@ -283,6 +341,7 @@ export default function Tree() {
           <img src={L.src} alt="Cây thông Giáng sinh và bốn món quà" draggable={false} />
           <WindowSnow r={L.win} />
           <Fire r={L.fire} flare={fireOn} />
+          <Flames r={L.fire} flare={fireOn} />
           <Embers r={L.fire} kick={kick} />
           <Lamps lamps={L.lamps} flare={lampOn} />
           <Twinkles t={L.tree} />
@@ -335,12 +394,12 @@ export default function Tree() {
           {halo('wreath', wreathKey)}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
-            {L.spots.map((q) => (
+            {spots.map((q) => (
               <polygon key={q.id} className="tr-hs" points={q.poly.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button"
                 aria-label={q.id} onMouseEnter={() => showTip(q.id, q.poly)} onMouseLeave={() => setTip(null)} onFocus={() => showTip(q.id, q.poly)} onBlur={() => setTip(null)}
                 onClick={() => { setTip(null); poke(q.id) }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(q.id) } }} />
             ))}
-            {L.lampPolys.map((lp, i) => (
+            {(lite ? [] : L.lampPolys).map((lp, i) => (
               <polygon key={`lp${i}`} className="tr-hs" points={lp.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button" aria-label="đèn"
                 onMouseEnter={() => showTip('lamp', lp, i)} onMouseLeave={() => setTip(null)} onFocus={() => showTip('lamp', lp, i)} onBlur={() => setTip(null)}
                 onClick={() => { setTip(null); pokeLamp(i) }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pokeLamp(i) } }} />

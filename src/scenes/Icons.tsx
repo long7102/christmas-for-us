@@ -192,3 +192,60 @@ export function LampIcon() {
     </Svg>
   )
 }
+
+export function BowIcon() {
+  return (
+    <Svg label="Chiếc nơ">
+      <defs><linearGradient id="bw-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#b8332f" /><stop offset="1" stopColor="#6a1214" /></linearGradient></defs>
+      <ellipse cx="100" cy="206" rx="56" ry="5" fill={INK} opacity=".16" />
+      <g className="ic-sway" style={{ transformOrigin: '100px 90px' }}>
+        <path d="M92 108 C84 140 74 170 58 196 L82 190 L94 202 C98 170 100 140 100 112 Z" fill="url(#bw-g)" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        <path d="M108 108 C116 140 126 170 142 196 L118 190 L106 202 C102 170 100 140 100 112 Z" fill="url(#bw-g)" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        <path d="M100 96 C80 52 36 44 28 72 C24 96 62 112 100 96 Z" fill="url(#bw-g)" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        <path d="M100 96 C120 52 164 44 172 72 C176 96 138 112 100 96 Z" fill="url(#bw-g)" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        <g stroke={INK} strokeOpacity=".4" strokeWidth="1.4" fill="none"><path d="M96 92 C78 66 52 60 40 72 M96 98 C76 90 52 90 38 80 M104 92 C122 66 148 60 160 72 M104 98 C124 90 148 90 162 80" /></g>
+        <path d="M36 70 C48 58 70 60 88 78" stroke="#e58a82" strokeOpacity=".5" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <rect x="86" y="84" width="28" height="28" rx="9" fill="url(#bw-g)" stroke={INK} strokeWidth="3" />
+        <path d="M92 90 Q100 86 108 90" stroke="#e58a82" strokeOpacity=".6" strokeWidth="2" fill="none" />
+      </g>
+      <g className="ic-tw" fill="#f7e6b0"><path d="M170 150 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" /><path d="M24 140 l1.6 4.6 4.6 1.6 -4.6 1.6 -1.6 4.6 -1.6 -4.6 -4.6 -1.6 4.6 -1.6z" style={{ animationDelay: '-1s' }} /></g>
+    </Svg>
+  )
+}
+
+export function BellIcon() {
+  return (
+    <Svg label="Chiếc chuông">
+      <defs>
+        <linearGradient id="bl-g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#6e4c10" /><stop offset=".3" stopColor="#d8a842" /><stop offset=".5" stopColor="#f6dc92" /><stop offset=".8" stopColor="#b8862c" /><stop offset="1" stopColor="#5e3f0c" /></linearGradient>
+      </defs>
+      <ellipse cx="100" cy="212" rx="50" ry="5" fill={INK} opacity=".16" />
+      <path d="M100 8 C86 8 80 22 86 32 M100 8 C114 8 120 22 114 32" fill="none" stroke={INK} strokeWidth="4" />
+      <g className="ic-swing" style={{ transformOrigin: '100px 30px' }}>
+        <path d="M100 30 V50" stroke={INK} strokeWidth="5" />
+        <path d="M100 48 C72 48 62 90 58 130 C56 150 44 160 40 176 L160 176 C156 160 144 150 142 130 C138 90 128 48 100 48 Z" fill="url(#bl-g)" stroke={INK} strokeWidth="3.4" strokeLinejoin="round" />
+        <path d="M44 168 H156" stroke={INK} strokeOpacity=".5" strokeWidth="2" /><path d="M60 140 Q100 148 140 140" fill="none" stroke={INK} strokeOpacity=".35" strokeWidth="1.6" />
+        <path d="M76 62 C70 90 68 120 66 146" stroke="#fff" strokeOpacity=".45" strokeWidth="5" strokeLinecap="round" fill="none" />
+        <path d="M100 74 l5 6 -5 6 -5 -6z M100 100 l5 6 -5 6 -5 -6z" fill={INK} fillOpacity=".35" />
+        <path d="M38 176 Q100 188 162 176" fill="none" stroke={INK} strokeWidth="3.4" />
+        <g className="ic-ring" style={{ transformOrigin: '100px 176px' }}><circle cx="100" cy="190" r="11" fill="url(#bl-g)" stroke={INK} strokeWidth="3" /><path d="M94 186 q4 -4 8 0" stroke="#fff" strokeOpacity=".5" strokeWidth="2" fill="none" /></g>
+      </g>
+      <g className="ic-tw" fill="#fff0b8"><path d="M164 80 l2.4 7 7 2.4 -7 2.4 -2.4 7 -2.4 -7 -7 -2.4 7 -2.4z" /><path d="M30 100 l1.6 4.6 4.6 1.6 -4.6 1.6 -1.6 4.6 -1.6 -4.6 -4.6 -1.6 4.6 -1.6z" style={{ animationDelay: '-1.2s' }} /></g>
+    </Svg>
+  )
+}
+
+const GLYPH: Record<string, string> = { window: '❄', curtainL: '❦', curtainR: '❦', painting: '❖', painting2: '❖', shelf: '❧', basket: '❦', tools: '✠', garland: '❀', chair: '❧', rug: '✥', tree: '✦' }
+export function OrnamentIcon({ kind }: { kind: string }) {
+  const g = GLYPH[kind] ?? '❦'
+  return (
+    <Svg label="Hoa văn">
+      <g fill="none" stroke={INK} strokeWidth="2.4" strokeLinecap="round">
+        <circle cx="100" cy="110" r="78" strokeWidth="3.2" /><circle cx="100" cy="110" r="68" strokeWidth="1.2" strokeDasharray="3 5" />
+        <path d="M100 22 L106 40 L100 34 L94 40 Z M100 198 L106 180 L100 186 L94 180 Z M12 110 L30 104 L24 110 L30 116 Z M188 110 L170 104 L176 110 L170 116 Z" fill={INK} opacity=".6" />
+        <path d="M44 56 q16 -10 30 0 M126 56 q16 -10 30 0 M44 164 q16 10 30 0 M126 164 q16 10 30 0" opacity=".55" />
+      </g>
+      <text x="100" y="138" textAnchor="middle" fontSize="92" fill={INK} fillOpacity=".78" fontFamily="'Cormorant Garamond', serif">{g}</text>
+    </Svg>
+  )
+}

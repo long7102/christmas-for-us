@@ -91,6 +91,49 @@ export const lampStories: Memo[] = [
   { title: 'Đèn bên bậu lò', tip: 'Ngọn đèn đón người vừa bước vào nhà.', meaning: ['Đặt một ngọn đèn ngay lối vào là cách chào người về nhà trước cả khi kịp mở lời. Ánh sáng đầu tiên chạm vào mắt bạn khi bước qua cửa thường là thứ bạn nhớ lâu nhất.', 'Ở đây, ánh sáng ấy mang màu hổ phách và mùi nến.'], story: 'Chuyện của hai đứa về ngọn đèn này sẽ được viết ở đây.' },
 ]
 
+const mk = (title: string, tip: string, meaning: string[]): Memo => ({ title, tip, meaning, story: 'Chuyện của hai đứa về điều này sẽ được viết ở đây.' })
+const bowStories: Memo[] = [
+  mk('Chiếc nơ nhung đỏ', 'Một nút thắt nhỏ giữ cả mùa đông lại.', ['Người xưa buộc ruy băng đỏ lên cành thông như buộc một lời chúc: thắt chặt vào, đừng để tuột mất. Màu đỏ là màu của hơi ấm giữa tiết trời lạnh.', 'Nút thắt nào cũng cần hai bàn tay, một người giữ và một người buộc.']),
+  mk('Nơ trên cành cao', 'Cái nơ đứng giữa ánh đèn, như đang đợi ai nhìn thấy.', ['Trên cây thông, nơ thường được buộc ở chỗ dễ nhìn thấy nhất, giữa những chùm đèn, để mắt người nhìn dừng lại một nhịp.', 'Có những thứ đẹp chỉ vì ai đó đã bỏ công buộc nó cẩn thận.']),
+  mk('Nơ nhung nghiêng', 'Cái nơ hơi lệch, nên nhìn vào thấy thân thương.', ['Nhung đỏ từng là thứ vải dành cho những dịp trọng đại. Người ta cắt một đoạn nhỏ làm nơ, vì nghĩ rằng điều tử tế nhất nên được gói bằng thứ đẹp nhất mình có.', 'Cái nơ không hoàn hảo vẫn là cái nơ do tay người buộc.']),
+  mk('Nơ giữa tán thông', 'Chiếc nơ lớn nhất nằm giữa thân cây.', ['Giữa thân cây thường là chỗ đặt nơ to nhất, như trái tim của cả cây thông. Từ đó, những dải ruy băng buông xuống như những lời nhắn dài.', 'Khi nhìn từ xa, người ta nhớ cây thông nhờ những mảng đỏ này.']),
+  mk('Nơ cạnh chùm đèn', 'Đèn sáng thêm khi có một mảng đỏ bên cạnh.', ['Ánh đèn vàng đặt cạnh nhung đỏ tạo nên màu hổ phách ấm áp mà ai cũng thấy quen thuộc của đêm Giáng sinh.', 'Hai thứ khác màu đứng cạnh nhau, vậy mà lại làm nhau đẹp hơn.']),
+  mk('Nơ nhỏ ở cành thấp', 'Cành thấp, nơ nhỏ, nhưng không bị bỏ sót.', ['Những cành thấp nhất thường là chỗ trẻ con với tới được. Người lớn buộc nơ ở đó để chúng có một điều của riêng mình trên cây.', 'Chỗ khiêm tốn nhất cũng xứng đáng có một món trang trí.']),
+  mk('Nơ gần ngọn', 'Nơ gần ngọn nhất, gần ngôi sao nhất.', ['Càng lên cao cây càng nhỏ, nơ cũng nhỏ dần, như một cầu thang đỏ dẫn lên ngôi sao.', 'Đi từng bậc một cũng là cách để lên tới đỉnh.']),
+  mk('Nơ nhung cuối cây', 'Chiếc nơ cuối cùng người ta buộc vào cây thông.', ['Thường thì nơ được buộc sau cùng, khi cây đã đủ đèn, đủ chuông. Nó như dấu chấm khép lại một buổi tối trang trí cây cùng nhau.', 'Có những khoảnh khắc nhỏ như vậy mới là phần đáng nhớ.']),
+]
+const bellStories: Memo[] = [
+  mk('Chiếc chuông nhỏ', 'Tiếng chuông báo rằng có ai đó đang đến.', ['Chuông treo trên cây thông có từ thời người ta tin tiếng chuông xua đi bóng tối và những điều chẳng lành của mùa đông.', 'Một chiếc chuông nhỏ thôi cũng đủ báo rằng: có ai đó đang đến gần.']),
+  mk('Chuông đồng', 'Chiếc chuông đồng giữ lại ánh đèn quanh nó.', ['Chuông đồng bắt ánh đèn rất đẹp, nên người ta thích treo nó cạnh những chùm đèn nhỏ. Mỗi cái chuông như một ngọn đèn thứ hai.', 'Thứ gì mang ánh sáng, dù là phản chiếu, cũng đều làm đêm bớt tối.']),
+  mk('Chuông trên cành thấp', 'Cành thấp rung nhẹ là chuông ngân khẽ.', ['Chuông được treo bằng sợi chỉ mảnh, chỉ cần gió thoảng qua cành là nó ngân khẽ. Người xưa gọi đó là tiếng chào của cây.', 'Có những âm thanh nhỏ đến mức chỉ khi yên lặng mới nghe thấy.']),
+  mk('Chuông bên cửa sổ', 'Chiếc chuông nghe được cả tiếng tuyết.', ['Treo chuông gần cửa sổ là thói quen của nhiều gia đình: đêm đông gió lay, chuông khẽ reo, như có ai gõ cửa chào.', 'Ngoài kia tuyết rơi, trong này có tiếng chuông.']),
+  mk('Chuông giữa tán thông', 'Một chiếc chuông giữa muôn ngàn chiếc lá.', ['Giữa những cành thông dày, chiếc chuông là điểm sáng bất ngờ nhất, như một lời thì thầm giữa khu rừng nhỏ.', 'Điều bất ngờ thường nằm ở những chỗ ta không để ý.']),
+  mk('Chuông ngân', 'Âm thanh mà cả năm mới nghe được một lần.', ['Tiếng chuông Giáng sinh là thứ âm thanh người ta chỉ nghe vào một mùa trong năm, nên nó mang cả cảm giác chờ đợi.', 'Có những điều đáng chờ chính vì nó không đến thường xuyên.']),
+  mk('Chuông nhỏ trên ngọn', 'Chuông gần ngọn nhất, nghe xa nhất.', ['Chuông treo càng cao thì tiếng ngân càng lan xa. Người ta tin tiếng chuông trên cao sẽ báo tin cho cả mùa đông biết rằng nhà này đã sẵn sàng đón Giáng sinh.', 'Tin vui nên được treo thật cao.']),
+]
+const place = (title: string, tip: string, meaning: string[]) => mk(title, tip, meaning)
+const sceneStories: Record<string, Memo> = {
+  window: place('Cửa sổ ngập tuyết', 'Ngoài kia lạnh, trong này có đèn.', ['Cửa sổ mùa đông là nơi người ta đứng nhìn tuyết rơi mà không thấy lạnh. Kính phủ hơi nước, ngoài trời xanh thẫm, trong phòng vàng ấm: hai thế giới chỉ cách nhau một lớp kính.', 'Chính vì ngoài kia lạnh nên căn phòng này mới ấm đến vậy.']),
+  curtainL: place('Tấm rèm nhung', 'Tấm rèm nặng giữ lại hơi ấm của căn phòng.', ['Rèm nhung dày từng được treo để chặn gió lùa qua khe cửa. Kéo rèm lại là cách báo rằng: đêm nay không ai phải ra ngoài nữa.', 'Có những tấm vải sinh ra để giữ hơi ấm ở lại.']),
+  curtainR: place('Rèm bên cửa sổ', 'Tấm rèm đỏ buông xuống đến tận sàn.', ['Màu đỏ sẫm của rèm hợp với màu của quả nhựa ruồi và nơ trên cây, nên cả căn phòng nhìn như được phối cùng một bảng màu.', 'Sự ấm áp đôi khi chỉ là những thứ cùng màu đứng gần nhau.']),
+  painting: place('Bức tranh nhỏ', 'Bức tranh một vùng quê mà ai đó từng đi qua.', ['Người ta treo tranh phong cảnh trong nhà để mùa đông nào cũng có một khung cửa khác nhìn ra mùa hè. Mỗi lần ngẩng lên, lại nhớ ra rằng mùa lạnh rồi cũng qua.']),
+  painting2: place('Bức tranh bên cửa sổ', 'Một góc làng quê dưới tuyết.', ['Những bức tranh làng quê trong tuyết thường được treo vào dịp cuối năm, vì ai cũng muốn nhớ về một nơi chốn yên bình, nơi đèn sáng ở mọi cửa sổ.']),
+  shelf: place('Tủ sách gỗ', 'Những cuốn sách chờ được đọc to lên.', ['Mùa đông là mùa của sách: ngoài trời lạnh thì cứ ở trong nhà, đọc một chương trước khi ngủ. Tủ sách gỗ cũ có mùi giấy và mùi nến, mùi của những buổi tối chậm.', 'Có những cuốn sách chỉ mở ra vào đúng dịp này trong năm.']),
+  basket: place('Giỏ củi', 'Giỏ củi khô cho những đêm dài.', ['Trước mùa đông, người ta chẻ củi và xếp đầy giỏ cạnh lò sưởi. Giỏ đầy củi là lời hứa rằng: dù đêm có dài đến mấy, lửa sẽ không tắt.', 'Chuẩn bị cho nhau từ trước là một kiểu thương thầm lặng.']),
+  tools: place('Bộ dụng cụ lò sưởi', 'Cái cời lửa đứng đó, chờ người thêm một khúc củi.', ['Chiếc cời, cái xẻng, chổi nhỏ: bộ ba người ta dùng mỗi tối để giữ lửa. Cời lửa là việc nhỏ, nhưng làm đúng thì cả đêm ấm.', 'Người giữ lửa cũng là người giữ cả căn nhà.']),
+  garland: place('Vòng lá trên bệ lò sưởi', 'Cành thông xanh, quả đỏ, đèn nhỏ.', ['Dây lá thông trang trí bệ lò sưởi vì cành thông xanh suốt mùa đông. Người ta chọn thêm quả đỏ và đèn nhỏ, để màu xanh có chỗ nương tựa.', 'Có những thứ nhỏ nhưng làm cả căn phòng có hơi thở mùa lễ.']),
+  chair: place('Ghế bành và tấm chăn', 'Chỗ ngồi chờ hai người co chân lại.', ['Chiếc ghế bành bên cửa sổ và tấm chăn ca-rô là góc quen thuộc của những buổi tối đông: một tách trà, một cuốn sách, và một người ngồi cạnh.', 'Một chỗ ngồi ấm là món quà mùa đông đáng giá nhất.']),
+  rug: place('Tấm thảm cổ', 'Tấm thảm ngồi dưới chân cây suốt bao mùa Giáng sinh.', ['Thảm dệt hoa văn là thứ người ta trải dưới gốc cây thông để đón những món quà đầu tiên. Mỗi vết sờn trên thảm là một mùa đông đã đi qua.', 'Đồ cũ thường giữ lại nhiều ký ức hơn đồ mới.']),
+  tree: place('Cây thông', 'Cây thông là trái tim của căn phòng.', ['Từ xa xưa, người ta mang cây thông xanh vào nhà giữa mùa đông để nhắc nhau rằng sự sống vẫn tiếp tục. Trang trí bằng đèn, chuông, nơ và quà là cách cả nhà cùng nhau thắp sáng đêm dài.', 'Đứng trước cây thông, ai cũng như trẻ lại một chút.']),
+}
+export const getMemory = (id: string): Memo | undefined => {
+  if (memories[id]) return memories[id]
+  if (sceneStories[id]) return sceneStories[id]
+  const n = Number(id.replace(/\D/g, ''))
+  if (id.startsWith('bow')) return bowStories[n % bowStories.length]
+  if (id.startsWith('bell')) return bellStories[n % bellStories.length]
+}
+
 /** Chữ ở góc cảnh cây thông (chữ tạm, sẽ đổi khi Long chốt nội dung). */
 export const tree = {
   title: 'Cây thông',

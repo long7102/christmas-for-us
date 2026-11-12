@@ -182,7 +182,9 @@ img { user-select: none; -webkit-user-drag: none; }
 .tree-scene.tall .sec-hint { display: none; }
 .tr-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .tr-stage > img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; pointer-events: none; filter: brightness(1.16) saturate(1.05) contrast(1.02); }
-.tr-snow { position: absolute; mix-blend-mode: screen; opacity: .85; pointer-events: none; }
+.tr-snow { position: absolute; mix-blend-mode: screen; opacity: .8; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 49%, transparent 49% 51%, #000 51%), linear-gradient(#000 0 26%, transparent 26% 28%, #000 28% 52%, transparent 52% 54%, #000 54% 76%, transparent 76% 78%, #000 78%); -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, #000 0 49%, transparent 49% 51%, #000 51%), linear-gradient(#000 0 26%, transparent 26% 28%, #000 28% 52%, transparent 52% 54%, #000 54% 76%, transparent 76% 78%, #000 78%); mask-composite: intersect; filter: blur(.4px); }
 .tr-fireglow { position: absolute; pointer-events: none; mix-blend-mode: screen; border-radius: 50%;
   background: radial-gradient(closest-side, rgba(255,150,50,.55), rgba(255,110,30,.22) 55%, transparent);
   animation: tr-glow 2.3s infinite ease-in-out; }
@@ -346,7 +348,7 @@ img { user-select: none; -webkit-user-drag: none; }
 
 /* ---- hình minh hoạ hoạt ảnh trên giấy ---- */
 .lt-icon { display: grid; place-items: center; margin: 6px 0 12px; }
-.ic { width: 190px; height: 209px; overflow: visible; filter: sepia(.6) saturate(.85) contrast(.95) brightness(1.12); mix-blend-mode: multiply; }
+.ic { width: 190px; height: 209px; overflow: visible; filter: url(#tr-engrave) sepia(.35); mix-blend-mode: multiply; }
 .ic-swing { animation: ic-swing 3.4s ease-in-out infinite alternate; }
 @keyframes ic-swing { from { transform: rotate(-5deg) } to { transform: rotate(5deg) } }
 .ic-sway { animation: ic-swing 3s ease-in-out infinite alternate; }
@@ -399,3 +401,43 @@ img { user-select: none; -webkit-user-drag: none; }
 .lt-snap.s0 { transform: rotate(-3.5deg); } .lt-snap.s1 { transform: rotate(2.5deg) translateY(10px); } .lt-snap.s2 { transform: rotate(-1.5deg) translateY(-2px); }
 @media (min-width: 780px) { .lt-sheet.memory .lt-cols { grid-template-columns: 240px minmax(0, 1fr); } .lt-sheet.memory .lt-left { padding-top: 12px; } }
 @media (max-width: 779px) { .lt-cameo { width: 190px; height: 210px; } .ic { width: 150px; height: 165px; } .lt-snap { width: 120px; } }
+
+/* ---- giấy mở / gấp lại ---- */
+.tr-modal.closing { animation: tr-out .34s ease forwards; }
+@keyframes tr-out { to { opacity: 0 } }
+.tr-modal.closing .lt-sheet { animation: tr-fold .34s cubic-bezier(.5,0,.8,.4) forwards; }
+@keyframes tr-fold { to { opacity: 0; transform: translateY(34px) scale(.9) rotate(3deg) } }
+.lt-close { position: relative; z-index: 2; margin: 20px 4px 4px auto; }
+.lt-body { padding-bottom: 54px; }
+.lt-frame { inset: 6% 5%; }
+
+.tr-flames { position: absolute; pointer-events: none; mix-blend-mode: screen; opacity: .9; }
+.tr-sill { position: absolute; pointer-events: none; border-radius: 8px 8px 2px 2px / 14px 14px 2px 2px;
+  background: radial-gradient(ellipse 60% 100% at 18% 80%, #fff 0, rgba(255,255,255,0) 60%), radial-gradient(ellipse 55% 100% at 62% 85%, #f4f8ff 0, rgba(235,242,255,0) 62%), linear-gradient(to bottom, rgba(246,250,255,0) 0%, rgba(240,246,255,.92) 60%, rgba(214,226,246,.95) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%); mask-image: linear-gradient(to bottom, transparent, #000 45%); filter: blur(.6px); }
+
+/* ---- cảnh cửa: chữ có viền Noel, hơi thở, tuyết bám cửa ---- */
+.door-plate { position: relative; display: flex; flex-direction: column; align-items: center; padding: 18px clamp(18px, 4vw, 44px) 20px; opacity: 0; transition: opacity 1s ease; }
+.door-plate.in { opacity: 1; }
+.door-orn { display: flex; align-items: center; gap: 12px; width: min(440px, 80vw); color: #f3d79a; text-shadow: 0 0 14px rgba(255,200,110,.6); }
+.door-orn i { flex: 1; height: 1.5px; background: linear-gradient(90deg, rgba(243,215,154,0), rgba(243,215,154,.95)); }
+.door-orn i:last-child { transform: scaleX(-1); }
+.door-orn b { font-weight: 400; font-size: 1.2rem; line-height: 1; }
+.door-orn.top { margin-bottom: 12px; } .door-orn.bot { margin-top: 14px; }
+.door-line1 { -webkit-text-stroke: .5px rgba(20,8,2,.5); paint-order: stroke fill; color: #fff4dc; text-shadow: 0 0 2px rgba(0,0,0,.9), 0 2px 12px rgba(0,0,0,.85), 0 0 26px rgba(255,190,100,.3); }
+.door-line2 { background: linear-gradient(180deg, #fffbe9 0%, #ffe2a0 46%, #f1b95a 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; filter: drop-shadow(0 0 1px rgba(40,16,2,.95)) drop-shadow(0 2px 0 rgba(60,24,4,.8)) drop-shadow(0 4px 14px rgba(0,0,0,.7)) drop-shadow(0 0 22px rgba(255,190,90,.35)); text-shadow: none; }
+.door-snowcap { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+.door-breath { position: absolute; left: 0; right: 0; bottom: 0; height: 46%; z-index: 4; pointer-events: none; overflow: hidden; }
+.door-breath i { position: absolute; left: 50%; bottom: -14%; width: 60vmin; height: 34vmin; margin-left: -30vmin; border-radius: 50%; opacity: 0; filter: blur(22px);
+  background: radial-gradient(ellipse at 50% 70%, rgba(240,246,255,.55), rgba(226,236,252,.26) 45%, rgba(226,236,252,0) 72%); animation: breath 6.4s ease-in-out infinite; }
+.door-breath i:nth-child(2) { animation-delay: 2.1s; margin-left: -34vmin; width: 52vmin; } .door-breath i:nth-child(3) { animation-delay: 4.2s; margin-left: -24vmin; width: 48vmin; }
+@keyframes breath { 0% { opacity: 0; transform: translate(0, 26%) scale(.5) } 14% { opacity: .85 } 55% { opacity: .4; transform: translate(4%, -34%) scale(1.15) } 100% { opacity: 0; transform: translate(-3%, -62%) scale(1.5) } }
+@media (prefers-reduced-motion: reduce) { .door-breath i { animation-duration: 12s } }
+
+.lt-cameo::after { content: '\2766'; }
+.lt-cameo { overflow: visible; }
+.lt-cameo > svg { position: relative; z-index: 1; }
+.lt-cameo { background-image: repeating-linear-gradient(45deg, rgba(70,40,14,.07) 0 1px, transparent 1px 4px), radial-gradient(ellipse at 50% 42%, rgba(255,250,232,.6), rgba(255,250,232,.12) 70%); }
+
+.tr-sill { opacity: .5; }
+.tree-scene.tall .tr-sill { display: none; }
