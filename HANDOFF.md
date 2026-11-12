@@ -99,3 +99,7 @@ npx tsc -b        # kiểm tra kiểu
 - Gợn chạm vàng + rung nhẹ trên điện thoại: `lib/ripple.ts`. Vùng chạm lớn hơn trên máy cảm ứng, `robots.txt` chặn hết, thẻ noindex/noarchive/no-referrer.
 - Chuyển cảnh: cả hai lần đều có bloom vàng, nốt nhạc và sao bay lên; `--bloom` dùng chung.
 - Kiểm thử: kịch bản Playwright ở /tmp (không nằm trong repo) chạy cổng mật khẩu, cửa, thế giới, hộp nhạc, bảng âm lượng trên máy tính, iPhone 13 và Pixel 7 (giả lập bằng Chromium), và khoá quà theo ngày bằng ?date= (chỉ chạy ở chế độ dev).
+
+### Lần 8
+- Cảnh cửa: bỏ hết chữ và nút "MỞ CÁNH CỬA". `Door.tsx` có `.door-hit` (nút trong suốt trùm lên cánh cửa, bấm là mở) và hoạt ảnh gợi ý bàn tay nhấn kèm gợn sáng vàng ở chỗ tay nắm; chỉ hiện khi máy quay đã tới sát cửa. Nội dung `content.door.line1/line2/button` không còn dùng.
+- Hình minh hoạ mới trong `Icons.tsx`: `BasketIcon` (giỏ củi), `PaintingIcon` (bức tranh, `snow` cho tranh thứ hai), gắn trong `iconFor` ở `Letter.tsx`. Các vật còn dùng hình chung: shelf, tools, garland, chair, rug, tree, window, curtainL/R.

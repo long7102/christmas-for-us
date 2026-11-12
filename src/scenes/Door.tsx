@@ -236,7 +236,6 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
   const villRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<HTMLDivElement>(null)
   const panels = useRef<HTMLDivElement>(null)
-  const [line, setLine] = useState(0) // 0 none, 1 line1, 2 line1+2, 3 hidden
   const [ready, setReady] = useState(false) // button visible
   const [opening, setOpening] = useState(false)
   const [rs, setRs] = useState(0) // rendered px per source px
@@ -303,14 +302,13 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       apply()
       box.current.classList.add('feather')
       tl.fromTo(villRef.current, { opacity: 0 }, { opacity: 1, duration: 2.4, ease: 'power1.inOut' }, 0)
-      at(900, () => setLine(1)); at(3000, () => setLine(2)); at(4600, () => setLine(3))
       // nút chỉ hiện khi máy quay đã tới sát cánh cửa (theo tiến độ phóng thật, không theo đồng hồ nên máy chậm cũng không hiện sớm)
       let arrived = false
       tl.to(proxy, { p: 1, duration: 5.6, ease: 'sine.inOut', onUpdate: () => { apply(); if (!arrived && proxy.p > 0.985) { arrived = true; setReady(true) } }, onComplete: () => { box.current?.classList.remove('feather'); gsap.set(villRef.current, { display: 'none' }); setReady(true) } }, 4.6)
         .to(villRef.current.querySelector('img'), { y: -5, duration: 0.27, yoyo: true, repeat: 20, ease: 'sine.inOut' }, 4.6)
     } else {
       if (sceneRef.current) gsap.to(sceneRef.current, { opacity: 1, duration: 2, delay: 5.6 * k })
-      at(800, () => setLine(1)); at(2900, () => setLine(2)); at(5600, () => setLine(3)); at(7600, () => setReady(true))
+      at(7600, () => setReady(true))
     }
     return () => { timers.forEach(clearTimeout); tl.kill() }
   }, [vill, villRaw, portrait, fit])
@@ -441,17 +439,17 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
           <div ref={panels} className="door-panels" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }}>
             <div className="door-recess">{leaf('l')}{leaf('r')}</div>
           </div>
+          {/* bấm vào cánh cửa để mở; bàn tay gợi ý chỉ hiện khi máy quay đã tới sát cửa */}
+          <button className={`door-hit${ready && !opening ? ' on' : ''}`} style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height }} disabled={!ready || opening} onClick={open} aria-label="Bấm vào cánh cửa để mở">
+            <span className="hint" aria-hidden>
+              <i className="ring" /><i className="ring r2" /><i className="ring r3" />
+              <svg viewBox="0 0 48 64" width="46" height="62"><path d="M20 4c-3 0-5 2-5 5v22l-4-4c-2-2-5-2-7 0s-1 5 1 7l13 18c3 4 6 6 11 6h4c8 0 13-5 13-13V30c0-3-2-5-4-5s-4 2-4 4v-3c0-3-2-5-5-5-2 0-4 2-4 4v-3c0-3-2-5-5-5-1 0-2 0-3 1V9c0-3-2-5-5-5z" fill="#fff6dc" stroke="#6a4416" strokeWidth="2" strokeLinejoin="round" /></svg>
+            </span>
+          </button>
         </div>
         <div className="door-scrim" />
       </div>
 
-      <div className={`door-intro ${vill ? 'top' : ''}`}>
-        <div className={`door-plate ${line >= 1 ? 'in' : ''}`}>
-          <p className={`door-line1 reveal ${line === 1 || line === 2 ? 'in' : ''}`}>{content.door.line1}</p>
-          <h1 className={`door-line2 ${line === 2 ? 'in' : ''}`}><span className="mask-line"><span>{content.door.line2}</span></span></h1>
-          <div className="door-orn bot" aria-hidden><i /><b>✦</b><i /></div>
-        </div>
-      </div>
       {!opening && <div className="door-breath" aria-hidden><i /><i /><i /></div>}
 
       <SnowParticles density={vill ? 1.4 : 1.1} />
@@ -459,9 +457,6 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       <SoundControl where="door" />
       {returning && !opening && <button className="door-skip" onClick={finish}>{ui.skip}</button>}
 
-      <div className={`door-cta reveal ${ready ? 'in' : ''}`}>
-        <button className="btn-gold" onClick={open} disabled={opening || !ready}>{content.door.button}</button>
-      </div>
       <div className="door-flash" />
     </div>
   )

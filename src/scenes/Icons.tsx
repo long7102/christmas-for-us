@@ -365,3 +365,91 @@ export function PineIcon() {
     </Svg>
   )
 }
+
+/** Giỏ củi vintage: giỏ liễu gai đan chéo, quai cong, những khúc củi bổ đôi lộ vân gỗ và vỏ cây, vài mảnh vụn và một chiếc lá thông. */
+export function BasketIcon() {
+  const r = rng(47)
+  const logs = [
+    { x: 54, y: 92, rx: 22, ry: 18, a: -6, c: '#8a5a2c' }, { x: 100, y: 84, rx: 23, ry: 19, a: 3, c: '#7a4b22' }, { x: 146, y: 92, rx: 22, ry: 18, a: 8, c: '#946134' },
+    { x: 76, y: 106, rx: 21, ry: 17, a: 5, c: '#6f441f' }, { x: 124, y: 106, rx: 22, ry: 17, a: -5, c: '#85552a' },
+  ]
+  return (
+    <Svg label="Giỏ củi">
+      <defs>
+        <linearGradient id="bs-w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#c8955a" /><stop offset="1" stopColor="#7c5026" /></linearGradient>
+        <radialGradient id="bs-glow"><stop offset="0" stopColor="#ffd890" stopOpacity=".5" /><stop offset="1" stopColor="#ffb050" stopOpacity="0" /></radialGradient>
+        <clipPath id="bs-clip"><path d="M26 112 H174 L160 188 Q158 198 148 198 H52 Q42 198 40 188 Z" /></clipPath>
+      </defs>
+      <ellipse cx="100" cy="204" rx="72" ry="6" fill={INK} opacity=".25" />
+      <circle className="ic-light" cx="100" cy="110" r="84" fill="url(#bs-glow)" />
+      {/* quai giỏ */}
+      <path d="M32 116 C32 44 168 44 168 116" fill="none" stroke="#5e3a18" strokeWidth="9" strokeLinecap="round" />
+      <path d="M32 116 C32 44 168 44 168 116" fill="none" stroke="#b98448" strokeWidth="5" strokeLinecap="round" strokeDasharray="6 4" />
+      {/* củi chất đầy miệng giỏ */}
+      {logs.map((l, i) => (
+        <g key={i} transform={`rotate(${l.a} ${l.x} ${l.y})`}>
+          <ellipse cx={l.x} cy={l.y} rx={l.rx} ry={l.ry} fill="#4a2a10" stroke="#2a1608" strokeWidth="2.4" />
+          <ellipse cx={l.x} cy={l.y} rx={l.rx - 3} ry={l.ry - 3} fill={l.c} />
+          {[0.75, 0.55, 0.35, 0.18].map((t, k) => <ellipse key={k} cx={l.x + (k % 2 ? 0.8 : -0.8)} cy={l.y} rx={(l.rx - 3) * t} ry={(l.ry - 3) * t} fill="none" stroke="#3e2210" strokeOpacity=".5" strokeWidth=".8" />)}
+          <path d={`M${l.x - 2} ${l.y - l.ry + 4} L${l.x + 3} ${l.y + l.ry - 4}`} stroke="#3e2210" strokeOpacity=".55" strokeWidth=".9" />
+          <ellipse cx={l.x - l.rx * 0.35} cy={l.y - l.ry * 0.35} rx={l.rx * 0.25} ry={l.ry * 0.2} fill="#e0b27a" opacity=".45" />
+        </g>
+      ))}
+      {/* thân giỏ đan chéo */}
+      <path d="M26 112 H174 L160 188 Q158 198 148 198 H52 Q42 198 40 188 Z" fill="url(#bs-w)" stroke="#3e2410" strokeWidth="1.6" />
+      <g clipPath="url(#bs-clip)">
+        {Array.from({ length: 16 }, (_, i) => <path key={'a' + i} d={`M${14 + i * 12} 108 L${-6 + i * 12 + 52} 202`} stroke="#4a2c12" strokeWidth="2.6" opacity=".55" />)}
+        {Array.from({ length: 16 }, (_, i) => <path key={'b' + i} d={`M${14 + i * 12 + 60} 108 L${14 + i * 12 - 4} 202`} stroke="#e3b878" strokeWidth="2.2" opacity=".4" />)}
+        <path d="M20 134 H180 M20 160 H180" stroke="#3e2410" strokeWidth="2" opacity=".5" />
+      </g>
+      <path d="M26 112 H174" stroke="#3e2410" strokeWidth="5" strokeLinecap="round" /><path d="M26 112 H174" stroke="#d9a868" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="7 3" />
+      {/* mảnh vụn và lá thông */}
+      {Array.from({ length: 6 }, (_, i) => <path key={i} d={`M${60 + r() * 90} ${203 + r() * 6} l${6 + r() * 6} ${r() * 3 - 1.5}`} stroke="#6a4220" strokeWidth="2.2" strokeLinecap="round" />)}
+      <g transform="translate(150 196) rotate(-24)"><path d="M0 0 q16 -4 26 -14" stroke="#2f7545" strokeWidth="2.2" fill="none" strokeLinecap="round" />{[4, 11, 18].map((x) => <path key={x} d={`M${x} ${-x * 0.45} l5 -7 M${x} ${-x * 0.45} l-1 7`} stroke="#2f7545" strokeWidth="1.6" strokeLinecap="round" />)}</g>
+    </Svg>
+  )
+}
+
+/** Bức tranh treo tường vintage: khung mạ vàng chạm hoa văn, tranh phong cảnh (hoặc làng quê dưới tuyết), tấm biển đồng nhỏ bên dưới, dây treo. */
+export function PaintingIcon({ snow = false }: { snow?: boolean }) {
+  const r = rng(snow ? 5 : 19)
+  const trees = Array.from({ length: 7 }, (_, i) => ({ x: 34 + i * 22 + r() * 6, h: 14 + r() * 12 }))
+  return (
+    <Svg label="Bức tranh treo tường">
+      <defs>
+        <linearGradient id={`pt-g${+snow}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f4d27a" /><stop offset=".45" stopColor="#b98a30" /><stop offset="1" stopColor="#6a4812" /></linearGradient>
+        <linearGradient id={`pt-s${+snow}`} x1="0" y1="0" x2="0" y2="1">{snow ? <><stop offset="0" stopColor="#25325a" /><stop offset=".6" stopColor="#6f7aa8" /><stop offset="1" stopColor="#e7d9c0" /></> : <><stop offset="0" stopColor="#7fa6c8" /><stop offset=".55" stopColor="#f2c88a" /><stop offset="1" stopColor="#f6dba4" /></>}</linearGradient>
+        <clipPath id={`pt-c${+snow}`}><rect x="40" y="46" width="120" height="112" rx="2" /></clipPath>
+      </defs>
+      <ellipse cx="100" cy="206" rx="66" ry="5" fill={INK} opacity=".2" />
+      {/* dây treo */}
+      <path d="M100 8 L58 44 M100 8 L142 44" stroke="#5a3a18" strokeWidth="1.6" fill="none" /><circle cx="100" cy="8" r="3.4" fill="#caa14e" stroke="#5a3a18" strokeWidth=".8" />
+      {/* khung vàng chạm nổi */}
+      <rect x="22" y="30" width="156" height="148" rx="5" fill={`url(#pt-g${+snow})`} stroke="#4a3008" strokeWidth="1.6" />
+      <rect x="30" y="38" width="140" height="132" rx="3" fill="none" stroke="#fbe9a8" strokeOpacity=".6" strokeWidth="1.2" />
+      <rect x="36" y="42" width="128" height="120" rx="2" fill="#3a2410" />
+      {[[22, 30], [178, 30], [22, 178], [178, 178]].map(([x, y], i) => <g key={i} transform={`translate(${x} ${y}) rotate(${i * 90})`}><path d="M0 0 q14 2 18 -12 q-4 14 -18 12 q8 8 -2 16 q0 -10 2 -16Z" fill="#f7dc8a" stroke="#6a4812" strokeWidth=".9" /></g>)}
+      {Array.from({ length: 10 }, (_, i) => <circle key={'t' + i} cx={44 + i * 12.4} cy="34" r="1.5" fill="#fbe9a8" opacity=".85" />)}
+      {Array.from({ length: 10 }, (_, i) => <circle key={'b' + i} cx={44 + i * 12.4} cy="174" r="1.5" fill="#fbe9a8" opacity=".85" />)}
+      {/* tranh */}
+      <g clipPath={`url(#pt-c${+snow})`}>
+        <rect x="40" y="46" width="120" height="112" fill={`url(#pt-s${+snow})`} />
+        {snow
+          ? Array.from({ length: 18 }, (_, i) => <circle key={i} cx={44 + r() * 112} cy={50 + r() * 70} r={0.8 + r() * 1.1} fill="#fff" opacity=".85" />)
+          : <><circle cx="128" cy="76" r="11" fill="#fff0b8" opacity=".9" /><circle cx="128" cy="76" r="18" fill="#fff0b8" opacity=".25" /></>}
+        <path d={snow ? 'M40 112 Q70 94 100 108 T160 100 V158 H40Z' : 'M40 108 Q66 88 94 104 T160 96 V158 H40Z'} fill={snow ? '#c7cde0' : '#6f8a62'} />
+        <path d={snow ? 'M40 126 Q80 112 120 124 T160 120 V158 H40Z' : 'M40 126 Q80 110 120 124 T160 118 V158 H40Z'} fill={snow ? '#e9e4d8' : '#4f6b46'} />
+        {/* mái nhà và gác chuông */}
+        <g transform="translate(78 92)"><rect x="0" y="12" width="34" height="22" fill={snow ? '#8a5a3a' : '#a8683f'} /><path d="M-4 14 L17 -2 L38 14Z" fill={snow ? '#f2f2f4' : '#7a3a2a'} /><rect x="13" y="20" width="8" height="14" fill="#2a1608" /><rect x="3" y="18" width="6" height="6" fill="#ffd36e" /><rect x="25" y="18" width="6" height="6" fill="#ffd36e" />
+          <rect x="24" y="-12" width="9" height="26" fill={snow ? '#8a5a3a' : '#a8683f'} /><path d="M22 -12 L28.5 -24 L35 -12Z" fill={snow ? '#f2f2f4' : '#7a3a2a'} /></g>
+        {trees.map((t, i) => <path key={i} d={`M${t.x} 142 l-6 0 l6 -${t.h} l6 ${t.h}Z`} fill={snow ? '#2c5a46' : '#2c5a3a'} stroke={snow ? '#f4f4f8' : 'none'} strokeWidth=".8" />)}
+        <path d="M40 148 Q80 140 120 148 T160 146 V158 H40Z" fill={snow ? '#aebbd8' : '#7fb0cc'} opacity=".8" />
+        <path d="M60 152 h20 M96 150 h28" stroke="#fff" strokeOpacity=".55" strokeWidth="1" />
+      </g>
+      <rect x="40" y="46" width="120" height="112" rx="2" fill="none" stroke="#2a1608" strokeOpacity=".7" strokeWidth="1.4" />
+      <path d="M40 46 H160 L150 56 H50Z" fill="#000" opacity=".18" />
+      {/* tấm biển đồng */}
+      <rect x="72" y="182" width="56" height="14" rx="2" fill="#d9b25c" stroke="#5a3a0c" strokeWidth="1" /><path d="M78 187 h44 M82 192 h36" stroke="#5a3a0c" strokeWidth="1" opacity=".7" />
+    </Svg>
+  )
+}
