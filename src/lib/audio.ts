@@ -19,6 +19,7 @@ class Sfx {
   private purrOn = false
   private mixV = 0
   private boxV = 0
+  private userPaused = false
   private purrGain?: GainNode
 
   constructor() {
@@ -51,7 +52,7 @@ class Sfx {
 
   setMuted(m: boolean) {
     this.muted = m; store.set('muted', m)
-    if (this.music) { this.music.muted = m; if (!m && this.music.paused) this.music.play().catch(() => {}) }
+    if (this.music) { this.music.muted = m; if (!m && this.music.paused && !this.userPaused) this.music.play().catch(() => {}) }
     if (this.master && this.ctx) this.master.gain.setTargetAtTime(m ? 0 : 1, this.ctx.currentTime, 0.1)
     this.emit()
   }
@@ -60,10 +61,19 @@ class Sfx {
   startMusic() {
     if (!this.music) {
       const a = new Audio(musicUrl); a.loop = true; a.volume = 0.42; a.preload = 'auto'; this.music = a
+      a.addEventListener('play', () => this.emit()); a.addEventListener('pause', () => this.emit())
     }
     this.music.muted = this.muted
-    if (this.music.paused) this.music.play().catch(() => {})
+    if (this.music.paused && !this.userPaused) this.music.play().catch(() => {})
   }
+
+  /** Điều khiển nhạc từ hộp nhạc (danh sách phát). */
+  get musicPlaying() { return !!this.music && !this.music.paused && !this.muted }
+  playMusic() { this.userPaused = false; if (this.muted) this.setMuted(false); this.unlock(); this.startMusic(); this.music?.play().catch(() => {}) }
+  pauseMusic() { this.userPaused = true; this.music?.pause() }
+  toggleMusic() { if (this.musicPlaying) this.pauseMusic(); else this.playMusic() }
+  musicClock() { return { t: this.music?.currentTime ?? 0, d: this.music && isFinite(this.music.duration) ? this.music.duration : 0 } }
+  seekMusic(frac: number) { if (this.music && isFinite(this.music.duration)) this.music.currentTime = Math.min(1, Math.max(0, frac)) * this.music.duration }
 
   /** Tiếng lửa tí tách quanh bếp: rì rào nhỏ + những tiếng nổ lách tách ngẫu nhiên. */
   fire(on: boolean) { this.fireOn = on; this.syncFire() }

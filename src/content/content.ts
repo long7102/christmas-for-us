@@ -188,13 +188,21 @@ export const ui = { enter: 'Vào', skip: 'Bỏ qua ›' }
 /** Chữ cảnh hộp nhạc. [nháp] lời Long, chờ Long sửa; chưa có chuyện riêng nào của hai người. */
 export const musicbox = {
   title: 'Hộp nhạc',
-  tagline: 'Chỉ cần vặn khoá, cô vũ công nhỏ lại bước ra.',
+  tagline: 'Mở nắp ra, là có một điệu nhạc dành cho em.',
   body: [
-    'Có những điều không cần nói thành lời. Chỉ cần một chiếc hộp nhỏ, một cú vặn khoá khẽ, là cả căn phòng chậm lại để nghe.',
-    'Anh để em vặn khoá, cô nàng nhỏ xíu xoay mãi một điệu, và mình ngồi đây nghe cho hết bài.',
+    'Có những điều không cần nói thành lời. Chỉ cần một chiếc hộp nhỏ, một cái mở nắp khẽ, là cả căn phòng chậm lại để nghe.',
+    'Anh để dành những bài hát ở trong này. Em mở ra, chọn một bài, và cô vũ công nhỏ sẽ múa theo.',
   ],
-  hint: 'Em bấm vào cô vũ công hoặc chiếc hộp để vặn khoá nhé.',
-  dancer: { title: 'Cô vũ công', tip: 'Bấm để vặn khoá, cô nàng sẽ xoay một điệu nhỏ.', tipOn: 'Bấm để dừng điệu nhạc.' },
-  box: { title: 'Chiếc hộp nhạc', tip: 'Gỗ óc chó cũ, bộ lược đồng bên trong. Bấm để vặn khoá.', tipOn: 'Bấm để dừng điệu nhạc.' },
+  hintClosed: 'Em bấm vào chiếc hộp để mở nắp nhé.',
+  hintOpen: 'Chọn một bài ở danh sách, hoặc bấm vào hộp để đóng lại.',
+  playlistTitle: 'Danh sách nhạc',
+  /** Danh sách bài. Bài đầu là nhạc nền có sẵn; các bài sau chờ Long gửi (đánh dấu soon). */
+  tracks: [
+    { title: 'Sugar Plum Fairy', artist: 'Tchaikovsky · Kẹo hạt dẻ', soon: false },
+    { title: 'Bài hát tiếp theo', artist: 'Anh sẽ thêm vào đây', soon: true },
+    { title: 'Bài hát tiếp theo', artist: 'Anh sẽ thêm vào đây', soon: true },
+  ],
+  dancer: { title: 'Cô vũ công', tip: 'Cô nàng múa theo nhạc. Bấm để dừng hoặc phát nhạc.' },
+  box: { closed: { title: 'Chiếc hộp nhạc', tip: 'Gỗ óc chó cũ, bộ lược đồng bên trong. Bấm để mở nắp.' }, open: { title: 'Chiếc hộp nhạc', tip: 'Bấm để đóng nắp lại.' } },
   lamp: { title: 'Ngọn đèn lồng', tipOn: 'Bấm để thổi tắt đèn.', tipOff: 'Bấm để thắp đèn lại.' },
-  }
+}

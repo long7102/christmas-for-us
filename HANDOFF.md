@@ -84,3 +84,9 @@ npx tsc -b        # kiểm tra kiểu
 ### Thứ tự cảnh mới (Long yêu cầu: hộp nhạc đứng TRÊN cây thông)
 - Sau cánh cửa: hộp nhạc (cảnh đầu, đứng yên HOLD0) -> màn ánh sáng vàng kéo từ dưới lên (SPAN2, mặt nạ ở `.xf-tree`) -> cây thông (đứng yên HOLD) -> vòng kẹo (SPAN) -> hai chú mèo. Mọi hằng số và công thức q/p ở `WorldScroll.tsx`; mục "Chuyển cảnh mèo -> hộp nhạc" ở trên nay là hộp nhạc -> cây thông. Hộp nhạc có nút loa + bóng đèn riêng (vì cây thông ẩn lúc đầu).
 - Xoay giả vũ công đã bỏ (trông dẹt): tạm chỉ lắc nhẹ. Chờ Long gửi chuỗi ảnh vũ công quay 8 góc (45..315) + ảnh hộp đóng + hộp hé mở 35 và 70 độ, cùng khung 1672x941 với ảnh gốc. Hộp nhạc sẽ kiểu playlist (đóng/mở, danh sách bài), không phải nhạc thật.
+
+### Hộp nhạc có đóng, hé, mở và danh sách nhạc (lần 6)
+- Long gửi ba ảnh cùng khung: đóng, hé mở, mở hẳn (có vũ công). `musicLayout.ts`: `imgs.closed/ajar/open`. Ảnh `musicbox-open.webp` là ảnh mở hẳn đã BỎ vũ công (vá vân gỗ), vũ công cắt rời `musicbox-ballerina.webp`. Chuyển mờ chồng ảnh theo `lid` (0 đóng, 1 hé, 2 mở). Bấm hộp: `sfx.ratchet`, hé 0,75s rồi mở hẳn và `sfx.playMusic()`; bấm lại thì đóng.
+- Danh sách nhạc (`.mb-playlist`, nội dung `musicbox.tracks` trong content.ts): bài 1 là Sugar Plum Fairy (nhạc nền có sẵn, điều khiển bằng `sfx.playMusic/pauseMusic/toggleMusic/seekMusic/musicClock`), hai bài sau là chỗ trống `soon: true` chờ Long. Muốn thêm bài thật: cần nhiều nguồn nhạc; hiện sfx chỉ có một `music`, phải mở rộng thành danh sách.
+- Vũ công không xoay nữa (xoay giả trông dẹt): lắc nhẹ + bóng đổ khi nhạc chạy. Nếu Long gửi chuỗi ảnh xoay các góc thì thay bằng đổi khung ảnh theo góc.
+- Bấm vũ công khi nắp mở = phát/dừng nhạc. Sách và cành thông giữ nguyên (viền grabCut, giấy cổ).
