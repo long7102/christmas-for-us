@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LONG_EMAIL, gifts, memories, treeText } from '../content/content'
 import { store } from '../lib/storage'
-import { LAND, lampPoly, polyBox, type P } from './treeLayout'
+import { FireIcon, LampIcon, StarIcon, StockingIcon, WreathIcon } from './Icons'
 import { countdown, isUnlocked } from '../lib/unlock'
 
 export type Modal = { kind: 'gift'; i: number } | { kind: 'memory'; id: string; i?: number } | null
@@ -44,18 +44,15 @@ function Postmark({ text }: { text: string }) {
   )
 }
 
-/** Hình nhỏ của vật phẩm, cắt ôm sát viền, dán lên giấy. */
-function Cutout({ id, i }: { id: string; i?: number }) {
-  const poly: P | undefined = id === 'lamp' ? lampPoly(LAND.lampBox[i ?? 0]) : LAND.spots.find((q) => q.id === id)?.poly
-  if (!poly) return null
-  const b = polyBox(poly), k = Math.min(150 / b.w, 170 / b.h, 1.6)
-  const clip = `polygon(${poly.map(([x, y]) => `${(x - b.x) * k}px ${(y - b.y) * k}px`).join(',')})`
-  return (
-    <div className="lt-cut" style={{ width: b.w * k, height: b.h * k }} aria-hidden>
-      <div style={{ width: b.w * k, height: b.h * k, clipPath: clip, backgroundImage: `url(${LAND.src})`, backgroundSize: `${LAND.w * k}px ${LAND.h * k}px`, backgroundPosition: `${-b.x * k}px ${-b.y * k}px` }} />
-      <i className="tape l" /><i className="tape r" />
-    </div>
-  )
+function iconFor(id: string) {
+  if (id === 'stock0') return <StockingIcon main="#a82a2a" dark="#6f1414" />
+  if (id === 'stock1') return <StockingIcon main="#eadfc4" dark="#b49f74" />
+  if (id === 'stock2') return <StockingIcon main="#24553a" dark="#123320" />
+  if (id === 'wreath') return <WreathIcon />
+  if (id === 'star') return <StarIcon />
+  if (id === 'lamp') return <LampIcon />
+  if (id === 'fire') return <FireIcon />
+  return null
 }
 
 function Reply({ id }: { id: number }) {
@@ -139,10 +136,9 @@ export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClo
           )}
           {m && (
             <>
-              <div className="lt-itemrow">
-                <Cutout id={(modal as { id: string }).id} i={(modal as { i?: number }).i} />
-                <p className="hand">{m.story}</p>
-              </div>
+              <div className="lt-icon">{iconFor((modal as { id: string }).id)}</div>
+              {m.meaning.map((t, i) => <p key={i}>{t}</p>)}
+              <p className="hand">{m.story}</p>
               <div className="lt-photo"><span>{treeText.photo}</span></div>
             </>
           )}

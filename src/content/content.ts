@@ -47,14 +47,42 @@ export const gifts: { id: number; kind: GiftKind; title: string; stamp: string; 
 ]
 
 /** Những vật trong phòng bấm được. Ảnh và câu chuyện thật Long sẽ cung cấp sau. */
-export const memories: Record<string, { title: string; story: string }> = {
-  stock0: { title: 'Chiếc tất đỏ', story: 'Câu chuyện nhỏ về chiếc tất này sẽ được kể ở đây.' },
-  stock1: { title: 'Chiếc tất kem', story: 'Câu chuyện nhỏ về chiếc tất này sẽ được kể ở đây.' },
-  stock2: { title: 'Chiếc tất xanh', story: 'Câu chuyện nhỏ về chiếc tất này sẽ được kể ở đây.' },
-  wreath: { title: 'Vòng hoa trên tường', story: 'Câu chuyện nhỏ về vòng hoa này sẽ được kể ở đây.' },
-  star: { title: 'Ngôi sao trên đỉnh', story: 'Ngôi sao trên đỉnh cây nhắc đến vì sao dẫn đường trong đêm Giáng sinh đầu tiên. Nó đứng cao nhất, để ai lạc đường cũng tìm được lối về nhà.' },
-  lamp: { title: 'Ngọn đèn nhỏ', story: 'Câu chuyện nhỏ về ngọn đèn này sẽ được kể ở đây.' },
-  fire: { title: 'Lò sưởi', story: 'Câu chuyện nhỏ về lò sưởi này sẽ được kể ở đây.' },
+export const memories: Record<string, { title: string; tip: string; meaning: string[]; story: string }> = {
+  stock0: {
+    title: 'Chiếc tất đỏ', tip: 'Tất treo bên lò sưởi, chờ một bất ngờ nhỏ.',
+    meaning: ['Chuyện kể rằng ngày xưa, thánh Nicholas lén thả vài đồng vàng qua ống khói cho ba cô gái nghèo. Đồng vàng rơi đúng vào những chiếc tất đang phơi bên lò sưởi. Từ đó, người ta treo tất lên để đón quà.', 'Chiếc tất nhỏ nhắc rằng điều quý nhất thường đến lặng lẽ và bất ngờ.'],
+    story: 'Câu chuyện của hai đứa về chiếc tất này sẽ được viết ở đây.',
+  },
+  stock1: {
+    title: 'Chiếc tất kem', tip: 'Tất treo bên lò sưởi, chờ một bất ngờ nhỏ.',
+    meaning: ['Chuyện kể rằng ngày xưa, thánh Nicholas lén thả vài đồng vàng qua ống khói cho ba cô gái nghèo. Đồng vàng rơi đúng vào những chiếc tất đang phơi bên lò sưởi. Từ đó, người ta treo tất lên để đón quà.', 'Chiếc tất nhỏ nhắc rằng điều quý nhất thường đến lặng lẽ và bất ngờ.'],
+    story: 'Câu chuyện của hai đứa về chiếc tất này sẽ được viết ở đây.',
+  },
+  stock2: {
+    title: 'Chiếc tất xanh', tip: 'Tất treo bên lò sưởi, chờ một bất ngờ nhỏ.',
+    meaning: ['Chuyện kể rằng ngày xưa, thánh Nicholas lén thả vài đồng vàng qua ống khói cho ba cô gái nghèo. Đồng vàng rơi đúng vào những chiếc tất đang phơi bên lò sưởi. Từ đó, người ta treo tất lên để đón quà.', 'Chiếc tất nhỏ nhắc rằng điều quý nhất thường đến lặng lẽ và bất ngờ.'],
+    story: 'Câu chuyện của hai đứa về chiếc tất này sẽ được viết ở đây.',
+  },
+  wreath: {
+    title: 'Vòng hoa trên tường', tip: 'Vòng tròn không có điểm đầu, cũng không có điểm cuối.',
+    meaning: ['Hình tròn của vòng hoa tượng trưng cho tình yêu và sự gắn bó không có điểm kết thúc. Lá thông xanh quanh năm là sự sống vẫn tiếp tục dù mùa đông lạnh giá, quả đỏ và chiếc nơ là hơi ấm.', 'Treo vòng hoa lên là một lời chào: nơi này luôn có chỗ cho em.'],
+    story: 'Câu chuyện của hai đứa về vòng hoa này sẽ được viết ở đây.',
+  },
+  star: {
+    title: 'Ngôi sao trên đỉnh', tip: 'Ngôi sao dẫn đường về nhà.',
+    meaning: ['Ngôi sao trên đỉnh cây nhắc đến vì sao dẫn đường trong đêm Giáng sinh đầu tiên. Nó đứng cao nhất, để ai lạc đường cũng tìm được lối về nhà.', 'Đặt ngôi sao lên đỉnh cây là cách nói rằng dù đêm có dài, vẫn luôn có một điểm sáng để hướng về.'],
+    story: 'Câu chuyện của hai đứa về ngôi sao này sẽ được viết ở đây.',
+  },
+  lamp: {
+    title: 'Ngọn đèn nhỏ', tip: 'Ngọn đèn giữ ánh sáng cho người về muộn.',
+    meaning: ['Ngày xưa, người ta thắp đèn đặt ở cửa sổ để người đi xa nhìn thấy mà tìm được lối về. Mỗi ngọn nến trong đèn là một lời nhắn lặng lẽ: có người đang chờ em ở đây.'],
+    story: 'Câu chuyện của hai đứa về ngọn đèn này sẽ được viết ở đây.',
+  },
+  fire: {
+    title: 'Bếp lửa', tip: 'Bếp lửa là nơi mình sưởi ấm cho nhau.',
+    meaning: ['Từ xưa, bếp lửa là trái tim của ngôi nhà: mọi người quây quần quanh nó vào những đêm đông. Cái ấm của lửa không chỉ là hơi nóng, mà là việc ngồi gần nhau, kể chuyện cho nhau nghe, hay chỉ lặng im mà vẫn thấy yên lòng.', 'Sưởi ấm nhau nghĩa là cùng nhau giữ cho căn nhà không bao giờ lạnh.'],
+    story: 'Câu chuyện của hai đứa về bếp lửa này sẽ được viết ở đây.',
+  },
 }
 
 /** Chữ ở góc cảnh cây thông (chữ tạm, sẽ đổi khi Long chốt nội dung). */

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { gifts, tree as treeCopy } from '../content/content'
+import { gifts, memories, tree as treeCopy } from '../content/content'
 import { reducedMotion } from '../lib/device'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
-import { LAND, PORT, lampPoly, polyBox, type Layout, type P, type R } from './treeLayout'
+import { LAND, PORT, polyBox, type Layout, type P, type R } from './treeLayout'
 
 /** Tuyết rơi sau cửa sổ (canvas nhỏ, chỉ vẽ trong ô kính). */
 function WindowSnow({ r }: { r: R }) {
@@ -182,6 +182,7 @@ export default function Tree() {
   const [lampOn, setLampOn] = useState<Set<number>>(new Set())
   const [fireOn, setFireOn] = useState(false)
   const [wreathKey, setWreathKey] = useState(0)
+  const [tip, setTip] = useState<{ title: string; text: string; b: { x: number; y: number; w: number; h: number } } | null>(null)
 
   useEffect(() => {
     const el = sec.current!
@@ -241,6 +242,15 @@ export default function Tree() {
     later(() => setModal({ kind: 'memory', id: 'lamp', i }))
   }
 
+  const showTip = (id: string, poly: P, i?: number) => {
+    if (id.startsWith('gift')) {
+      const gf = gifts[i!]
+      setTip({ title: gf.title, text: isUnlocked(gf.unlockAt) ? 'Đã đến ngày, bấm để mở.' : 'Chưa đến ngày mở, bấm để xem còn bao lâu.', b: polyBox(poly) })
+    } else {
+      const m = memories[id]
+      if (m) setTip({ title: m.title, text: m.tip, b: polyBox(poly) })
+    }
+  }
   const halo = (id: string, key: number) => {
     const sp = L.spots.find((q) => q.id === id)
     if (!sp || !key) return null
@@ -317,19 +327,21 @@ export default function Tree() {
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             {L.spots.map((q) => (
               <polygon key={q.id} className="tr-hs" points={q.poly.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button"
-                aria-label={q.id} onClick={() => poke(q.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(q.id) } }} />
+                aria-label={q.id} onMouseEnter={() => showTip(q.id, q.poly)} onMouseLeave={() => setTip(null)} onFocus={() => showTip(q.id, q.poly)} onBlur={() => setTip(null)}
+                onClick={() => { setTip(null); poke(q.id) }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(q.id) } }} />
             ))}
-            {L.lampBox.map((bx, i) => (
-              <polygon key={`lp${i}`} className="tr-hs" points={lampPoly(bx).map((c) => c.join(',')).join(' ')} tabIndex={0} role="button" aria-label="đèn"
-                onClick={() => pokeLamp(i)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pokeLamp(i) } }} />
+            {L.lampPolys.map((lp, i) => (
+              <polygon key={`lp${i}`} className="tr-hs" points={lp.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button" aria-label="đèn"
+                onMouseEnter={() => showTip('lamp', lp)} onMouseLeave={() => setTip(null)} onFocus={() => showTip('lamp', lp)} onBlur={() => setTip(null)}
+                onClick={() => { setTip(null); pokeLamp(i) }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pokeLamp(i) } }} />
             ))}
             {L.polys.map((p, i) => {
               const gf = gifts[i]
               return (
                 <polygon key={gf.id} className="tr-gifthit" points={(opened[i] ? bodyPoly(i) : p).map((q) => q.join(',')).join(' ')} tabIndex={0} role="button"
                   aria-label={gf.title}
-                  onMouseEnter={() => setHov(i)} onMouseLeave={() => setHov(null)} onFocus={() => setHov(i)} onBlur={() => setHov(null)}
-                  onClick={() => openGift(i)}
+                  onMouseEnter={() => { setHov(i); showTip('gift', opened[i] ? bodyPoly(i) : p, i) }} onMouseLeave={() => { setHov(null); setTip(null) }} onFocus={() => { setHov(i); showTip('gift', p, i) }} onBlur={() => { setHov(null); setTip(null) }}
+                  onClick={() => { setTip(null); openGift(i) }}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openGift(i) } }} />
               )
             })}
@@ -342,6 +354,14 @@ export default function Tree() {
         <p className="sec-desc">{treeCopy.body}</p>
         <p className="sec-hint">{treeCopy.hint}</p>
       </div>
+
+      {tip && (() => {
+        const W = sec.current?.clientWidth ?? 800
+        const cx = Math.min(Math.max(g.x + (tip.b.x + tip.b.w / 2) * g.s, 150), W - 150)
+        const above = g.y + tip.b.y * g.s > 130
+        const top = above ? g.y + tip.b.y * g.s - 12 : g.y + (tip.b.y + tip.b.h) * g.s + 12
+        return <div className="tr-tip" style={{ left: cx, top, transform: `translate(-50%, ${above ? '-100%' : '0'})` }}><b>{tip.title}</b><span>{tip.text}</span></div>
+      })()}
 
       {modal && <ModalView modal={modal} onClose={() => setModal(null)} />}
     </section>
