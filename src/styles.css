@@ -765,3 +765,19 @@ button, a, [role="button"] { touch-action: manipulation; -webkit-tap-highlight-c
 .xf-dots button::before { content: ""; position: absolute; inset: -12px; }
 @media (pointer: coarse) { .xf-dots { gap: 18px; } .scroll-cue { width: 46px; height: 46px; } .tr-sound, .tr-lights, .door-sound { width: 46px; height: 46px; } }
 @media (max-aspect-ratio: 1/1) and (max-height: 720px) { .tree-scene.tall .sec-desc ~ .sec-desc { display: none; } }
+
+/* bấm vào cánh cửa để mở: vùng bấm trùm lên cửa, bàn tay nhấn nhẹ và gợn sáng vàng lan ra từ đầu ngón tay */
+.door-hit { position: absolute; z-index: 5; display: block; padding: 0; background: transparent; cursor: default; pointer-events: none; border-radius: 48% 48% 0 0 / 22% 22% 0 0; }
+.door-hit.on { cursor: pointer; pointer-events: auto; }
+.door-hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0; transition: opacity .5s; background: radial-gradient(ellipse 55% 45% at 50% 66%, rgba(255,214,130,.38), rgba(255,190,100,.12) 55%, transparent 75%); }
+.door-hit.on::before { opacity: 1; animation: dh-glow 2.6s ease-in-out infinite; }
+.door-hit:hover::before { animation: none; opacity: 1; filter: brightness(1.35); }
+.door-hit .hint { position: absolute; left: 50%; top: 66%; width: 0; height: 0; opacity: 0; transition: opacity 1.2s ease .3s; }
+.door-hit.on .hint { opacity: 1; }
+.door-hit .hint svg { position: absolute; left: -17px; top: -6px; transform-origin: 38% 8%; filter: drop-shadow(0 4px 8px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(255,214,130,.8)); animation: dh-tap 2.6s ease-in-out infinite; }
+.door-hit .ring { position: absolute; left: 0; top: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; border: 2px solid rgba(255,230,170,.95); box-shadow: 0 0 12px rgba(255,200,110,.8); opacity: 0; animation: dh-ring 2.6s ease-out infinite; }
+.door-hit .ring.r2 { animation-delay: .35s; } .door-hit .ring.r3 { animation-delay: .7s; }
+@keyframes dh-tap { 0%, 18% { transform: translate(0, 10px) scale(1); } 34% { transform: translate(0, 18px) scale(.9); } 48%, 100% { transform: translate(0, 10px) scale(1); } }
+@keyframes dh-ring { 0%, 30% { transform: scale(.3); opacity: 0; } 36% { opacity: .95; } 80%, 100% { transform: scale(4.6); opacity: 0; } }
+@keyframes dh-glow { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .door-hit .hint svg, .door-hit .ring, .door-hit.on::before { animation: none; } .door-hit .ring { opacity: .6; transform: scale(2); } }
