@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { gifts, lampStories, memories, tree as treeCopy } from '../content/content'
 import { reducedMotion } from '../lib/device'
+import { sfx } from '../lib/audio'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
@@ -176,6 +177,13 @@ export default function Tree() {
   const [opened, setOpened] = useState<Record<number, boolean>>(() => store.get('giftsOpened', {}))
   const [opening, setOpening] = useState<number | null>(null)
   const [, tick] = useState(0)
+  const [snd, setSnd] = useState(() => sfx.running && !sfx.muted)
+  useEffect(() => {
+    sfx.fire(true)
+    const sync = () => { sfx.fire(true); setSnd(sfx.running && !sfx.muted) }
+    const off = sfx.subscribe(sync)
+    return () => { off(); sfx.fire(false) }
+  }, [])
   const [kick, setKick] = useState(0)
   const [starKey, setStarKey] = useState(0)
   const [flash, setFlash] = useState(false)
@@ -201,11 +209,12 @@ export default function Tree() {
       const vw = el.clientWidth, vh = el.clientHeight, F = L.focus
       const band = mode === 'tall' ? txt.current?.offsetHeight ?? 0 : 0
       const vis = vh - band
-      const s = Math.max(vw / L.w, vh / L.h)
+      let s = Math.max(vw / L.w, vh / L.h)
+      if (mode === 'tall') s = Math.max(vw / L.w, Math.min(s, (vis - 24) / (F.y2 - F.y1)))
       const cx = (F.x1 + F.x2) / 2, cy = (F.y1 + F.y2) / 2
       let x = vw / 2 - cx * s
       let y = Math.min(vis / 2 - cy * s, vis - F.y2 * s - 10)
-      x = Math.min(0, Math.max(vw - L.w * s, x)); y = Math.min(0, mode === 'tall' ? y : Math.max(vh - L.h * s, y))
+      x = Math.min(0, Math.max(vw - L.w * s, x)); y = Math.min(0, Math.max((mode === 'tall' ? vis : vh) - L.h * s, y))
       setG({ s, x, y })
     }
     fit()
@@ -232,7 +241,7 @@ export default function Tree() {
   const later = (f: () => void) => setTimeout(f, reducedMotion() ? 0 : 750)
   const poke = (id: string) => {
     if (id === 'star') { setStarKey((k) => k + 1); setFlash(true); setTimeout(() => setFlash(false), 2600); later(() => setModal({ kind: 'memory', id })) }
-    else if (id === 'fire') { setKick((k) => k + 1); setFireOn(true); setTimeout(() => setFireOn(false), FLARE_MS); later(() => setModal({ kind: 'memory', id })) }
+    else if (id === 'fire') { sfx.crackleBurst(); setKick((k) => k + 1); setFireOn(true); setTimeout(() => setFireOn(false), FLARE_MS); later(() => setModal({ kind: 'memory', id })) }
     else if (id === 'wreath') { setWreathKey((k) => k + 1); later(() => setModal({ kind: 'memory', id })) }
     else setModal({ kind: 'memory', id })
   }
@@ -350,6 +359,9 @@ export default function Tree() {
         </div>
       </div>
 
+      <button className="tr-sound" aria-label={snd ? 'Tắt âm thanh' : 'Bật âm thanh'} onClick={() => { if (!sfx.running) { sfx.setMuted(false); sfx.unlock() } else sfx.setMuted(!sfx.muted); setSnd(sfx.running && !sfx.muted) }}>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 9v6h4l5 4V5L8 9z" />{snd ? <><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" /></> : <path d="M17 9l5 6M22 9l-5 6" />}</svg>
+      </button>
       <div className="sec-text" ref={txt}>
         <h2 className="sec-title">{treeCopy.title}</h2>
         <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>

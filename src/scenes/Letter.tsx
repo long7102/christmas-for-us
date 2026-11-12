@@ -139,6 +139,7 @@ export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClo
     <div className="tr-modal" onClick={onClose}>
       <div className={`lt-sheet ${m ? 'memory' : 'gift'} ${wide ? 'wide' : ''}`} data-paper={g ? `g${g.id}` : modal.kind === 'memory' ? (modal.id === 'lamp' ? 'lamp' : modal.id) : ''} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
         <div className="lt-paper" />
+        <div className="lt-deco" />
         {g && <Postmark text={g.stamp} />}
         <Stamp tilt={g ? 4 : -5} />
         {g ? <Seal mark="L♥H" /> : <i className="lt-pin" />}

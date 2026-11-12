@@ -1,4 +1,5 @@
 import { store } from './storage'
+import musicUrl from '../assets/sugarplum-fairy.mp3'
 
 /**
  * Procedural sound (no files needed): howling wind, door creak, thud, whoosh.
@@ -10,6 +11,10 @@ class Sfx {
   private windGain?: GainNode
   private noise?: AudioBuffer
   muted = store.get('muted', false)
+  private music?: HTMLAudioElement
+  private fireOn = false
+  private fireGain?: GainNode
+  private fireTimer = 0
   private subs = new Set<() => void>()
 
   constructor() {
@@ -35,15 +40,60 @@ class Sfx {
       for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b0 = 0.99765 * b0 + w * 0.099; b1 = 0.963 * b1 + w * 0.2965; b2 = 0.57 * b2 + w * 1.0526; d[i] = (b0 + b1 + b2 + w * 0.1848) * 0.2 }
       this.noise = n
     }
-    this.ctx.resume().then(() => { this.emit() }).catch(() => {})
+    this.ctx.resume().then(() => { this.emit(); this.syncFire() }).catch(() => {})
+    this.startMusic()
     this.emit()
   }
 
   setMuted(m: boolean) {
     this.muted = m; store.set('muted', m)
+    if (this.music) { this.music.muted = m; if (!m && this.music.paused) this.music.play().catch(() => {}) }
     if (this.master && this.ctx) this.master.gain.setTargetAtTime(m ? 0 : 1, this.ctx.currentTime, 0.1)
     this.emit()
   }
+
+  /** Nhạc nền (Sugar Plum Fairy). Chỉ phát sau thao tác đầu tiên của người xem. */
+  startMusic() {
+    if (!this.music) {
+      const a = new Audio(musicUrl); a.loop = true; a.volume = 0.42; a.preload = 'auto'; this.music = a
+    }
+    this.music.muted = this.muted
+    if (this.music.paused) this.music.play().catch(() => {})
+  }
+
+  /** Tiếng lửa tí tách quanh bếp: rì rào nhỏ + những tiếng nổ lách tách ngẫu nhiên. */
+  fire(on: boolean) { this.fireOn = on; this.syncFire() }
+  private syncFire() {
+    if (!this.ctx || !this.master || this.ctx.state !== 'running') return
+    if (this.fireOn && !this.fireGain) {
+      const c = this.ctx, g = c.createGain(); g.gain.value = 0; g.connect(this.master); this.fireGain = g
+      const r = this.src(), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520
+      const rg = c.createGain(); rg.gain.value = 0.16
+      const lfo = c.createOscillator(), ld = c.createGain(); lfo.frequency.value = 0.35; ld.gain.value = 0.07; lfo.connect(ld); ld.connect(rg.gain); lfo.start()
+      r.connect(lp); lp.connect(rg); rg.connect(g); r.start(0, Math.random() * 2)
+      const hiss = this.src(), hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3800
+      const hg = c.createGain(); hg.gain.value = 0.018; hiss.connect(hp); hp.connect(hg); hg.connect(g); hiss.start(0, 0.5)
+      const tick = () => {
+        if (!this.fireOn || !this.fireGain) return
+        const burst = Math.random() < 0.18 ? 2 + Math.floor(Math.random() * 4) : 1
+        for (let i = 0; i < burst; i++) setTimeout(() => this.pop(), i * (30 + Math.random() * 60))
+        this.fireTimer = window.setTimeout(tick, 120 + Math.random() * 900)
+      }
+      tick()
+    }
+    if (this.fireGain) this.fireGain.gain.setTargetAtTime(this.fireOn ? 1 : 0, this.ctx.currentTime, 0.4)
+    if (!this.fireOn) { clearTimeout(this.fireTimer) }
+  }
+  /** Một tiếng nổ lách tách. */
+  pop(vol = 0.5 + Math.random() * 0.5) {
+    if (!this.ctx || !this.fireGain || !this.noise) return
+    const c = this.ctx, t = c.currentTime, len = 0.015 + Math.random() * 0.07
+    const n = c.createBufferSource(); n.buffer = this.noise
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1200 + Math.random() * 4200; bp.Q.value = 0.8 + Math.random() * 2.5
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.5 * vol, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + len)
+    n.connect(bp); bp.connect(g); g.connect(this.fireGain); n.start(t, Math.random() * 2); n.stop(t + len + 0.02)
+  }
+  crackleBurst() { if (!this.ctx) return; for (let i = 0; i < 14; i++) setTimeout(() => this.pop(1), i * (25 + Math.random() * 70)) }
 
   private src(loop = true) { const s = this.ctx!.createBufferSource(); s.buffer = this.noise!; s.loop = loop; s.loopStart = 0; return s }
 
