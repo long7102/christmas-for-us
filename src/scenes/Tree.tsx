@@ -346,8 +346,6 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
           <Fire r={L.fire} flare={fireOn} />
           {!paused && <Flames r={L.fire} flare={fireOn} />}
           {!paused && <Embers r={L.fire} kick={kick} />}
-          <Lamps lamps={L.lamps} flare={lampOn} />
-          <Twinkles t={L.tree} />
           {!paused && <Dust w={L.w} h={L.h} />}
           <div className="tr-warm" />
 
@@ -397,6 +395,9 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
           {halo('wreath', wreathKey)}
 
           <div className="tr-dark" />
+          {/* đèn nhỏ nằm trên lớp tối: tắt đèn lớn rồi vẫn sáng */}
+          <Lamps lamps={L.lamps} flare={lampOn} />
+          <Twinkles t={L.tree} />
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             {spots.map((q) => (
               <polygon key={q.id} className="tr-hs" points={q.poly.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button"
