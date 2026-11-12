@@ -228,7 +228,8 @@ export default function Tree() {
   const [compact, setCompact] = useState(() => innerWidth < 1100)
   const L = mode === 'tall' ? PORT : LAND
   const lite = mode === 'tall' || compact && innerWidth < 760
-  const spots = lite ? L.spots.filter((q) => q.id === 'star' || q.id === 'fire' || q.id.startsWith('stock')) : L.spots
+  const OFF = new Set(['rug', 'tree', 'window', 'curtainL', 'curtainR', 'tools', 'garland', 'shelf', 'bow0', 'bow1', 'bow2', 'bow5', 'bow6', 'bow7', 'bell1', 'bell2', 'bell3', 'bell4', 'bell6'])
+  const spots = (lite ? L.spots.filter((q) => q.id === 'star' || q.id === 'fire' || q.id.startsWith('stock')) : L.spots).filter((q) => !OFF.has(q.id))
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [modal, setModal] = useState<Modal>(null)
   const [hov, setHov] = useState<number | null>(null)
