@@ -22,7 +22,7 @@ const THICK = 0.36
 const RECESS = 0.75
 const PERSP = 1100
 
-type Tex = { frame: string; left: string; right: string; leftDark: string; rightDark: string; hl: string; hr: string; hlDark: string; hrDark: string }
+type Tex = { wr: string; wrDark: string; wbox: [number, number, number, number]; frame: string; left: string; right: string; leftDark: string; rightDark: string; hl: string; hr: string; hlDark: string; hrDark: string }
 
 /** Bakes the frame (doors cut out) and each leaf (+ a darker copy for its thickness) into transparent textures. */
 function useDoorTextures(src: string, geo: typeof LAND) {
@@ -32,6 +32,63 @@ function useDoorTextures(src: string, geo: typeof LAND) {
     const im = new Image()
     im.onload = () => {
       const sh = pixelShapes(geo)
+      // ---- the wreath: lift it off the photo as ONE whole object, and fill the wood where it hung ----
+      const { ell, rects } = geo.wreath
+      const W = im.naturalWidth, H = im.naturalHeight
+      const full = document.createElement('canvas'); full.width = W; full.height = H
+      const fc = full.getContext('2d', { willReadFrequently: true })!; fc.drawImage(im, 0, 0)
+      const bx0 = Math.floor(Math.min(ell[0] - ell[2], ...rects.map((r) => r[0]))) - 8, bx1 = Math.ceil(Math.max(ell[0] + ell[2], ...rects.map((r) => r[0] + r[2]))) + 8
+      const by0 = Math.floor(Math.min(ell[1] - ell[3], ...rects.map((r) => r[1]))) - 8, by1 = Math.ceil(Math.max(ell[1] + ell[3], ...rects.map((r) => r[1] + r[3]))) + 8
+      const bw = bx1 - bx0, bh = by1 - by0
+      const img = fc.getImageData(bx0, by0, bw, bh), px = img.data
+      let alpha = new Float32Array(bw * bh)
+      const isWood = (r: number, g: number, b: number) => {
+        const mx = Math.max(r, g, b), mn = Math.min(r, g, b), v = mx / 255, sat = mx ? (mx - mn) / mx : 0
+        let h = 0; const d = mx - mn
+        if (d) h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4
+        h *= 60
+        return h >= 12 && h <= 48 && v < 0.62 && sat > 0.35
+      }
+      for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
+        const X = x + bx0, Y = y + by0
+        const e = ((X - ell[0]) / ell[2]) ** 2 + ((Y - ell[1]) / ell[3]) ** 2
+        const inRect = rects.some((r) => X >= r[0] && X <= r[0] + r[2] && Y >= r[1] && Y <= r[1] + r[3])
+        if (e > 1 && !inRect) continue
+        const i = (y * bw + x) * 4
+        const solid = e < 0.62 // the middle of the wreath is kept whole, even its dark shadows
+        if (solid || !isWood(px[i], px[i + 1], px[i + 2])) alpha[y * bw + x] = 1
+      }
+      // close pinholes and soften edge
+      const blur = (a: Float32Array) => { const o = new Float32Array(a.length); for (let y = 1; y < bh - 1; y++) for (let x = 1; x < bw - 1; x++) { let t = 0; for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) t += a[(y + j) * bw + x + k]; o[y * bw + x] = t / 9 } return o }
+      alpha = blur(alpha); for (let i = 0; i < alpha.length; i++) alpha[i] = alpha[i] > 0.34 ? 1 : 0
+      const solidA = alpha.slice(); alpha = blur(alpha)
+      // dilate for the fill mask
+      const fm = new Uint8Array(bw * bh)
+      for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) if (solidA[y * bw + x]) for (let j = -4; j <= 4; j++) for (let k = -4; k <= 4; k++) { const yy = y + j, xx = x + k; if (yy >= 0 && yy < bh && xx >= 0 && xx < bw) fm[yy * bw + xx] = 1 }
+      // wreath texture (original pixels, soft alpha)
+      const wc = document.createElement('canvas'); wc.width = bw; wc.height = bh
+      const wd = new ImageData(new Uint8ClampedArray(px), bw, bh)
+      for (let i = 0; i < alpha.length; i++) wd.data[i * 4 + 3] = alpha[i] * 255
+      const wdark = new ImageData(new Uint8ClampedArray(wd.data), bw, bh)
+      for (let i = 0; i < alpha.length; i++) { wdark.data[i * 4] *= 0.42; wdark.data[i * 4 + 1] *= 0.42; wdark.data[i * 4 + 2] *= 0.42 }
+      // fill: wood planks run vertically, so blend each column between the wood above and below the wreath
+      const avg = (x: number, y: number, dy: number) => { const c = [0, 0, 0]; for (let t = 0; t < 4; t++) { const yy = Math.min(bh - 1, Math.max(0, y + dy * t)); const i = (yy * bw + x) * 4; c[0] += px[i]; c[1] += px[i + 1]; c[2] += px[i + 2] } return c.map((v) => v / 4) }
+      const fill = fc.getImageData(bx0, by0, bw, bh)
+      for (let x = 0; x < bw; x++) {
+        let y0 = -1, y1 = -1
+        for (let y = 0; y < bh; y++) if (fm[y * bw + x]) { if (y0 < 0) y0 = y; y1 = y }
+        if (y0 < 0) continue
+        const top = avg(x, Math.max(0, y0 - 3), -1), bot = avg(x, Math.min(bh - 1, y1 + 3), 1)
+        for (let y = y0; y <= y1; y++) if (fm[y * bw + x]) {
+          const t = (y - y0) / Math.max(1, y1 - y0), i = (y * bw + x) * 4, n = (Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1 * 3
+          fill.data[i] = top[0] * (1 - t) + bot[0] * t + n; fill.data[i + 1] = top[1] * (1 - t) + bot[1] * t + n; fill.data[i + 2] = top[2] * (1 - t) + bot[2] * t + n
+        }
+      }
+      fc.putImageData(fill, bx0, by0)
+      const clean = full
+      const toUrl = (d: ImageData) => new Promise<string>((res) => { wc.getContext('2d')!.putImageData(d, 0, 0); wc.toBlob((b) => res(URL.createObjectURL(b!)), 'image/png') })
+      const wbox: [number, number, number, number] = [bx0, by0, bw, bh]
+
       const path = (c: CanvasRenderingContext2D, pts: [number, number][], ox = 0, oy = 0) => { c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x - ox, y - oy) : c.moveTo(x - ox, y - oy))); c.closePath() }
       const make = (w: number, h: number, draw: (c: CanvasRenderingContext2D) => void) => new Promise<string>((res) => {
         const cv = document.createElement('canvas'); cv.width = Math.round(w); cv.height = Math.round(h)
@@ -49,7 +106,7 @@ function useDoorTextures(src: string, geo: typeof LAND) {
         c.drawImage(t, bx - ox, by - sh.y0)
       }
       const leaf = (pts: [number, number][], ox: number, dark: boolean, hb: [number, number, number, number], dir: 1 | -1) => make(sh.bw, sh.bh, (c) => {
-        c.save(); path(c, pts, ox, sh.y0); c.clip(); c.drawImage(im, -ox, -sh.y0); unhandle(c, hb, ox, dir)
+        c.save(); path(c, pts, ox, sh.y0); c.clip(); c.drawImage(clean, -ox, -sh.y0); unhandle(c, hb, ox, dir)
         if (dark) { c.globalCompositeOperation = 'source-atop'; c.fillStyle = 'rgba(70,36,14,.4)'; c.fillRect(0, 0, sh.bw, sh.bh) }
         c.restore()
       })
@@ -65,10 +122,11 @@ function useDoorTextures(src: string, geo: typeof LAND) {
         c.putImageData(d, 0, 0)
       })
       Promise.all([
-        make(geo.w, geo.h, (c) => { c.drawImage(im, 0, 0); c.globalCompositeOperation = 'destination-out'; path(c, sh.ring); c.fill() }),
+        toUrl(wd), toUrl(wdark),
+        make(geo.w, geo.h, (c) => { c.drawImage(clean, 0, 0); c.globalCompositeOperation = 'destination-out'; path(c, sh.ring); c.fill() }),
         leaf(sh.leafL, sh.x0, false, geo.handleL, -1), leaf(sh.leafR, sh.cx, false, geo.handleR, 1), leaf(sh.leafL, sh.x0, true, geo.handleL, -1), leaf(sh.leafR, sh.cx, true, geo.handleR, 1),
         brass(geo.handleL, false), brass(geo.handleR, false), brass(geo.handleL, true), brass(geo.handleR, true),
-      ]).then(([frame, left, right, leftDark, rightDark, hl, hr, hlDark, hrDark]) => !dead && setTex({ frame, left, right, leftDark, rightDark, hl, hr, hlDark, hrDark }))
+      ]).then(([wr, wrDark, frame, left, right, leftDark, rightDark, hl, hr, hlDark, hrDark]) => !dead && setTex({ wr, wrDark, wbox, frame, left, right, leftDark, rightDark, hl, hr, hlDark, hrDark }))
     }
     im.src = src
     return () => { dead = true }
@@ -316,6 +374,20 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       </div>
     )
   }
+  /** The whole wreath, hung on the left leaf: a pillowy body of slices (back darker and slightly smaller), plus a soft contact shadow. */
+  const wreath = () => {
+    if (!tex) return null
+    const [wx, wy, ww, wh] = tex.wbox
+    const wdp = Math.max(10, geo.hw * rs * 0.085), n = Math.min(26, Math.round(wdp / 0.8))
+    return (
+      <div className="hnd" style={{ left: `${((wx - sh.x0) / sh.bw) * 100}%`, top: `${((wy - sh.y0) / sh.bh) * 100}%`, width: `${(ww / sh.bw) * 100}%`, height: `${(wh / sh.bh) * 100}%` }}>
+        <i className="slice" style={{ backgroundImage: `url(${tex.wrDark})`, filter: 'brightness(0) blur(7px)', opacity: 0.5, transform: 'translate3d(7px, 10px, 0.5px)' }} />
+        {Array.from({ length: n + 1 }, (_, k) => (
+          <i key={k} className="slice" style={{ backgroundImage: `url(${k === n ? tex.wr : tex.wrDark})`, transform: `translateZ(${(1 + (k / n) * wdp).toFixed(2)}px) scale(${(0.9 + 0.1 * (k / n)).toFixed(3)})` }} />
+        ))}
+      </div>
+    )
+  }
   /** One solid slab: front face (photo), back face (dark), and a continuous rim around the outline. No stacked layers. */
   const leaf = (side: 'l' | 'r') => {
     const pts = (side === 'l' ? sh.leafL : sh.leafR).map(([x, y]) => [(x - (side === 'l' ? sh.x0 : sh.cx)) * rs, (y - sh.y0) * rs] as [number, number])
@@ -337,6 +409,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
         {tex && <i className="slice" style={{ backgroundImage: `url(${side === 'l' ? tex.left : tex.right})` }} />}
         {tex && <i className="slice door-shade" style={{ backgroundImage: `url(${side === 'l' ? tex.leftDark : tex.rightDark})`, transform: 'translateZ(.6px)' }} />}
         {handle(side)}
+        {side === 'l' && wreath()}
       </div>
     )
   }
