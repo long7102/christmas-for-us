@@ -480,11 +480,6 @@ img { user-select: none; -webkit-user-drag: none; }
 .cat-breath.fake { animation: cat-fake 3.4s ease-in-out both; }
 @keyframes cat-breath { 0%, 100% { transform: scale(1, 1) } 50% { transform: scale(1.004, 1.014) } }
 @keyframes cat-fake { 0% { transform: scale(1, 1) } 28% { transform: scale(1.07, 1.1) translateY(-4px) } 62% { transform: scale(1.07, 1.1) translateY(-4px) } 100% { transform: scale(1, 1) } }
-.cat-over { position: absolute; pointer-events: none; opacity: 0; transition: opacity 1s ease; filter: brightness(1.16) saturate(1.05) contrast(1.02);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent); -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent); mask-composite: intersect; }
-.cat-over.on { opacity: 1; transition-duration: .6s; }
-.cats-scene .tr-hs[aria-busy="true"] { cursor: default; }
 @media (prefers-reduced-motion: reduce) { .cat-breath { animation: none; } }
 
 /* mũi tên mời cuộn xuống cảnh kế tiếp */
@@ -494,15 +489,56 @@ img { user-select: none; -webkit-user-drag: none; }
 @media (max-aspect-ratio: 7/10) { .scroll-cue { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); top: 72px; } }
 
 /* ===== Chuyển cảnh cây thông -> hai chú mèo (chạy theo thanh cuộn) ===== */
-.xf { position: relative; height: 240dvh; --R: 0px; --D: 0px; --tz: 1; --tb: 0px; --tl: 1; --to: 1; --cz: 1.16; --ring: 0; --bloom: 0; --cv: hidden; --cpe: none; --tpe: auto; }
+.xf { position: relative; height: 300dvh; --R: 0px; --D: 0px; --tz: 1; --tb: 0px; --tl: 1; --to: 1; --cz: 1.16; --ring: 0; --bloom: 0; --cv: hidden; --cpe: none; --tpe: auto; }
 .xf-sticky { position: sticky; top: 0; height: 100dvh; overflow: hidden; background: #1a0f08; }
 .xf-layer { position: absolute; inset: 0; }
 .xf-layer > .tree-scene { position: absolute; inset: 0; height: auto; }
-.xf-tree { transform: scale(var(--tz)); transform-origin: 50% 62%; opacity: var(--to); pointer-events: var(--tpe); }
-.xf-cats { visibility: var(--cv); pointer-events: var(--cpe); clip-path: circle(var(--R) at 50% 62%); }
-.xf-cats > .tree-scene { transform: scale(var(--cz)); transform-origin: 50% 62%; }
-.xf-ring { position: absolute; z-index: 6; left: 50%; top: 62%; width: var(--D); height: var(--D); transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; opacity: var(--ring);
-  box-shadow: 0 0 0 2px rgba(255,226,160,.85), 0 0 26px 8px rgba(255,196,110,.75), 0 0 90px 30px rgba(255,150,50,.45), inset 0 0 60px 18px rgba(255,190,100,.4); }
+.xf-tree { transform: scale(var(--tz)); transform-origin: 50% 58%; opacity: var(--to); pointer-events: var(--tpe); }
+.xf-cats { visibility: var(--cv); pointer-events: var(--cpe); clip-path: circle(var(--R) at 50% 58%); }
+.xf-cats > .tree-scene { transform: scale(var(--cz)); transform-origin: 50% 58%; }
 .xf-bloom { position: absolute; z-index: 5; inset: 0; pointer-events: none; opacity: var(--bloom); mix-blend-mode: screen;
-  background: radial-gradient(ellipse 70% 60% at 50% 62%, rgba(255,214,140,.55), rgba(255,150,50,.18) 55%, transparent 80%); }
-@media (prefers-reduced-motion: reduce) { .xf-ring, .xf-bloom { display: none; } }
+  background: radial-gradient(ellipse 70% 60% at 50% 58%, rgba(255,214,140,.55), rgba(255,150,50,.18) 55%, transparent 80%); }
+@media (prefers-reduced-motion: reduce) { .xf-glow, .xf-candy, .xf-bloom, .xf-fx { display: none; } }
+
+/* ===== Hai chú mèo: vầng sáng ôm đúng hình bé, đổi dáng, đèn và ánh sáng bập bùng theo bếp ===== */
+.cat-over { position: absolute; pointer-events: none; opacity: 0; transition: opacity 1s ease; filter: brightness(1.16) saturate(1.05) contrast(1.02); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+.cat-over.on { opacity: 1; transition-duration: .6s; }
+.cat-glow { position: absolute; pointer-events: none; opacity: 0; transition: opacity .28s ease; filter: drop-shadow(0 0 2px rgba(255,240,196,.95)) drop-shadow(0 0 10px rgba(255,200,110,.85)) drop-shadow(0 0 26px rgba(255,160,60,.55)); }
+.cat-glow.on { opacity: 1; }
+.cat-glow > i { position: absolute; inset: 0; filter: brightness(1.34) saturate(1.1) contrast(1.02); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+.cat-hs { fill: transparent; stroke: none; cursor: pointer; pointer-events: all; outline: none; }
+.cats-scene.busy .cat-hs { pointer-events: none; cursor: default; }
+.cat-lamp { position: absolute; pointer-events: none; mix-blend-mode: screen; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255,205,115,.7), rgba(255,150,55,.28) 46%, transparent);
+  opacity: calc(.28 + var(--fl2, .75) * .72); transform: scale(calc(.86 + var(--fl2, .75) * .22)); }
+.cat-lamp.core { background: radial-gradient(closest-side, rgba(255,246,214,.95), rgba(255,214,130,.4) 55%, transparent); opacity: calc(.2 + var(--fl2, .75) * .8); }
+.cat-room { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
+  background: radial-gradient(ellipse 85% 95% at -6% 66%, rgba(255,150,60,.85), rgba(255,120,40,.35) 45%, transparent 75%);
+  opacity: calc(.18 + var(--fl, .7) * .8); }
+.cat-dim { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; background: rgba(34,10,0, calc((1 - var(--fl, .7)) * .3)); }
+.cats-scene .tr-warm.cat-warm { display: none; }
+/* chữ ở góc trên trái (máy tính), tránh ngọn đèn lồng; điện thoại giữ dải tối phía dưới */
+.cats-scene.wide .sec-text { right: auto; bottom: auto; top: max(26px, env(safe-area-inset-top, 0px)); text-align: left; }
+.cats-scene.wide .sec-text::before { inset: -70px -140px -90px -110px; background: radial-gradient(ellipse 100% 100% at 0% 0%, rgba(26,13,6,.92) 0%, rgba(34,18,8,.78) 38%, rgba(40,22,10,.4) 66%, rgba(40,22,10,0) 100%); }
+.cats-scene.wide .sec-title { font-size: clamp(2.3rem, 3.6vw, 3.4rem); }
+.cats-scene.wide .sec-orn { justify-content: flex-start; margin: .5rem 0; } .cats-scene.wide .sec-orn i:first-child { display: none; }
+.cats-scene.wide .sec-tag { font-size: 1.1rem; margin-bottom: .45rem; }
+.cats-scene.wide .sec-desc { font-size: clamp(.86rem, .95vw, .98rem); line-height: 1.52; margin: 0 0 .5rem; }
+.cats-scene.wide .sec-hint { display: block; margin-top: .6rem; padding-top: .55rem; font-size: .82rem; }
+.cats-scene.tall .sec-desc { margin: 0 0 .4rem; font-size: .93rem; line-height: 1.5; }
+
+/* ===== Chuyển cảnh Giáng sinh: vòng kẹo viền vàng, tuyết và sao ===== */
+.xf-glow { position: absolute; z-index: 6; left: 50%; top: 58%; width: var(--D); height: var(--D); transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; opacity: var(--ring);
+  box-shadow: 0 0 0 1px rgba(255,226,160,.9), 0 0 24px 7px rgba(255,196,110,.75), 0 0 90px 28px rgba(255,150,50,.42), inset 0 0 70px 20px rgba(255,190,100,.38); }
+.xf-candy { position: absolute; z-index: 6; left: 50%; top: 58%; width: var(--D); height: var(--D); transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; opacity: var(--ring);
+  background: repeating-conic-gradient(from 0deg, #c2271d 0 5deg, #f7ecd0 5deg 10deg, #1f6b3a 10deg 15deg, #f7ecd0 15deg 20deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 11px), #000 calc(100% - 10px), #000 calc(100% - 1px), transparent); mask: radial-gradient(farthest-side, transparent calc(100% - 11px), #000 calc(100% - 10px), #000 calc(100% - 1px), transparent);
+  filter: drop-shadow(0 0 6px rgba(255,205,120,.8)); }
+.xf-fx { position: absolute; z-index: 7; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* màn hình thấp (điện thoại nằm ngang): chữ gọn lại để không che hai bé */
+@media (max-height: 560px) {
+  .cats-scene .sec-desc ~ .sec-desc, .cats-scene .sec-hint, .cats-scene .sec-orn { display: none; }
+  .cats-scene.wide .sec-title { font-size: 1.9rem; }
+  .cats-scene.wide .sec-tag { font-size: .95rem; margin-bottom: .3rem; }
+  .cats-scene.wide .sec-desc { font-size: .8rem; line-height: 1.4; }
+}

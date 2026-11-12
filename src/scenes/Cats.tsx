@@ -1,35 +1,87 @@
 import { useEffect, useRef, useState } from 'react'
 import { cats as copy } from '../content/content'
 import { reducedMotion } from '../lib/device'
-import { CAT_LAND, CAT_PORT, type CatLayout } from './catsLayout'
-import { Dust, Lamps } from './Tree'
-import { polyBox, type P, type R } from './treeLayout'
+import { sfx } from '../lib/audio'
+import { CAT_LAND, CAT_PORT, type Cat, type CatLayout, type Pose } from './catsLayout'
+import { Dust } from './Tree'
+import { polyBox, type R } from './treeLayout'
 
 type Who = 'bong' | 'mochi'
-const STRETCH_MS = 3600
+const FADE_OUT = 1100
+const FAKE_MS = 3400
 
-const poly = (p: P) => `polygon(${p.map(([x, y]) => `${x}px ${y}px`).join(',')})`
+const rect = (r: R) => ({ left: r.x, top: r.y, width: r.w, height: r.h })
 
-/** Một ảnh thay thế trong khung chữ nhật, mép mờ dần để hoà vào ảnh nền. */
-function Over({ L, r, src, on }: { L: CatLayout; r: R; src: string; on: boolean }) {
+/** Ảnh dáng khác của bé, chỉ hiện ở chỗ khác với ảnh ngủ (mặt nạ mềm), nên không có đường cắt. */
+function Over({ L, pose, on }: { L: CatLayout; pose: Pose; on: boolean }) {
+  const r = pose.box
   return (
     <div className={`cat-over${on ? ' on' : ''}`}
-      style={{ left: r.x, top: r.y, width: r.w, height: r.h, backgroundImage: `url(${src})`, backgroundSize: `${L.w}px ${L.h}px`, backgroundPosition: `${-r.x}px ${-r.y}px` }} />
+      style={{ ...rect(r), backgroundImage: `url(${pose.src})`, backgroundSize: `${L.w}px ${L.h}px`, backgroundPosition: `${-r.x}px ${-r.y}px`, WebkitMaskImage: `url(${pose.mask})`, maskImage: `url(${pose.mask})` }} />
   )
 }
 
-export default function Cats({ active = true }: { active?: boolean }) {
+/** Vầng sáng ôm đúng hình bé khi rê chuột: hình cắt của bé sáng lên, bóng sáng toả theo đường viền. */
+function Glow({ L, cat, on }: { L: CatLayout; cat: Cat; on: boolean }) {
+  const r = cat.cutBox
+  return (
+    <div className={`cat-glow${on ? ' on' : ''}`} style={rect(r)}>
+      <i style={{ backgroundImage: `url(${L.src})`, backgroundSize: `${L.w}px ${L.h}px`, backgroundPosition: `${-r.x}px ${-r.y}px`, WebkitMaskImage: `url(${cat.cut})`, maskImage: `url(${cat.cut})` }} />
+    </div>
+  )
+}
+
+/** Ánh sáng căn phòng bập bùng theo bếp lửa (bếp nằm ngoài khung ảnh, bên trái) và đèn lồng chập chờn nhanh hơn. */
+function useFlicker(stage: React.RefObject<HTMLDivElement | null>, active: boolean) {
+  useEffect(() => {
+    const el = stage.current
+    if (!el || !active) return
+    if (reducedMotion()) { el.style.setProperty('--fl', '.7'); el.style.setProperty('--fl2', '.75'); return }
+    let raf = 0, last = performance.now()
+    let fl = 0.7, tf = 0.7, nf = 0, f2 = 0.75, t2 = 0.75, n2 = 0
+    const frame = (t: number) => {
+      const dt = Math.min(0.06, (t - last) / 1000); last = t
+      nf -= dt; n2 -= dt
+      if (nf <= 0) { nf = 0.07 + Math.random() * 0.22; tf = Math.random() < 0.16 ? 0.12 + Math.random() * 0.22 : 0.55 + Math.random() * 0.45 }
+      if (n2 <= 0) { n2 = 0.04 + Math.random() * 0.15; t2 = Math.random() < 0.28 ? 0.1 + Math.random() * 0.3 : 0.6 + Math.random() * 0.4 }
+      fl += (tf - fl) * (1 - Math.exp(-dt / 0.07))
+      f2 += (t2 - f2) * (1 - Math.exp(-dt / 0.035))
+      el.style.setProperty('--fl', fl.toFixed(3))
+      el.style.setProperty('--fl2', f2.toFixed(3))
+      raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+    const vis = () => { cancelAnimationFrame(raf); if (!document.hidden) { last = performance.now(); raf = requestAnimationFrame(frame) } }
+    document.addEventListener('visibilitychange', vis)
+    return () => { cancelAnimationFrame(raf); document.removeEventListener('visibilitychange', vis) }
+  }, [stage, active])
+}
+
+export default function Cats({ active = true, near = true }: { active?: boolean; near?: boolean }) {
   const sec = useRef<HTMLElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const txt = useRef<HTMLDivElement>(null)
+  const stage = useRef<HTMLDivElement>(null)
   const [mode, setMode] = useState<'wide' | 'tall'>(() => (innerWidth / innerHeight < 1.05 ? 'tall' : 'wide'))
   const [compact, setCompact] = useState(() => innerWidth < 1100)
   const L = mode === 'tall' ? CAT_PORT : CAT_LAND
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [tip, setTip] = useState<{ title: string; text: string; b: { x: number; y: number; w: number; h: number } } | null>(null)
+  const [hov, setHov] = useState<Who | null>(null)
   const [busy, setBusy] = useState<Who | null>(null)
-  const [show, setShow] = useState<Who | null>(null)
+  const [show, setShow] = useState<string | null>(null)
   const timers = useRef<number[]>([])
+  const next = useRef<Record<Who, number>>({ bong: 0, mochi: 0 })
+
+  useFlicker(stage, active)
+
+  // tiếng gừ gừ nhẹ khi cảnh này đang ở trước mắt
+  useEffect(() => {
+    if (!near) return
+    sfx.purr(true)
+    const off = sfx.subscribe(() => sfx.purr(true))
+    return () => { off(); sfx.purr(false) }
+  }, [near])
 
   useEffect(() => {
     const el = sec.current!
@@ -50,7 +102,10 @@ export default function Cats({ active = true }: { active?: boolean }) {
       const cx = (F.x1 + F.x2) / 2, cy = (F.y1 + F.y2) / 2
       let x = vw / 2 - cx * s
       let y = Math.min(vis / 2 - cy * s, vis - F.y2 * s - 10)
-      x = Math.min(0, Math.max(vw - L.w * s, x)); y = Math.min(0, Math.max((mode === 'tall' ? vis : vh) - L.h * s, y))
+      x = Math.min(0, Math.max(vw - L.w * s, x))
+      // máy tính: dựa ảnh sát lề trái để thấy đèn lồng, miễn là bé vẫn nằm trọn trong khung
+      if (mode === 'wide') x = Math.min(0, Math.max(vw - L.w * s, Math.min(0, vw - 24 - F.x2 * s)))
+      y = Math.min(0, Math.max((mode === 'tall' ? vis : vh) - L.h * s, y))
       setG({ s, x, y })
     }
     fit()
@@ -60,61 +115,84 @@ export default function Cats({ active = true }: { active?: boolean }) {
 
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
 
+  const cats: { id: Who; cat: Cat; label: string; info: { title: string; tip: string } }[] = [
+    { id: 'bong', cat: L.bong, label: 'Bông', info: copy.bong },
+    { id: 'mochi', cat: L.mochi, label: 'Mochi', info: copy.mochi },
+  ]
+
+  /** Bấm một bé: bé đổi dáng rồi ngủ lại. Trong lúc đó không bấm được bé nào, đến khi bé ngủ lại mới bấm tiếp. */
   const poke = (who: Who) => {
     if (busy) return
-    setTip(null); setBusy(who)
-    const dur = reducedMotion() ? 900 : STRETCH_MS
-    setShow(who)
-    timers.current.push(window.setTimeout(() => setShow(null), dur - 1100))
-    timers.current.push(window.setTimeout(() => setBusy(null), dur))
+    const cat = who === 'bong' ? L.bong : L.mochi
+    setTip(null); setHov(null); setBusy(who)
+    sfx.meow(who === 'bong' ? 0.92 : 1.12)
+    if (!cat.poses.length) {
+      timers.current.push(window.setTimeout(() => setBusy(null), reducedMotion() ? 800 : FAKE_MS))
+      return
+    }
+    const i = next.current[who]++ % cat.poses.length
+    const hold = reducedMotion() ? 700 : cat.poses[i].hold
+    setShow(`${who}-${i}`)
+    timers.current.push(window.setTimeout(() => setShow(null), hold))
+    timers.current.push(window.setTimeout(() => setBusy(null), hold + FADE_OUT))
   }
+  const enter = (c: (typeof cats)[number]) => {
+    if (busy) return
+    setHov(c.id); setTip({ title: c.info.title, text: c.info.tip, b: polyBox(c.cat.poly) })
+  }
+  const leave = () => { setHov(null); setTip(null) }
 
-  const cats: { id: Who; p: P; label: string; info: { title: string; tip: string }; img?: string; region: R }[] = [
-    { id: 'bong', p: L.bong, label: 'Bông', info: copy.bong, img: L.bongStretch, region: L.bongRegion },
-    { id: 'mochi', p: L.mochi, label: 'Mochi', info: copy.mochi, img: L.mochiStretch, region: L.mochiRegion },
-  ]
-  const showTip = (c: (typeof cats)[number]) => setTip({ title: c.info.title, text: c.info.tip, b: polyBox(c.p) })
+  // chữ nằm ở góc trên trái, trừ ngọn đèn lồng; điện thoại thì ở dải tối phía dưới
+  const lampRight = (L.lamp[0] + L.lamp[2] * 0.55) * g.s + g.x
+  const headLeft = (mode === 'wide' ? 640 : 0) * g.s + g.x
+  const left = Math.max(26, lampRight + 8)
+  const textStyle = mode === 'wide' ? { left, width: Math.max(250, Math.min(430, headLeft - left - 24)) } : undefined
 
   return (
-    <section id="cats" className={`tree-scene cats-scene ${mode} ${compact ? 'compact' : ''}`} ref={sec}>
+    <section id="cats" className={`tree-scene cats-scene ${mode} ${compact ? 'compact' : ''}${busy ? ' busy' : ''}`} ref={sec}>
       <div className="sec-frame" ref={host}>
-        <div className="tr-stage" style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
+        <div className="tr-stage" ref={stage} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img src={L.src} alt="Bông và Mochi ngủ cạnh nhau trên ghế sofa" draggable={false} />
-          <Lamps lamps={L.lamps} flare={new Set()} />
-          {active && <Dust w={L.w} h={L.h} />}
-          <div className="tr-warm cat-warm" />
+          <div className="cat-room" />
 
-          {/* mỗi bé thở nhẹ khi ngủ; bé nào đang duỗi thì lớp này ẩn đi */}
+          {/* mỗi bé thở nhẹ khi ngủ; bé nào đang đổi dáng thì lớp này ẩn đi */}
           {cats.map((c, i) => {
-            const b = polyBox(c.p)
-            const fake = busy === c.id && !c.img
+            const b = polyBox(c.cat.poly)
+            const has = c.cat.poses.length > 0
             return (
-              <div key={c.id} className={`cat-breath${busy === c.id && c.img ? ' hide' : ''}${fake ? ' fake' : ''}`}
-                style={{ clipPath: poly(c.p), backgroundImage: `url(${L.src})`, transformOrigin: `${b.x + b.w * (c.id === 'mochi' ? 0.15 : 0.5)}px ${b.y + b.h}px`, animationDelay: `${-i * 1.7}s` }} />
+              <div key={c.id} className={`cat-breath${busy === c.id && has ? ' hide' : ''}${busy === c.id && !has ? ' fake' : ''}`}
+                style={{ clipPath: `polygon(${c.cat.poly.map(([x, y]) => `${x}px ${y}px`).join(',')})`, backgroundImage: `url(${L.src})`, transformOrigin: `${b.x + b.w * (c.id === 'mochi' ? 0.15 : 0.5)}px ${b.y + b.h}px`, animationDelay: `${-i * 1.7}s` }} />
             )
           })}
 
-          {cats.map((c) => (c.img ? <Over key={c.id} L={L} r={c.region} src={c.img} on={show === c.id} /> : null))}
+          {cats.map((c) => c.cat.poses.map((p, i) => <Over key={`${c.id}${i}`} L={L} pose={p} on={show === `${c.id}-${i}`} />))}
+          {cats.map((c) => <Glow key={c.id} L={L} cat={c.cat} on={hov === c.id && !busy} />)}
+
+          {/* đèn lồng chập chờn */}
+          <i className="cat-lamp" style={{ left: L.lamp[0] - L.lamp[2], top: L.lamp[1] - L.lamp[2], width: L.lamp[2] * 2, height: L.lamp[2] * 2 }} />
+          <i className="cat-lamp core" style={{ left: L.lamp[0] - L.lamp[2] * 0.32, top: L.lamp[1] - L.lamp[2] * 0.32, width: L.lamp[2] * 0.64, height: L.lamp[2] * 0.64 }} />
+          <div className="cat-dim" />
+          {active && <Dust w={L.w} h={L.h} />}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             {cats.map((c) => (
-              <polygon key={c.id} className="tr-hs" points={c.p.map((q) => q.join(',')).join(' ')} tabIndex={0} role="button" aria-label={c.label}
-                onMouseEnter={() => showTip(c)} onMouseLeave={() => setTip(null)} onFocus={() => showTip(c)} onBlur={() => setTip(null)}
+              <polygon key={c.id} className="cat-hs" points={c.cat.poly.map((q) => q.join(',')).join(' ')} tabIndex={busy ? -1 : 0} role="button" aria-label={c.label} aria-disabled={!!busy}
+                onMouseEnter={() => enter(c)} onMouseLeave={leave} onFocus={() => enter(c)} onBlur={leave}
                 onClick={() => poke(c.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(c.id) } }} />
             ))}
           </svg>
         </div>
       </div>
 
-      <div className="sec-text" ref={txt}>
+      <div className="sec-text" ref={txt} style={textStyle}>
         <h2 className="sec-title">{copy.title}</h2>
         <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>
         <p className="sec-tag">{copy.tagline}</p>
-        <p className="sec-desc">{copy.body}</p>
+        {copy.body.map((t, i) => <p key={i} className="sec-desc">{t}</p>)}
         <p className="sec-hint"><span aria-hidden>✦</span>{copy.hint}</p>
       </div>
 
-      {tip && (() => {
+      {tip && !busy && (() => {
         const W = sec.current?.clientWidth ?? 800
         const cx = Math.min(Math.max(g.x + (tip.b.x + tip.b.w / 2) * g.s, 150), W - 150)
         const above = g.y + tip.b.y * g.s > 130

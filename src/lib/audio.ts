@@ -16,6 +16,8 @@ class Sfx {
   private fireGain?: GainNode
   private fireTimer = 0
   private subs = new Set<() => void>()
+  private purrOn = false
+  private purrGain?: GainNode
 
   constructor() {
     const go = () => { this.unlock(); removeEventListener('pointerdown', go); removeEventListener('keydown', go); removeEventListener('touchstart', go) }
@@ -40,7 +42,7 @@ class Sfx {
       for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b0 = 0.99765 * b0 + w * 0.099; b1 = 0.963 * b1 + w * 0.2965; b2 = 0.57 * b2 + w * 1.0526; d[i] = (b0 + b1 + b2 + w * 0.1848) * 0.2 }
       this.noise = n
     }
-    this.ctx.resume().then(() => { this.emit(); this.syncFire() }).catch(() => {})
+    this.ctx.resume().then(() => { this.emit(); this.syncFire(); this.syncPurr() }).catch(() => {})
     this.startMusic()
     this.emit()
   }
@@ -107,6 +109,50 @@ class Sfx {
     }
   }
   crackleBurst() { if (!this.ctx) return; for (let i = 0; i < 14; i++) setTimeout(() => this.pop(1), i * (25 + Math.random() * 70)) }
+
+
+  /** Tiếng gừ gừ rất nhẹ của mèo: sóng trầm bị nhịp ~25 nhịp mỗi giây làm lúc dày lúc thưa, thêm nhịp thở chậm. */
+  purr(on: boolean) { this.purrOn = on; this.syncPurr() }
+  private syncPurr() {
+    if (!this.ctx || !this.master || this.ctx.state !== 'running') return
+    const c = this.ctx
+    if (!this.purrGain) {
+      const out = c.createGain(); out.gain.value = 0; out.connect(this.master); this.purrGain = out
+      const am = c.createGain(); am.gain.value = 0.5
+      const lfo = c.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 25
+      const ld = c.createGain(); ld.gain.value = 0.5; lfo.connect(ld); ld.connect(am.gain); lfo.start()
+      const o1 = c.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 52
+      const o2 = c.createOscillator(); o2.type = 'triangle'; o2.frequency.value = 104
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 340; lp.Q.value = 0.7
+      const g1 = c.createGain(); g1.gain.value = 0.7; const g2 = c.createGain(); g2.gain.value = 0.35
+      o1.connect(g1); o2.connect(g2); g1.connect(lp); g2.connect(lp); lp.connect(am)
+      const n = this.src(), nl = c.createBiquadFilter(); nl.type = 'bandpass'; nl.frequency.value = 260; nl.Q.value = 0.9
+      const ng = c.createGain(); ng.gain.value = 0.5; n.connect(nl); nl.connect(ng); ng.connect(am); n.start(0, 0.7)
+      const breath = c.createGain(); breath.gain.value = 1
+      const bl = c.createOscillator(); bl.frequency.value = 0.27; const bd = c.createGain(); bd.gain.value = 0.3; bl.connect(bd); bd.connect(breath.gain); bl.start()
+      am.connect(breath); breath.connect(out)
+      o1.start(); o2.start()
+    }
+    this.purrGain.gain.setTargetAtTime(this.purrOn ? 0.1 : 0, c.currentTime, 0.8)
+  }
+
+  /** Tiếng "meo" ngắn: giọng sawtooth lên rồi xuống qua hai vùng cộng hưởng như miệng mèo, thêm chút hơi thở. */
+  meow(pitch = 1) {
+    if (!this.ctx || !this.master || this.ctx.state !== 'running') return
+    const c = this.ctx, t = c.currentTime, dur = 0.72
+    const o = c.createOscillator(); o.type = 'sawtooth'
+    o.frequency.setValueAtTime(430 * pitch, t); o.frequency.exponentialRampToValueAtTime(760 * pitch, t + 0.2); o.frequency.exponentialRampToValueAtTime(520 * pitch, t + dur)
+    const vib = c.createOscillator(), vg = c.createGain(); vib.frequency.value = 6.5; vg.gain.value = 9; vib.connect(vg); vg.connect(o.frequency); vib.start(t); vib.stop(t + dur + 0.1)
+    const f1 = c.createBiquadFilter(); f1.type = 'bandpass'; f1.Q.value = 6; f1.frequency.setValueAtTime(650, t); f1.frequency.linearRampToValueAtTime(1050, t + 0.25); f1.frequency.linearRampToValueAtTime(720, t + dur)
+    const f2 = c.createBiquadFilter(); f2.type = 'bandpass'; f2.Q.value = 7; f2.frequency.setValueAtTime(1900, t); f2.frequency.linearRampToValueAtTime(2700, t + 0.25); f2.frequency.linearRampToValueAtTime(2100, t + dur)
+    const a = c.createGain(), b = c.createGain(); a.gain.value = 0.9; b.gain.value = 0.55
+    const env = c.createGain(); env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(0.2, t + 0.07); env.gain.linearRampToValueAtTime(0.15, t + 0.4); env.gain.exponentialRampToValueAtTime(0.0001, t + dur)
+    o.connect(f1); o.connect(f2); f1.connect(a); f2.connect(b); a.connect(env); b.connect(env); env.connect(this.master)
+    const n = this.src(), nf = c.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 2400; nf.Q.value = 1.2
+    const ng = c.createGain(); ng.gain.setValueAtTime(0.0001, t); ng.gain.linearRampToValueAtTime(0.03, t + 0.05); ng.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.9)
+    n.connect(nf); nf.connect(ng); ng.connect(this.master); n.start(t, Math.random()); n.stop(t + dur + 0.05)
+    o.start(t); o.stop(t + dur + 0.05)
+  }
 
   private src(loop = true) { const s = this.ctx!.createBufferSource(); s.buffer = this.noise!; s.loop = loop; s.loopStart = 0; return s }
 

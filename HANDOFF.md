@@ -55,3 +55,10 @@ npx tsc -b        # kiểm tra kiểu
 - Chuyển cảnh cây thông -> mèo: `WorldScroll.tsx` (khối `.xf` cao 240dvh, phần `sticky`), chạy theo thanh cuộn: cây thông phóng dần, mờ đi, vòng sáng vàng loang ra từ giữa để lộ cảnh mèo (clip-path circle). Không dùng filter blur (nặng máy). Cảnh không thấy thì tắt canvas (Tree `paused`, Cats `active`).
 - Ảnh "Bông ngồi tỉnh táo" (cats-land-awake) Long gửi nhưng chưa dùng.
 - Chữ tạm trong `content.ts` mục `cats`; chuyện riêng của hai bé chờ Long viết.
+
+### Cập nhật cảnh mèo (lần 3)
+- Bấm một bé: bé đổi dáng (Bông luân phiên duỗi người và ngồi tỉnh; Mochi duỗi người), rồi ngủ lại. Trong lúc đổi dáng không bấm được bé nào (`.cats-scene.busy .cat-hs { pointer-events: none }`).
+- Ảnh dáng khác chỉ hiện ở chỗ khác với ảnh ngủ bằng mặt nạ mềm (`*-over.png`, tính từ hiệu giữa hai ảnh sau khi căn chỉnh) nên không có đường cắt. Hình bé để làm vầng sáng khi rê chuột: `*-mask.png` (tách bằng OpenCV grabCut). Script nằm ngoài repo; muốn làm lại ảnh mới thì tách lại theo cách trên.
+- Ảnh Mochi duỗi người BẢN DỌC chưa có (ảnh gửi lệch khung với ảnh ngủ dọc nên không ghép được): cần chỉnh từ chính `cats-port.webp`. Hiện bản dọc Mochi chỉ cử động nhẹ.
+- Ánh sáng bập bùng: `useFlicker` đặt `--fl` (cả phòng theo bếp) và `--fl2` (đèn lồng) liên tục. Tiếng gừ gừ `sfx.purr`, tiếng meo `sfx.meow` (WebAudio tự tạo, chưa nghe thử).
+- Chuyển cảnh `WorldScroll.tsx`: dài hơn (SPAN = 1.7 lần chiều cao màn hình), vòng kẹo đỏ trắng xanh viền vàng, tuyết và sao vàng (canvas `Sparks`).

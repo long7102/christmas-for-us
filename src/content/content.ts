@@ -147,10 +147,14 @@ export const cats = {
   title: 'Bông và Mochi',
   tagline: 'Hai bé được thương, hai đứa mình cũng vậy.',
   // [nháp] lời Long, chờ Long sửa lại
-  body: 'Bông là bé của anh, Mochi là bé của em. Hai bé được ôm, được nuông, được ngủ ở chỗ ấm nhất nhà. Có lẽ vì hai bé thấy cách hai đứa mình thương nhau: lặng lẽ, đều đặn, và chẳng cần nói thành lời.',
+  body: [
+    'Bông là bé của anh, Mochi là bé của em. Hai cô nàng được ôm, được nuông, được ngủ ở chỗ ấm nhất nhà, và chẳng bé nào phải hỏi vì sao.',
+    'Anh thương Bông theo cách của anh, em thương Mochi theo cách của em. Mỗi đứa đều có một sinh linh bé nhỏ để chăm, để lo, để về nhà là có người chờ.',
+    'Có lẽ vì vậy mà hai bé nằm cạnh nhau yên tâm đến thế: bé nào cũng được yêu, và hai đứa mình cũng thương nhau như thế.',
+  ],
   hint: 'Em rê chuột vào từng bé, rồi bấm xem bé đổi dáng nhé.',
-  bong: { title: 'Bông · bé của anh', tip: 'Cô nàng trắng pha xám, được anh thương từng cái ôm. Bấm để bé đổi dáng.' },
-  mochi: { title: 'Mochi · bé của em', tip: 'Cô nàng xám vằn, được em nuông chiều hết mực. Bấm để bé đổi dáng.' },
+  bong: { title: 'Bông · bé của anh', tip: 'Cô nàng trắng pha xám, mắt hổ phách, được anh thương từng cái ôm, từng giấc ngủ. Bấm để bé đổi dáng.' },
+  mochi: { title: 'Mochi · bé của em', tip: 'Cô nàng xám vằn, mắt xanh vàng, được em nuông chiều hết mực. Bấm để bé đổi dáng.' },
 }
 
 export const treeText = {
