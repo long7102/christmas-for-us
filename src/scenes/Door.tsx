@@ -435,7 +435,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
           <div className="door-glow" />
           <div className="door-light" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }} />
           {tex && <img src={tex.frame} className="door-img" alt="" draggable={false} />}
-          <DoorSnow geo={portrait ? PORT : LAND} />
+          <DoorSnow geo={portrait ? PORT : LAND} fall={opening} />
           <div ref={panels} className="door-panels" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }}>
             <div className="door-recess">{leaf('l')}{leaf('r')}</div>
           </div>

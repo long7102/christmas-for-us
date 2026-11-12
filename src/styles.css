@@ -441,3 +441,10 @@ img { user-select: none; -webkit-user-drag: none; }
 
 .tr-sill { opacity: .5; }
 .tree-scene.tall .tr-sill { display: none; }
+
+.dsn-main.fall { animation: dsn-slip 1.5s cubic-bezier(.5,0,.9,.6) forwards; }
+@keyframes dsn-slip { 0% { transform: translateY(0); opacity: 1 } 25% { transform: translateY(2px); opacity: 1 } 100% { transform: translateY(70px); opacity: 0 } }
+.dsn-drop { animation: dsn-drop 1.5s cubic-bezier(.45,0,.9,.55) forwards; opacity: 0; }
+@keyframes dsn-drop { 0% { transform: translate(0,0); opacity: 0 } 12% { opacity: .95 } 100% { transform: translate(var(--dx), var(--fall)); opacity: 0 } }
+.door-breath i { width: 34vmin; height: 20vmin; margin-left: -17vmin; filter: blur(16px); }
+.door-breath i:nth-child(2) { width: 30vmin; margin-left: -19vmin; } .door-breath i:nth-child(3) { width: 28vmin; margin-left: -13vmin; }
