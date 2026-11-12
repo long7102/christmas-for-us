@@ -164,12 +164,29 @@ img { user-select: none; -webkit-user-drag: none; }
 .tr-tw { position: absolute; width: 9px; height: 9px; margin: -4px; border-radius: 50%; pointer-events: none; mix-blend-mode: screen;
   background: radial-gradient(circle, #fff6cf, rgba(255,214,120,.6) 40%, transparent 70%); animation: tr-twk 3s infinite ease-in-out; }
 @keyframes tr-twk { 0%,100%{opacity:0;transform:scale(.4)} 50%{opacity:.95;transform:scale(1.2)} }
-.tr-gift { position: absolute; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 6px; }
-.tr-gift.on { animation: tr-pulse 2.4s infinite ease-in-out; }
-@keyframes tr-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,214,130,0)} 50%{box-shadow:0 0 22px 6px rgba(255,214,130,.55)} }
-.tr-gift:hover, .tr-gift:focus-visible { box-shadow: 0 0 22px 8px rgba(255,214,130,.6); outline: none; }
-.tr-tag { position: absolute; left: 50%; top: -6px; transform: translate(-50%,-100%); white-space: nowrap; padding: 2px 8px; border-radius: 999px;
+.tr-hit { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tr-hit polygon { fill: transparent; pointer-events: all; cursor: pointer; outline: none; }
+.tr-dim { position: absolute; inset: 0; background: rgba(12,6,3,.62); opacity: 0; transition: opacity .35s ease; pointer-events: none; }
+.tr-dim.on { opacity: 1; }
+.tr-litwrap { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s ease; filter: drop-shadow(0 0 7px rgba(255,214,130,.95)) drop-shadow(0 0 26px rgba(255,190,90,.75)); }
+.tr-litwrap.on { opacity: 1; animation: tr-breathe 1.8s infinite ease-in-out; }
+@keyframes tr-breathe { 50% { filter: drop-shadow(0 0 10px rgba(255,226,160,1)) drop-shadow(0 0 40px rgba(255,200,100,.9)); } }
+.tr-lit { position: absolute; inset: 0; background-size: 100% 100%; filter: brightness(1.45) saturate(1.2) contrast(1.05); }
+.tr-tag { position: absolute; transform: translate(-50%,-100%); white-space: nowrap; padding: 2px 8px; border-radius: 999px; transition: opacity .3s, background .3s;
   background: rgba(20,10,4,.72); color: #ffe7b0; font-family: var(--serif); pointer-events: none; }
+.tr-tag.dim { opacity: .35; }
+.tr-tag.hot { background: rgba(255,226,166,.95); color: #4a2a0c; }
+.tr-embers, .tr-dust { position: absolute; pointer-events: none; mix-blend-mode: screen; }
+.tr-dust { left: 0; top: 0; }
+.tr-lamp { position: absolute; pointer-events: none; mix-blend-mode: screen; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255,190,90,.5), rgba(255,150,50,.18) 55%, transparent); animation: tr-lamp 2s infinite steps(1, end); }
+@keyframes tr-lamp { 0%{opacity:.8;transform:scale(1)} 12%{opacity:.5;transform:scale(.96)} 27%{opacity:1;transform:scale(1.04)} 41%{opacity:.62} 58%{opacity:.95;transform:scale(1.02)} 76%{opacity:.55;transform:scale(.97)} 90%{opacity:.9} }
+.tr-caption { position: absolute; left: max(20px, env(safe-area-inset-left, 0px)); bottom: max(22px, env(safe-area-inset-bottom, 0px)); max-width: min(300px, calc(100% - 40px)); z-index: 4; padding: 14px 18px 14px 16px;
+  font-family: var(--serif); color: #ffe9c4; text-shadow: 0 1px 10px rgba(0,0,0,.8);
+  background: linear-gradient(90deg, rgba(14,7,3,.62), rgba(14,7,3,0)); border-left: 2px solid rgba(255,200,120,.7); pointer-events: none; }
+.tr-caption small { letter-spacing: .22em; text-transform: uppercase; font-size: .72rem; opacity: .8; }
+.tr-caption h3 { margin: 4px 0 6px; font-size: 1.55rem; font-weight: 500; font-style: italic; color: #ffd98c; }
+.tr-caption p { margin: 0; font-size: 1rem; line-height: 1.5; opacity: .92; }
 .tr-modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(20,10,4,.55); backdrop-filter: blur(2px); animation: tr-in .4s ease both; }
 .tr-card { position: relative; max-width: 440px; width: 100%; padding: 38px 28px 26px; text-align: center; font-family: var(--serif); color: #4a2e17;
   background:
@@ -194,4 +211,4 @@ img { user-select: none; -webkit-user-drag: none; }
 .tr-card button { margin-top: 16px; padding: 8px 26px; border-radius: 999px; border: 1.5px solid rgba(120,70,25,.6); background: rgba(255,248,225,.4); color: #6b3a14; font: inherit; font-style: italic; cursor: pointer; }
 .tr-card button:hover { background: rgba(255,248,225,.8); }
 @media (max-width: 420px) { .tr-clock { gap: 6px } .tr-clock div { min-width: 54px } .tr-clock b { font-size: 1.7rem } }
-@media (prefers-reduced-motion: reduce) { .tr-fire i, .tr-fireglow, .tr-warm, .tr-tw, .tr-gift.on { animation-duration: 6s; } }
+@media (prefers-reduced-motion: reduce) { .tr-fire i, .tr-fireglow, .tr-warm, .tr-tw, .tr-lamp, .tr-litwrap.on { animation-duration: 6s; } }

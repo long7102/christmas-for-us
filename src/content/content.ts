@@ -25,6 +25,13 @@ export const gifts: { id: number; title: string; unlockAt: string; body: string 
   { id: 4, title: 'Ngày 8 tháng 1', unlockAt: '2027-01-08T00:00:00+07:00', body: '' },
 ]
 
+/** Chữ minh hoạ ở góc cảnh cây thông (sẽ đổi khi Long chốt nội dung). */
+export const tree = {
+  eyebrow: 'Dưới gốc cây',
+  title: 'Bốn món quà cho em',
+  body: 'Mỗi món quà sẽ mở vào một ngày riêng. Em chạm vào hộp quà để xem.',
+}
+
 export const treeText = {
   locked: 'Món quà này còn đang ngủ, chưa đến giờ mở đâu em.',
   waiting: 'Còn',
