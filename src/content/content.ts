@@ -52,12 +52,16 @@ export const memories: Record<string, { title: string; story: string }> = {
   stock1: { title: 'Chiếc tất kem', story: 'Câu chuyện nhỏ về chiếc tất này sẽ được kể ở đây.' },
   stock2: { title: 'Chiếc tất xanh', story: 'Câu chuyện nhỏ về chiếc tất này sẽ được kể ở đây.' },
   wreath: { title: 'Vòng hoa trên tường', story: 'Câu chuyện nhỏ về vòng hoa này sẽ được kể ở đây.' },
+  star: { title: 'Ngôi sao trên đỉnh', story: 'Ngôi sao trên đỉnh cây nhắc đến vì sao dẫn đường trong đêm Giáng sinh đầu tiên. Nó đứng cao nhất, để ai lạc đường cũng tìm được lối về nhà.' },
+  lamp: { title: 'Ngọn đèn nhỏ', story: 'Câu chuyện nhỏ về ngọn đèn này sẽ được kể ở đây.' },
+  fire: { title: 'Lò sưởi', story: 'Câu chuyện nhỏ về lò sưởi này sẽ được kể ở đây.' },
 }
 
 /** Chữ ở góc cảnh cây thông (chữ tạm, sẽ đổi khi Long chốt nội dung). */
 export const tree = {
   title: 'Cây thông',
-  body: 'Bốn món quà, mỗi món mở vào một ngày riêng. Em chạm vào hộp quà, tất, vòng hoa, ngôi sao hay đèn để xem điều gì xảy ra.',
+  body: 'Cây thông xanh suốt bốn mùa nên từ xưa đã là dấu hiệu của hy vọng và sự sống bền bỉ. Mỗi chùm đèn là một điều ước nhỏ, ngôi sao trên đỉnh dẫn đường về nhà, còn những món quà dưới gốc cây là điều bất ngờ dành cho người mình thương.',
+  hint: 'Em chạm vào hộp quà, tất, vòng hoa, ngôi sao hay đèn để xem điều gì xảy ra.',
 }
 
 export const treeText = {

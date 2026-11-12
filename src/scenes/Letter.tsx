@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { LONG_EMAIL, gifts, memories, treeText } from '../content/content'
 import { store } from '../lib/storage'
+import { LAND, lampPoly, polyBox, type P } from './treeLayout'
 import { countdown, isUnlocked } from '../lib/unlock'
 
-export type Modal = { kind: 'gift'; i: number } | { kind: 'memory'; id: string } | null
+export type Modal = { kind: 'gift'; i: number } | { kind: 'memory'; id: string; i?: number } | null
 
 /** Bộ lọc làm mép giấy răng cưa như giấy xé. Đặt một lần trong trang. */
 export function PaperFilter() {
@@ -40,6 +41,20 @@ function Postmark({ text }: { text: string }) {
       </g>
       <text x="60" y="64" textAnchor="middle" fontSize="15" fill="#3a4a6a" opacity=".7" fontFamily="serif" fontWeight="700">{text}</text>
     </svg>
+  )
+}
+
+/** Hình nhỏ của vật phẩm, cắt ôm sát viền, dán lên giấy. */
+function Cutout({ id, i }: { id: string; i?: number }) {
+  const poly: P | undefined = id === 'lamp' ? lampPoly(LAND.lampBox[i ?? 0]) : LAND.spots.find((q) => q.id === id)?.poly
+  if (!poly) return null
+  const b = polyBox(poly), k = Math.min(150 / b.w, 170 / b.h, 1.6)
+  const clip = `polygon(${poly.map(([x, y]) => `${(x - b.x) * k}px ${(y - b.y) * k}px`).join(',')})`
+  return (
+    <div className="lt-cut" style={{ width: b.w * k, height: b.h * k }} aria-hidden>
+      <div style={{ width: b.w * k, height: b.h * k, clipPath: clip, backgroundImage: `url(${LAND.src})`, backgroundSize: `${LAND.w * k}px ${LAND.h * k}px`, backgroundPosition: `${-b.x * k}px ${-b.y * k}px` }} />
+      <i className="tape l" /><i className="tape r" />
+    </div>
   )
 }
 
@@ -124,8 +139,11 @@ export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClo
           )}
           {m && (
             <>
+              <div className="lt-itemrow">
+                <Cutout id={(modal as { id: string }).id} i={(modal as { i?: number }).i} />
+                <p className="hand">{m.story}</p>
+              </div>
               <div className="lt-photo"><span>{treeText.photo}</span></div>
-              <p className="hand">{m.story}</p>
             </>
           )}
           <button className="lt-close" onClick={onClose}>{treeText.close}</button>

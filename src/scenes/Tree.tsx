@@ -1,81 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import landSrc from '../assets/tree-land.webp'
-import portSrc from '../assets/tree-port.webp'
 import { gifts, tree as treeCopy } from '../content/content'
 import { reducedMotion } from '../lib/device'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
-
-type P = [number, number][]
-type R = { x: number; y: number; w: number; h: number }
-type Layout = {
-  src: string; w: number; h: number
-  win: R; fire: R
-  tree: { cx: number; top: number; base: number; half: number }
-  /** Viền từng hộp quà (đa giác, px ảnh gốc). */
-  polys: P[]
-  /** Đèn lồng/nến (x, y, bán kính). */
-  lamps: [number, number, number][]
-  /** Nắp từng hộp: đỉnh nơ, mép trên miệng hộp, mép dưới nắp; khoảng x của hộp. */
-  lids: { poly: P; top: number; y1: number; y2: number; x1: number; x2: number }[]
-  /** Vật bấm được (hình elip): ngôi sao, vòng hoa, tất, lò sưởi. */
-  spots: { id: string; cx: number; cy: number; rx: number; ry: number }[]
-  /** Khung phải luôn thấy được (cây + quà). */
-  focus: { x1: number; y1: number; x2: number; y2: number }
-}
-
-// Toạ độ theo pixel của ảnh gốc.
-const LAND: Layout = {
-  src: landSrc, w: 1680, h: 944,
-  win: { x: 1220, y: 118, w: 239, h: 510 },
-  fire: { x: 108, y: 535, w: 170, h: 180 },
-  tree: { cx: 840, top: 126, base: 693, half: 226 },
-  polys: [
-    [[632,745],[660,735],[662,723],[690,722],[712,724],[722,738],[738,742],[738,800],[722,815],[640,812],[632,790]],
-    [[735,758],[765,752],[765,735],[790,732],[812,735],[815,750],[840,752],[840,800],[822,827],[742,828],[738,790]],
-    [[852,760],[870,752],[875,742],[895,742],[912,745],[915,755],[935,758],[936,800],[930,826],[855,826],[850,790]],
-    [[940,745],[962,738],[968,724],[990,722],[1020,722],[1030,735],[1052,742],[1052,810],[1040,826],[965,828],[945,800]],
-  ],
-  lamps: [[45, 205, 70], [395, 280, 55], [606, 425, 55], [1215, 582, 55], [1632, 232, 70], [45, 710, 75]],
-  lids: [
-    { poly: [[632,742],[660,735],[662,722],[690,721],[712,723],[722,737],[740,740],[739,761],[632,763]], top: 720, y1: 740, y2: 761, x1: 633, x2: 739 },
-    { poly: [[735,758],[765,752],[765,734],[790,731],[812,734],[815,750],[842,752],[843,777],[737,779]], top: 729, y1: 752, y2: 778, x1: 736, x2: 843 },
-    { poly: [[851,760],[870,752],[875,741],[895,741],[912,745],[915,755],[936,758],[937,778],[851,778]], top: 739, y1: 757, y2: 778, x1: 851, x2: 937 },
-    { poly: [[940,745],[962,738],[968,723],[990,721],[1020,721],[1030,735],[1053,742],[1053,776],[942,778]], top: 719, y1: 742, y2: 777, x1: 940, x2: 1054 },
-  ],
-  spots: [
-    { id: 'wreath', cx: 237, cy: 140, rx: 100, ry: 104 }, { id: 'star', cx: 832, cy: 92, rx: 38, ry: 44 },
-    { id: 'stock0', cx: 138, cy: 445, rx: 48, ry: 88 }, { id: 'stock1', cx: 236, cy: 442, rx: 44, ry: 78 }, { id: 'stock2', cx: 336, cy: 457, rx: 40, ry: 74 },
-    { id: 'fire', cx: 190, cy: 625, rx: 110, ry: 95 },
-  ],
-  focus: { x1: 560, y1: 60, x2: 1110, y2: 850 },
-}
-const PORT: Layout = {
-  src: portSrc, w: 944, h: 1680,
-  win: { x: 751, y: 25, w: 181, h: 643 },
-  fire: { x: 0, y: 1051, w: 71, h: 156 },
-  tree: { cx: 488, top: 357, base: 1230, half: 269 },
-  polys: [
-    [[273,1252],[300,1245],[305,1232],[320,1228],[345,1230],[362,1240],[390,1248],[392,1325],[375,1342],[285,1335],[272,1300]],
-    [[383,1255],[405,1248],[410,1235],[430,1228],[465,1232],[472,1245],[492,1250],[492,1300],[485,1352],[392,1350],[385,1300]],
-    [[502,1258],[520,1250],[525,1235],[540,1230],[570,1232],[582,1245],[603,1252],[603,1300],[600,1350],[510,1352],[502,1300]],
-    [[597,1250],[620,1245],[630,1230],[650,1222],[685,1224],[695,1238],[720,1245],[722,1320],[712,1335],[630,1347],[610,1320]],
-  ],
-  lamps: [[240, 488, 90], [145, 598, 70], [855, 895, 70], [20, 1360, 80]],
-  lids: [
-    { poly: [[273,1252],[300,1245],[305,1231],[320,1227],[345,1229],[362,1240],[391,1248],[391,1283],[275,1285]], top: 1226, y1: 1250, y2: 1284, x1: 273, x2: 392 },
-    { poly: [[383,1255],[405,1248],[410,1234],[430,1227],[465,1231],[472,1245],[493,1250],[493,1291],[386,1291]], top: 1226, y1: 1252, y2: 1290, x1: 383, x2: 493 },
-    { poly: [[502,1258],[520,1250],[525,1234],[540,1229],[570,1231],[582,1245],[604,1252],[604,1286],[502,1286]], top: 1228, y1: 1255, y2: 1285, x1: 502, x2: 605 },
-    { poly: [[597,1250],[620,1245],[630,1229],[650,1221],[685,1223],[695,1238],[721,1245],[723,1284],[600,1289]], top: 1220, y1: 1246, y2: 1286, x1: 597, x2: 724 },
-  ],
-  spots: [
-    { id: 'star', cx: 488, cy: 335, rx: 54, ry: 60 },
-    { id: 'stock0', cx: 45, cy: 812, rx: 40, ry: 95 }, { id: 'stock1', cx: 108, cy: 818, rx: 38, ry: 90 }, { id: 'stock2', cx: 175, cy: 820, rx: 36, ry: 85 },
-    { id: 'fire', cx: 45, cy: 1100, rx: 70, ry: 120 },
-  ],
-  focus: { x1: 200, y1: 270, x2: 770, y2: 1370 },
-}
+import { LAND, PORT, lampPoly, polyBox, type Layout, type P, type R } from './treeLayout'
 
 /** Tuyết rơi sau cửa sổ (canvas nhỏ, chỉ vẽ trong ô kính). */
 function WindowSnow({ r }: { r: R }) {
@@ -237,6 +166,7 @@ const FLARE_MS = 2400
 export default function Tree() {
   const sec = useRef<HTMLElement>(null)
   const host = useRef<HTMLDivElement>(null)
+  const txt = useRef<HTMLDivElement>(null)
   const [mode, setMode] = useState<'wide' | 'tall'>(() => (innerWidth / innerHeight < 0.7 ? 'tall' : 'wide'))
   const [compact, setCompact] = useState(() => innerWidth < 1100)
   const L = mode === 'tall' ? PORT : LAND
@@ -268,15 +198,17 @@ export default function Tree() {
     const el = host.current!
     const fit = () => {
       const vw = el.clientWidth, vh = el.clientHeight, F = L.focus
+      const band = mode === 'tall' ? txt.current?.offsetHeight ?? 0 : 0
+      const vis = vh - band
       const s = Math.max(vw / L.w, vh / L.h)
       const cx = (F.x1 + F.x2) / 2, cy = (F.y1 + F.y2) / 2
       let x = vw / 2 - cx * s
-      let y = Math.min(vh / 2 - cy * s, vh - F.y2 * s - 10)
-      x = Math.min(0, Math.max(vw - L.w * s, x)); y = Math.min(0, Math.max(vh - L.h * s, y))
+      let y = Math.min(vis / 2 - cy * s, vis - F.y2 * s - 10)
+      x = Math.min(0, Math.max(vw - L.w * s, x)); y = Math.min(0, mode === 'tall' ? y : Math.max(vh - L.h * s, y))
       setG({ s, x, y })
     }
     fit()
-    const ro = new ResizeObserver(fit); ro.observe(el)
+    const ro = new ResizeObserver(fit); ro.observe(el); if (txt.current) ro.observe(txt.current)
     return () => ro.disconnect()
   }, [L, mode])
 
@@ -296,17 +228,25 @@ export default function Tree() {
     }, reducedMotion() ? 200 : 1900)
   }
 
+  const later = (f: () => void) => setTimeout(f, reducedMotion() ? 0 : 750)
   const poke = (id: string) => {
-    if (id === 'star') { setStarKey((k) => k + 1); setFlash(true); setTimeout(() => setFlash(false), 2600) }
-    else if (id === 'fire') { setKick((k) => k + 1); setFireOn(true); setTimeout(() => setFireOn(false), FLARE_MS) }
-    else if (id === 'wreath') { setWreathKey((k) => k + 1); setModal({ kind: 'memory', id }) }
+    if (id === 'star') { setStarKey((k) => k + 1); setFlash(true); setTimeout(() => setFlash(false), 2600); later(() => setModal({ kind: 'memory', id })) }
+    else if (id === 'fire') { setKick((k) => k + 1); setFireOn(true); setTimeout(() => setFireOn(false), FLARE_MS); later(() => setModal({ kind: 'memory', id })) }
+    else if (id === 'wreath') { setWreathKey((k) => k + 1); later(() => setModal({ kind: 'memory', id })) }
     else setModal({ kind: 'memory', id })
   }
   const pokeLamp = (i: number) => {
     setLampOn((s) => new Set(s).add(i))
     setTimeout(() => setLampOn((s) => { const n = new Set(s); n.delete(i); return n }), FLARE_MS)
+    later(() => setModal({ kind: 'memory', id: 'lamp', i }))
   }
 
+  const halo = (id: string, key: number) => {
+    const sp = L.spots.find((q) => q.id === id)
+    if (!sp || !key) return null
+    const b = polyBox(sp.poly), r = Math.max(b.w, b.h) * 1.5
+    return <div key={`${id}${key}`} className="tr-halo" style={{ left: b.x + b.w / 2 - r / 2, top: b.y + b.h / 2 - r / 2, width: r, height: r }} />
+  }
   const bodyPoly = (i: number): P => L.polys[i].map(([x, y]) => [x, Math.max(y, L.lids[i].y1)] as [number, number])
   const lidVars = (i: number) => {
     const d = L.lids[i], ys = L.polys[i].map((q) => q[1]), bottom = Math.max(...ys)
@@ -371,18 +311,16 @@ export default function Tree() {
             ? <span key={`c${i}`} className="tr-cue" style={{ left: (d.x1 + d.x2) / 2, top: d.top - 22 }}>✦</span> : null))}
 
           {/* hiệu ứng */}
-          <div key={`s${starKey}`} className={`tr-starburst${starKey ? ' go' : ''}`} style={{ left: L.spots.find((q) => q.id === 'star')!.cx, top: L.spots.find((q) => q.id === 'star')!.cy }} />
-          {L.spots.some((q) => q.id === 'wreath') && (
-            <div key={`w${wreathKey}`} className={`tr-ring${wreathKey ? ' go' : ''}`} style={{ left: L.spots.find((q) => q.id === 'wreath')!.cx, top: L.spots.find((q) => q.id === 'wreath')!.cy }} />
-          )}
+          {halo('star', starKey)}
+          {halo('wreath', wreathKey)}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             {L.spots.map((q) => (
-              <ellipse key={q.id} className="tr-hs" cx={q.cx} cy={q.cy} rx={q.rx} ry={q.ry} tabIndex={0} role="button"
+              <polygon key={q.id} className="tr-hs" points={q.poly.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button"
                 aria-label={q.id} onClick={() => poke(q.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(q.id) } }} />
             ))}
-            {L.lamps.map(([x, y, r], i) => (
-              <ellipse key={`lp${i}`} className="tr-hs" cx={x} cy={y} rx={r * 0.42} ry={r * 0.85} tabIndex={0} role="button" aria-label="đèn"
+            {L.lampBox.map((bx, i) => (
+              <polygon key={`lp${i}`} className="tr-hs" points={lampPoly(bx).map((c) => c.join(',')).join(' ')} tabIndex={0} role="button" aria-label="đèn"
                 onClick={() => pokeLamp(i)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pokeLamp(i) } }} />
             ))}
             {L.polys.map((p, i) => {
@@ -399,9 +337,10 @@ export default function Tree() {
         </div>
       </div>
 
-      <div className="sec-text">
+      <div className="sec-text" ref={txt}>
         <h2 className="sec-title">{treeCopy.title}</h2>
         <p className="sec-desc">{treeCopy.body}</p>
+        <p className="sec-hint">{treeCopy.hint}</p>
       </div>
 
       {modal && <ModalView modal={modal} onClose={() => setModal(null)} />}
