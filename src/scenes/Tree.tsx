@@ -15,23 +15,23 @@ type Layout = {
 
 // Toạ độ theo pixel của ảnh gốc.
 const LAND: Layout = {
-  src: landSrc, w: 1600, h: 899,
-  win: { x: 1162, y: 112, w: 228, h: 486 },
-  fire: { x: 108, y: 500, w: 130, h: 170 },
-  tree: { cx: 800, top: 120, base: 660, half: 215 },
+  src: landSrc, w: 1680, h: 944,
+  win: { x: 1220, y: 118, w: 239, h: 510 },
+  fire: { x: 108, y: 535, w: 170, h: 180 },
+  tree: { cx: 840, top: 126, base: 693, half: 226 },
   gifts: [
-    { x: 602, y: 698, w: 100, h: 82 }, { x: 700, y: 710, w: 102, h: 80 },
-    { x: 811, y: 716, w: 80, h: 74 }, { x: 892, y: 702, w: 110, h: 86 },
+    { x: 632, y: 733, w: 105, h: 86 }, { x: 735, y: 746, w: 107, h: 84 },
+    { x: 852, y: 752, w: 84, h: 78 }, { x: 937, y: 737, w: 116, h: 90 },
   ],
 }
 const PORT: Layout = {
-  src: portSrc, w: 449, h: 799,
-  win: { x: 357, y: 12, w: 86, h: 306 },
-  fire: { x: 0, y: 500, w: 34, h: 74 },
-  tree: { cx: 232, top: 170, base: 585, half: 128 },
+  src: portSrc, w: 944, h: 1680,
+  win: { x: 751, y: 25, w: 181, h: 643 },
+  fire: { x: 0, y: 1051, w: 71, h: 156 },
+  tree: { cx: 488, top: 357, base: 1230, half: 269 },
   gifts: [
-    { x: 129, y: 590, w: 56, h: 50 }, { x: 181, y: 596, w: 62, h: 48 },
-    { x: 239, y: 594, w: 50, h: 50 }, { x: 284, y: 588, w: 58, h: 54 },
+    { x: 271, y: 1240, w: 118, h: 105 }, { x: 381, y: 1253, w: 130, h: 101 },
+    { x: 502, y: 1249, w: 105, h: 105 }, { x: 597, y: 1236, w: 122, h: 114 },
   ],
 }
 
@@ -151,7 +151,7 @@ export default function Tree() {
               onClick={() => setOpen(i)}
               aria-label={`${gf.title}${ok ? '' : ` (mở lúc ${fmt(gf.unlockAt)})`}`}
             >
-              <span className="tr-tag" style={{ fontSize: portrait ? 9 : 13 }}>{ok ? '✦' : `🔒 ${fmt(gf.unlockAt)}`}</span>
+              <span className="tr-tag" style={{ fontSize: portrait ? 20 : 14 }}>{ok ? '✦' : `🔒 ${fmt(gf.unlockAt)}`}</span>
             </button>
           )
         })}
@@ -160,11 +160,17 @@ export default function Tree() {
       {cur && (
         <div className="tr-modal" onClick={() => setOpen(null)}>
           <div className="tr-card" onClick={(e) => e.stopPropagation()}>
+            <div className="tr-seal" aria-hidden>✦</div>
             <h2>{cur.title}</h2>
+            <div className="tr-rule" aria-hidden />
             {cd ? (
               <>
                 <p>{treeText.locked}</p>
-                <p className="tr-cd">{treeText.waiting} {cd.d} ngày {cd.h} giờ {cd.m} phút {cd.s} giây</p>
+                <div className="tr-clock" role="timer" aria-label={`Còn ${cd.d} ngày ${cd.h} giờ ${cd.m} phút ${cd.s} giây`}>
+                  {([['ngày', cd.d], ['giờ', cd.h], ['phút', cd.m], ['giây', cd.s]] as const).map(([u, v]) => (
+                    <div key={u}><b>{String(v).padStart(2, '0')}</b><span>{u}</span></div>
+                  ))}
+                </div>
               </>
             ) : (
               <p>{cur.body || treeText.empty}</p>
