@@ -351,6 +351,7 @@ export default function Tree() {
 
       <div className="sec-text" ref={txt}>
         <h2 className="sec-title">{treeCopy.title}</h2>
+        <p className="sec-tag">{treeCopy.tagline}</p>
         <p className="sec-desc">{treeCopy.body}</p>
         <p className="sec-hint">{treeCopy.hint}</p>
       </div>

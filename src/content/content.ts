@@ -49,46 +49,47 @@ export const gifts: { id: number; kind: GiftKind; title: string; stamp: string; 
 /** Những vật trong phòng bấm được. Ảnh và câu chuyện thật Long sẽ cung cấp sau. */
 export const memories: Record<string, { title: string; tip: string; meaning: string[]; story: string }> = {
   stock0: {
-    title: 'Chiếc tất đỏ', tip: 'Tất treo bên lò sưởi, chờ một bất ngờ nhỏ.',
-    meaning: ['Chuyện kể rằng ngày xưa, thánh Nicholas lén thả vài đồng vàng qua ống khói cho ba cô gái nghèo. Đồng vàng rơi đúng vào những chiếc tất đang phơi bên lò sưởi. Từ đó, người ta treo tất lên để đón quà.', 'Chiếc tất nhỏ nhắc rằng điều quý nhất thường đến lặng lẽ và bất ngờ.'],
-    story: 'Câu chuyện của hai đứa về chiếc tất này sẽ được viết ở đây.',
+    title: 'Chiếc tất đỏ', tip: 'Chiếc tất giữ những đồng vàng đầu tiên.',
+    meaning: ['Chuyện kể rằng ngày xưa, thánh Nicholas nghe tin có ba cô gái nghèo không đủ của hồi môn. Đêm đó ông lén thả những đồng vàng xuống ống khói, và chúng rơi đúng vào những chiếc tất đang phơi cạnh lò sưởi.', 'Từ đó người ta treo tất lên bên lò sưởi mỗi dịp Giáng sinh, để chờ một điều tốt lành đến lặng lẽ như thế.'],
+    story: 'Chuyện của hai đứa về chiếc tất đỏ sẽ được viết ở đây.',
   },
   stock1: {
-    title: 'Chiếc tất kem', tip: 'Tất treo bên lò sưởi, chờ một bất ngờ nhỏ.',
-    meaning: ['Chuyện kể rằng ngày xưa, thánh Nicholas lén thả vài đồng vàng qua ống khói cho ba cô gái nghèo. Đồng vàng rơi đúng vào những chiếc tất đang phơi bên lò sưởi. Từ đó, người ta treo tất lên để đón quà.', 'Chiếc tất nhỏ nhắc rằng điều quý nhất thường đến lặng lẽ và bất ngờ.'],
-    story: 'Câu chuyện của hai đứa về chiếc tất này sẽ được viết ở đây.',
+    title: 'Chiếc tất kem', tip: 'Một quả cam nhỏ nơi mũi tất cũng là kho báu.',
+    meaning: ['Ngày xưa, khi quà còn hiếm, trẻ con thức dậy và tìm thấy một quả cam hay quýt nằm sâu nơi mũi tất. Với chúng, đó là cả một kho báu: ngọt, thơm, và mang mùi của mùa đông.', 'Chiếc tất kem nhắc rằng hạnh phúc đôi khi chỉ nhỏ bằng một quả cam, miễn là có người nhớ tới mình.'],
+    story: 'Chuyện của hai đứa về chiếc tất kem sẽ được viết ở đây.',
   },
   stock2: {
-    title: 'Chiếc tất xanh', tip: 'Tất treo bên lò sưởi, chờ một bất ngờ nhỏ.',
-    meaning: ['Chuyện kể rằng ngày xưa, thánh Nicholas lén thả vài đồng vàng qua ống khói cho ba cô gái nghèo. Đồng vàng rơi đúng vào những chiếc tất đang phơi bên lò sưởi. Từ đó, người ta treo tất lên để đón quà.', 'Chiếc tất nhỏ nhắc rằng điều quý nhất thường đến lặng lẽ và bất ngờ.'],
-    story: 'Câu chuyện của hai đứa về chiếc tất này sẽ được viết ở đây.',
+    title: 'Chiếc tất xanh', tip: 'Mỗi người một chiếc tất, mỗi người một chỗ treo.',
+    meaning: ['Trong nhiều gia đình, mỗi người có một chiếc tất riêng, treo cạnh nhau và đôi khi thêu cả tên. Treo tất cạnh nhau có nghĩa là: ở ngôi nhà này, em có một chỗ của riêng em.', 'Chỉ cần hai chiếc tất nằm cạnh nhau trên mặt lò sưởi là đã đủ thành một gia đình nhỏ.'],
+    story: 'Chuyện của hai đứa về chiếc tất xanh sẽ được viết ở đây.',
   },
   wreath: {
     title: 'Vòng hoa trên tường', tip: 'Vòng tròn không có điểm đầu, cũng không có điểm cuối.',
-    meaning: ['Hình tròn của vòng hoa tượng trưng cho tình yêu và sự gắn bó không có điểm kết thúc. Lá thông xanh quanh năm là sự sống vẫn tiếp tục dù mùa đông lạnh giá, quả đỏ và chiếc nơ là hơi ấm.', 'Treo vòng hoa lên là một lời chào: nơi này luôn có chỗ cho em.'],
-    story: 'Câu chuyện của hai đứa về vòng hoa này sẽ được viết ở đây.',
+    meaning: ['Người ta đan vòng hoa từ cành thông vì nó không rụng lá qua mùa đông, như một lời hứa rằng sự sống vẫn tiếp tục. Vòng tròn không có đầu cũng không có cuối, nên nó trở thành biểu tượng của một tình yêu bền lâu.', 'Treo trước cửa, vòng hoa nói với người đến: bước vào đi, ở đây có chỗ cho bạn.'],
+    story: 'Chuyện của hai đứa về vòng hoa sẽ được viết ở đây.',
   },
   star: {
     title: 'Ngôi sao trên đỉnh', tip: 'Ngôi sao dẫn đường về nhà.',
-    meaning: ['Ngôi sao trên đỉnh cây nhắc đến vì sao dẫn đường trong đêm Giáng sinh đầu tiên. Nó đứng cao nhất, để ai lạc đường cũng tìm được lối về nhà.', 'Đặt ngôi sao lên đỉnh cây là cách nói rằng dù đêm có dài, vẫn luôn có một điểm sáng để hướng về.'],
-    story: 'Câu chuyện của hai đứa về ngôi sao này sẽ được viết ở đây.',
+    meaning: ['Theo truyền thuyết, ba nhà thông thái đã đi theo một ngôi sao sáng suốt nhiều đêm để tìm đến nơi đứa trẻ Giáng sinh ra đời. Từ đó, ngôi sao được đặt trên đỉnh cây: cao nhất và sáng nhất.', 'Dù đêm có dài đến đâu, ai đang lạc đường cũng có một điểm sáng để hướng về.'],
+    story: 'Chuyện của hai đứa về ngôi sao sẽ được viết ở đây.',
   },
   lamp: {
     title: 'Ngọn đèn nhỏ', tip: 'Ngọn đèn giữ ánh sáng cho người về muộn.',
-    meaning: ['Ngày xưa, người ta thắp đèn đặt ở cửa sổ để người đi xa nhìn thấy mà tìm được lối về. Mỗi ngọn nến trong đèn là một lời nhắn lặng lẽ: có người đang chờ em ở đây.'],
-    story: 'Câu chuyện của hai đứa về ngọn đèn này sẽ được viết ở đây.',
+    meaning: ['Ngày xưa, người ta thắp một ngọn đèn đặt nơi cửa sổ trong đêm đông để người đi xa nhìn thấy mà tìm đường về.', 'Mỗi ngọn nến là một lời nhắn không cần nói thành lời: có người đang chờ em ở đây.'],
+    story: 'Chuyện của hai đứa về ngọn đèn sẽ được viết ở đây.',
   },
   fire: {
     title: 'Bếp lửa', tip: 'Bếp lửa là nơi mình sưởi ấm cho nhau.',
     meaning: ['Từ xưa, bếp lửa là trái tim của ngôi nhà: mọi người quây quần quanh nó vào những đêm đông. Cái ấm của lửa không chỉ là hơi nóng, mà là việc ngồi gần nhau, kể chuyện cho nhau nghe, hay chỉ lặng im mà vẫn thấy yên lòng.', 'Sưởi ấm nhau nghĩa là cùng nhau giữ cho căn nhà không bao giờ lạnh.'],
-    story: 'Câu chuyện của hai đứa về bếp lửa này sẽ được viết ở đây.',
+    story: 'Chuyện của hai đứa về bếp lửa sẽ được viết ở đây.',
   },
 }
 
 /** Chữ ở góc cảnh cây thông (chữ tạm, sẽ đổi khi Long chốt nội dung). */
 export const tree = {
   title: 'Cây thông',
-  body: 'Cây thông xanh suốt bốn mùa nên từ xưa đã là dấu hiệu của hy vọng và sự sống bền bỉ. Mỗi chùm đèn là một điều ước nhỏ, ngôi sao trên đỉnh dẫn đường về nhà, còn những món quà dưới gốc cây là điều bất ngờ dành cho người mình thương.',
+  tagline: 'Giữa mùa đông, vẫn còn một góc xanh.',
+  body: 'Người xưa mang cây thông vào nhà để nhắc nhau rằng bóng tối nào rồi cũng lùi lại. Mỗi chùm đèn là một điều ước chưa nói thành lời, ngôi sao trên đỉnh chỉ đường về nhà, còn dưới gốc cây là những điều bất ngờ dành cho người mình thương.',
   hint: 'Em chạm vào hộp quà, tất, vòng hoa, ngôi sao hay đèn để xem điều gì xảy ra.',
 }
 

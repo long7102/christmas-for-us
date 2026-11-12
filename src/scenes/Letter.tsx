@@ -6,7 +6,7 @@ import { countdown, isUnlocked } from '../lib/unlock'
 
 export type Modal = { kind: 'gift'; i: number } | { kind: 'memory'; id: string; i?: number } | null
 
-/** Bộ lọc làm mép giấy răng cưa như giấy xé. Đặt một lần trong trang. */
+/** Bộ lọc: mép giấy răng cưa, mực chữ sờn, vết ố trên giấy. Đặt một lần trong trang. */
 export function PaperFilter() {
   return (
     <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden>
@@ -15,6 +15,14 @@ export function PaperFilter() {
         <feDisplacementMap in="SourceGraphic" in2="a" scale="9" xChannelSelector="R" yChannelSelector="G" result="b" />
         <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="2" seed="2" result="c" />
         <feDisplacementMap in="b" in2="c" scale="4" xChannelSelector="G" yChannelSelector="R" />
+      </filter>
+      <filter id="tr-ink" x="-2%" y="-5%" width="104%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" result="n" />
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G" result="rag" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.55 0.7" numOctaves="3" seed="4" result="m" />
+        <feColorMatrix in="m" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 14 -9.8" result="holes" />
+        <feComposite in="rag" in2="holes" operator="out" result="worn" />
+        <feComponentTransfer in="worn"><feFuncA type="linear" slope=".92" /></feComponentTransfer>
       </filter>
     </svg>
   )
@@ -45,9 +53,9 @@ function Postmark({ text }: { text: string }) {
 }
 
 function iconFor(id: string) {
-  if (id === 'stock0') return <StockingIcon main="#a82a2a" dark="#6f1414" />
-  if (id === 'stock1') return <StockingIcon main="#eadfc4" dark="#b49f74" />
-  if (id === 'stock2') return <StockingIcon main="#24553a" dark="#123320" />
+  if (id === 'stock0') return <StockingIcon main="#a82a2a" dark="#6a1212" light="#d84e4e" variant="coins" />
+  if (id === 'stock1') return <StockingIcon main="#e4d6b4" dark="#a8926a" light="#f6ecd2" variant="orange" />
+  if (id === 'stock2') return <StockingIcon main="#25603f" dark="#0f2c1a" light="#3f8a5c" variant="tag" />
   if (id === 'wreath') return <WreathIcon />
   if (id === 'star') return <StarIcon />
   if (id === 'lamp') return <LampIcon />
@@ -66,13 +74,13 @@ function Reply({ id }: { id: number }) {
   }
   return (
     <div className="lt-reply">
-      <label htmlFor={`lt-note-${id}`}>{treeText.replyLabel}</label>
+      <label className="ink" htmlFor={`lt-note-${id}`}>{treeText.replyLabel}</label>
       <textarea id={`lt-note-${id}`} value={v} onChange={(e) => setV(e.target.value)} placeholder={treeText.replyHolder} rows={8} />
       <div className="lt-actions">
         <a className="lt-btn primary" href={href}>{treeText.send}</a>
         <button className="lt-btn" onClick={copy} type="button">{done ? treeText.copied : treeText.copy}</button>
       </div>
-      <p className="lt-small">{treeText.sendHint}<br />Email nhận: <span className="lt-sel">{LONG_EMAIL}</span></p>
+      <p className="lt-small ink">{treeText.sendHint}<br />Email nhận: <span className="lt-sel">{LONG_EMAIL}</span></p>
     </div>
   )
 }
@@ -92,6 +100,29 @@ function Qr({ label }: { label?: string }) {
   )
 }
 
+function Holly() {
+  return (
+    <svg className="lt-holly" viewBox="0 0 110 90" aria-hidden>
+      <g stroke="#0f2f1c" strokeWidth="1.2">
+        <path d="M6 70c6-26 30-40 56-34-9 8-8 22-24 32-10 6-22 6-32 2z" fill="#2b6a3e" />
+        <path d="M30 86c-3-24 6-44 28-56 3 9 10 17 3 33-5 12-17 22-31 23z" fill="#1f5230" />
+        <path d="M52 52c18-2 36 6 48 24-18 6-34 0-48-24z" fill="#34794a" />
+      </g>
+      <g fill="#c6302a" stroke="#7a1412" strokeWidth=".8"><circle cx="40" cy="58" r="6" /><circle cx="52" cy="64" r="6" /><circle cx="46" cy="48" r="6" /></g>
+      <g fill="#fff" opacity=".6"><circle cx="38" cy="56" r="1.7" /><circle cx="50" cy="62" r="1.7" /><circle cx="44" cy="46" r="1.7" /></g>
+    </svg>
+  )
+}
+
+function Seal({ mark }: { mark: string }) {
+  return (
+    <div className="lt-seal" aria-hidden>
+      <svg viewBox="0 0 64 64"><path d="M32 2c7 0 9 6 15 6 6 0 9 5 8 11 5 4 8 8 5 14 3 6 0 11-6 14-1 7-6 10-12 9-5 5-10 5-14 0-6 1-11-2-12-9-6-3-9-8-6-14-3-6 0-10 5-14-1-6 2-11 8-11 6 0 8-6 15-6z" fill="url(#sealg)" /><defs><radialGradient id="sealg" cx=".35" cy=".3" r=".8"><stop offset="0" stopColor="#d64a40" /><stop offset=".6" stopColor="#a5251f" /><stop offset="1" stopColor="#6c1411" /></radialGradient></defs></svg>
+      <span>{mark}</span>
+    </div>
+  )
+}
+
 export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClose: () => void }) {
   const [, tick] = useState(0)
   useEffect(() => {
@@ -106,20 +137,26 @@ export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClo
   const locked = g ? !isUnlocked(g.unlockAt) : false
   const cd = g && locked ? countdown(g.unlockAt) : null
   const title = g ? g.title : m!.title
+  const open = !!g && !locked
+  const wide = (g && open && g.kind !== 'plain') || !!m
+  const body = g ? g.body.map((t, i) => <p className="hand ink" key={i}>{t}</p>) : null
 
   return (
     <div className="tr-modal" onClick={onClose}>
-      <div className={`lt-sheet ${m ? 'memory' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
+      <div className={`lt-sheet ${m ? 'memory' : 'gift'} ${wide ? 'wide' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
         <div className="lt-paper" />
+        <div className="lt-fox" />
         {g && <Postmark text={g.stamp} />}
         <Stamp tilt={g ? 4 : -5} />
-        <i className="lt-pin" />
+        {g ? <Seal mark="L♥H" /> : <i className="lt-pin" />}
+        <Holly />
+        {g && open && <div className="lt-sparkles" aria-hidden>{Array.from({ length: 9 }, (_, i) => <i key={i} style={{ left: `${(i * 37 + 8) % 96}%`, top: `${(i * 53 + 5) % 92}%`, animationDelay: `-${(i * 0.43).toFixed(2)}s` }}>✦</i>)}</div>}
         <div className="lt-body">
-          <h2>{title}</h2>
+          <h2 className="ink">{title}</h2>
           <div className="lt-rule" aria-hidden />
           {cd && (
             <>
-              <p>{treeText.locked}</p>
+              <p className="ink">{treeText.locked}</p>
               <div className="lt-clock" role="timer" aria-label={`Còn ${cd.d} ngày ${cd.h} giờ ${cd.m} phút ${cd.s} giây`}>
                 {([['ngày', cd.d], ['giờ', cd.h], ['phút', cd.m], ['giây', cd.s]] as const).map(([u, v]) => (
                   <div key={u}><b>{String(v).padStart(2, '0')}</b><span>{u}</span></div>
@@ -127,20 +164,24 @@ export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClo
               </div>
             </>
           )}
-          {g && !locked && (
-            <>
-              {g.body.length === 0 ? <p className="hand">{treeText.empty}</p> : g.body.map((t, i) => <p className="hand" key={i}>{t}</p>)}
-              {g.kind === 'reply' && <Reply id={g.id} />}
-              {g.kind === 'qr' && <Qr label={g.extra} />}
-            </>
+          {g && open && g.kind === 'plain' && (g.body.length === 0 ? <p className="hand ink">{treeText.empty}</p> : body)}
+          {g && open && g.kind !== 'plain' && (
+            <div className="lt-cols">
+              <div className="lt-col">{body}</div>
+              <div className="lt-col">{g.kind === 'reply' ? <Reply id={g.id} /> : <Qr label={g.extra} />}</div>
+            </div>
           )}
           {m && (
-            <>
-              <div className="lt-icon">{iconFor((modal as { id: string }).id)}</div>
-              {m.meaning.map((t, i) => <p key={i}>{t}</p>)}
-              <p className="hand">{m.story}</p>
-              <div className="lt-photo"><span>{treeText.photo}</span></div>
-            </>
+            <div className="lt-cols">
+              <div className="lt-col lt-left">
+                <div className="lt-icon">{iconFor((modal as { id: string }).id)}</div>
+                <div className="lt-photo"><span>{treeText.photo}</span></div>
+              </div>
+              <div className="lt-col">
+                {m.meaning.map((t, i) => <p className="ink" key={i}>{t}</p>)}
+                <p className="hand ink">{m.story}</p>
+              </div>
+            </div>
           )}
           <button className="lt-close" onClick={onClose}>{treeText.close}</button>
         </div>
