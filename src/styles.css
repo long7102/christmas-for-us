@@ -492,6 +492,9 @@ img { user-select: none; -webkit-user-drag: none; }
 .xf { position: relative; height: 300dvh; --R: 0px; --D: 0px; --tz: 1; --tb: 0px; --tl: 1; --to: 1; --cz: 1.16; --ring: 0; --bloom: 0; --cv: hidden; --cpe: none; --tpe: auto; }
 .xf-sticky { position: sticky; top: 0; height: 100dvh; overflow: hidden; background: #1a0f08; }
 .xf-layer { position: absolute; inset: 0; }
+/* giữ mỗi cảnh thành một lớp riêng để khi cuộn không bị vỡ ô tối (ô chưa kịp vẽ lại) */
+.xf-tree { will-change: transform, opacity; }
+.xf-cats > .tree-scene { will-change: transform; }
 .xf-layer > .tree-scene { position: absolute; inset: 0; height: auto; }
 .xf-tree { transform: scale(var(--tz)); transform-origin: 50% 58%; opacity: var(--to); pointer-events: var(--tpe); }
 .xf-cats { visibility: var(--cv); pointer-events: var(--cpe); clip-path: circle(var(--R) at 50% 58%); }
@@ -553,3 +556,10 @@ img { user-select: none; -webkit-user-drag: none; }
 .cats-scene.wide .sec-text[data-fit="3"] .sec-hint, .cats-scene.wide .sec-text[data-fit="3"] .sec-orn, .cats-scene.wide .sec-text[data-fit="3"] .sec-desc ~ .sec-desc { display: none; }
 .cats-scene.wide .sec-text[data-fit="4"] .sec-hint, .cats-scene.wide .sec-text[data-fit="4"] .sec-orn, .cats-scene.wide .sec-text[data-fit="4"] .sec-desc { display: none; }
 .cats-scene.wide .sec-text[data-fit="3"] .sec-title, .cats-scene.wide .sec-text[data-fit="4"] .sec-title { font-size: clamp(1.9rem, 3vw, 2.6rem); }
+
+/* nền tối mờ sau chữ cảnh mèo: bám sát góc trên trái màn hình, không chừa khoảng hở bên lề */
+.cats-scene.wide .sec-text::before { display: none; }
+.cats-veil { position: absolute; z-index: 3; left: 0; top: 0; pointer-events: none;
+  background: radial-gradient(ellipse 100% 100% at 0% 0%, rgba(24,11,5,.94) 0%, rgba(30,15,7,.86) 40%, rgba(34,18,8,.5) 72%, rgba(40,22,10,0) 100%); }
+.cats-scene.tall .cats-veil { display: none; }
+.xf-cats .cats-veil { opacity: var(--ct, 0); }

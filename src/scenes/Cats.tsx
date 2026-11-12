@@ -72,6 +72,7 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
   const [tip, setTip] = useState<{ title: string; text: string; b: { x: number; y: number; w: number; h: number } } | null>(null)
   const [hov, setHov] = useState<Who | null>(null)
   const [busy, setBusy] = useState<Who | null>(null)
+  const [tbox, setTbox] = useState({ h: 0 })
   const [show, setShow] = useState<string | null>(null)
   const timers = useRef<number[]>([])
   const next = useRef<Record<Who, number>>({ bong: 0, mochi: 0 })
@@ -148,7 +149,7 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
   // chữ nằm ở góc trên trái, trừ ngọn đèn lồng; điện thoại thì ở dải tối phía dưới
   const lampRight = (L.lamp[0] + L.lamp[2] * 0.55) * g.s + g.x
   const headLeft = (mode === 'wide' ? 640 : 0) * g.s + g.x
-  const left = Math.max(26, lampRight + 8)
+  const left = Math.max(22, lampRight + 2)
   const textWidth = mode === 'wide' ? Math.max(250, Math.min(430, headLeft - left - 24)) : 0
   const avail = mode === 'wide' ? (L.bong.poly.reduce((m, q) => Math.min(m, q[1]), 1e9) + 40) * g.s + g.y - 26 - 14 : 0
   // chữ phải nằm gọn trên đầu hai bé: nếu chỗ trống ít thì bỏ bớt từng phần cho vừa khít
@@ -159,6 +160,7 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
     let lvl = 0
     for (; lvl < 5; lvl++) { el.dataset.fit = String(lvl); if (el.offsetHeight <= avail) break }
     el.dataset.fit = String(Math.min(lvl, 4))
+    setTbox((o) => (o.h === el.offsetHeight ? o : { h: el.offsetHeight }))
   }, [mode, avail, textWidth, g.s])
   const textStyle = mode === 'wide' ? { left, width: textWidth } : undefined
 
@@ -199,6 +201,7 @@ export default function Cats({ active = true, near = true }: { active?: boolean;
         </div>
       </div>
 
+      {mode === 'wide' && <div className="cats-veil" style={{ width: left + textWidth + 110, height: tbox.h + 22 + 110 }} aria-hidden />}
       <div className="sec-text" ref={txt} style={textStyle}>
         <h2 className="sec-title">{copy.title}</h2>
         <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>

@@ -106,7 +106,7 @@ export default function WorldScroll() {
       st.setProperty('--tt', String(1 - smooth(0.0, 0.16, p)))
       st.setProperty('--ct', String(smooth(0.78, 0.97, p)))
       st.setProperty('--cue', String(1 - smooth(0, 0.06, p)))
-      setSeen((o) => { const n = { tree: p < 0.92, cats: p > 0.003, near: p > 0.6 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near ? o : n })
+      setSeen((o) => { const n = { tree: p < 0.75, cats: p > 0.003, near: p > 0.6 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
     apply()
