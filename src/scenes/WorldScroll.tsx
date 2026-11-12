@@ -10,9 +10,11 @@ const smooth = (a: number, b: number, x: number) => { const t = Math.min(1, Math
 /** Quãng cuộn (tính theo chiều cao màn hình) để đi hết một lần chuyển cảnh: dài hơn thì chậm và mượt hơn. */
 const SPAN = 1.7
 const CY = 0.58
-/** Chuyển cảnh thứ hai (mèo -> hộp nhạc): màn ánh sáng vàng kéo từ dưới lên, kéo theo nốt nhạc và tia sáng. */
+/** Chuyển cảnh đầu (hộp nhạc -> cây thông): màn ánh sáng vàng kéo từ dưới lên, kéo theo nốt nhạc và tia sáng. */
 const SPAN2 = 1.5
-/** Dừng ngắm cảnh mèo trước khi chuyển (tính theo chiều cao màn hình) và đoạn nghỉ cuối cùng ở cảnh hộp nhạc. */
+/** Đứng yên ở cảnh hộp nhạc lúc mới vào (tính theo chiều cao màn hình). */
+const HOLD0 = 0.45
+/** Dừng ngắm cây thông trước khi sang cảnh mèo (tính theo chiều cao màn hình) và đoạn nghỉ cuối ở cảnh mèo. */
 const HOLD = 0.45
 const END = 0.5
 
@@ -135,7 +137,7 @@ export default function WorldScroll() {
   const fx2 = useRef<Fx2>({ e: 0, on: false, edge: 0 })
   const prevP = useRef(0)
   const prevQ = useRef(0)
-  const [seen, setSeen] = useState({ tree: true, cats: false, near: false, box: false })
+  const [seen, setSeen] = useState({ tree: false, cats: false, near: false, box: true })
 
   useEffect(() => {
     const el = wrap.current!
@@ -144,10 +146,12 @@ export default function WorldScroll() {
     const apply = () => {
       raf = 0
       const vh = innerHeight, vw = innerWidth
-      const p = Math.min(1, Math.max(0, -el.getBoundingClientRect().top / (vh * SPAN)))
-      const e = ease(p)
-      const q = Math.min(1, Math.max(0, (-el.getBoundingClientRect().top - vh * (SPAN + HOLD)) / (vh * SPAN2)))
+      const y = -el.getBoundingClientRect().top / vh // đã cuộn bao nhiêu màn hình
+      // thứ tự: cảnh hộp nhạc (đứng yên HOLD0) -> màn ánh sáng vàng (q) -> cây thông (đứng yên HOLD) -> vòng kẹo (p) -> hai chú mèo
+      const q = Math.min(1, Math.max(0, (y - HOLD0) / SPAN2))
+      const p = Math.min(1, Math.max(0, (y - (HOLD0 + SPAN2 + HOLD)) / SPAN))
       const eq = ease(q)
+      const e = ease(p)
       const R = e * 1.06 * Math.hypot(vw * 0.5, vh * Math.max(CY, 1 - CY))
       const st = el.style
       fx.current = { p, R, cx: vw / 2, cy: vh * CY, on: p > 0.003 && p < 0.997 }
@@ -159,29 +163,28 @@ export default function WorldScroll() {
       st.setProperty('--ring', String(Math.min(1, Math.sin(Math.PI * p) * 2.2) * (p > 0.003 ? 1 : 0)))
       st.setProperty('--bloom', String(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, p)), 2) * 0.75))
       st.setProperty('--cv', p > 0.003 ? 'visible' : 'hidden')
-      st.setProperty('--cpe', p > 0.985 && q < 0.02 ? 'auto' : 'none')
-      st.setProperty('--tpe', p < 0.012 ? 'auto' : 'none')
-      st.setProperty('--tt', String(1 - smooth(0.0, 0.16, p)))
-      st.setProperty('--ct', String(smooth(0.78, 0.97, p) * (1 - smooth(0, 0.22, q))))
-      st.setProperty('--cue', String(1 - smooth(0, 0.06, p)))
-      const c2 = smooth(0.97, 1, p) * (1 - smooth(0, 0.05, q))
-      st.setProperty('--cue2', String(c2)); st.setProperty('--cue2pe', c2 > 0.5 ? 'auto' : 'none')
-      // chuyển cảnh thứ hai: màn ánh sáng vàng (mặt nạ mềm) kéo từ dưới lên để lộ cảnh hộp nhạc
+      st.setProperty('--cpe', p > 0.985 ? 'auto' : 'none')
+      st.setProperty('--tv', q > 0.003 ? 'visible' : 'hidden')
+      st.setProperty('--tpe', q > 0.985 && p < 0.012 ? 'auto' : 'none')
+      st.setProperty('--tt', String(smooth(0.78, 0.97, q) * (1 - smooth(0.0, 0.16, p))))
+      st.setProperty('--ct', String(smooth(0.78, 0.97, p)))
+      // mũi tên cuộn: ở cảnh hộp nhạc và ở cảnh cây thông (lúc đứng yên)
+      st.setProperty('--cue', String(Math.max(1 - smooth(0, 0.06, q), smooth(0.97, 1, q) * (1 - smooth(0, 0.06, p)))))
+      // chuyển cảnh hộp nhạc -> cây thông: màn ánh sáng vàng (mặt nạ mềm) kéo từ dưới lên để lộ cây thông
       st.setProperty('--by', `${(-14 + 128 * eq).toFixed(2)}%`)
       st.setProperty('--bz', String(calm ? 1 : 1.1 - 0.1 * eq))
-      st.setProperty('--cs', String(calm ? 1 : 1 + 0.07 * eq))
-      st.setProperty('--bring', String(Math.min(1, Math.sin(Math.PI * q) * 2.4) * (q > 0.003 ? 1 : 0)))
-      st.setProperty('--bv', q > 0.003 ? 'visible' : 'hidden')
-      st.setProperty('--bpe', q > 0.985 ? 'auto' : 'none')
-      st.setProperty('--bt', String(smooth(0.78, 0.97, q)))
+      st.setProperty('--bs', String(calm ? 1 : 1 + 0.07 * eq))
+      st.setProperty('--bring', String(Math.min(1, Math.sin(Math.PI * q) * 2.4) * (q > 0.003 && q < 0.997 ? 1 : 0)))
+      st.setProperty('--bpe', q < 0.02 ? 'auto' : 'none')
+      st.setProperty('--bt', String(1 - smooth(0, 0.22, q)))
       fx2.current = { e: q, on: q > 0.003 && q < 0.997, edge: Math.min(1, Math.max(0, (-14 + 128 * eq - 7) / 100)) }
+      sfx.stageBox(1 - smooth(0.2, 0.85, q))
       sfx.mix(smooth(0.2, 0.85, p))
-      sfx.stageBox(smooth(0.2, 0.85, q))
       const pp = prevP.current; prevP.current = p
       if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
       const pq = prevQ.current; prevQ.current = q
       if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) sfx.sparkle()
-      setSeen((o) => { const n = { tree: p < 0.75, cats: p > 0.003 && q < 0.995, near: p > 0.6, box: q > 0.003 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box ? o : n })
+      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.75, cats: p > 0.003, near: p > 0.6, box: q < 0.995 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
     apply()
@@ -192,15 +195,15 @@ export default function WorldScroll() {
   const down = (e: React.MouseEvent) => {
     e.preventDefault()
     const top = (wrap.current?.getBoundingClientRect().top ?? 0) + scrollY
-    scrollTo({ top: top + innerHeight * (prevP.current > 0.9 ? SPAN + HOLD + SPAN2 + 0.02 : SPAN + 0.02), behavior: 'smooth' })
+    scrollTo({ top: top + innerHeight * (prevQ.current > 0.9 ? HOLD0 + SPAN2 + HOLD + SPAN + 0.02 : HOLD0 + SPAN2 + 0.02), behavior: 'smooth' })
   }
 
   return (
-    <div className="xf" ref={wrap} style={{ height: `${(1 + SPAN + HOLD + SPAN2 + END) * 100}dvh` }}>
+    <div className="xf" ref={wrap} style={{ height: `${(1 + HOLD0 + SPAN2 + HOLD + SPAN + END) * 100}dvh` }}>
       <div className="xf-sticky">
+        <div className="xf-layer xf-box"><MusicBox active={seen.box} /></div>
         <div className="xf-layer xf-tree"><Tree paused={!seen.tree} /></div>
         <div className="xf-layer xf-cats"><Cats active={seen.cats} /></div>
-        <div className="xf-layer xf-box"><MusicBox active={seen.box} /></div>
         <i className="xf-gold" aria-hidden />
         <i className="xf-glow" aria-hidden />
         <i className="xf-candy" aria-hidden />
@@ -208,9 +211,6 @@ export default function WorldScroll() {
         <Sparks fx={fx} />
         <Notes fx={fx2} />
         <a className="scroll-cue" href="#cats" aria-label="Cuộn xuống cảnh kế tiếp" onClick={down}>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
-        </a>
-        <a className="scroll-cue cue2" href="#musicbox" aria-label="Cuộn xuống cảnh hộp nhạc" onClick={down}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
         </a>
       </div>

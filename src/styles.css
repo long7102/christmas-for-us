@@ -489,14 +489,15 @@ img { user-select: none; -webkit-user-drag: none; }
 @media (max-aspect-ratio: 7/10) { .scroll-cue { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); top: 72px; } }
 
 /* ===== Chuyển cảnh cây thông -> hai chú mèo (chạy theo thanh cuộn) ===== */
-.xf { position: relative; height: 300dvh; --R: 0px; --D: 0px; --tz: 1; --tb: 0px; --tl: 1; --to: 1; --cz: 1.16; --ring: 0; --bloom: 0; --cv: hidden; --cpe: none; --tpe: auto; }
+.xf { position: relative; height: 300dvh; --R: 0px; --D: 0px; --tz: 1; --tb: 0px; --tl: 1; --to: 1; --cz: 1.16; --ring: 0; --bloom: 0; --cv: hidden; --cpe: none; --tpe: none; --tv: hidden; --bs: 1; }
 .xf-sticky { position: sticky; top: 0; height: 100dvh; overflow: hidden; background: #1a0f08; }
 .xf-layer { position: absolute; inset: 0; }
 /* giữ mỗi cảnh thành một lớp riêng để khi cuộn không bị vỡ ô tối (ô chưa kịp vẽ lại) */
 .xf-tree { will-change: transform, opacity; }
 .xf-cats > .tree-scene { will-change: transform; }
 .xf-layer > .tree-scene { position: absolute; inset: 0; height: auto; }
-.xf-tree { transform: scale(var(--tz)); transform-origin: 50% 58%; opacity: var(--to); pointer-events: var(--tpe); }
+.xf-tree { transform: scale(calc(var(--tz) * var(--bz, 1))); transform-origin: 50% 58%; opacity: var(--to); pointer-events: var(--tpe); visibility: var(--tv, hidden);
+  -webkit-mask-image: linear-gradient(to top, #000 0, #000 calc(var(--by, -14%) - 14%), transparent var(--by, -14%)); mask-image: linear-gradient(to top, #000 0, #000 calc(var(--by, -14%) - 14%), transparent var(--by, -14%)); }
 .xf-cats { visibility: var(--cv); pointer-events: var(--cpe); clip-path: circle(var(--R) at 50% 58%); }
 .xf-cats > .tree-scene { transform: scale(var(--cz)); transform-origin: 50% 58%; }
 .xf-bloom { position: absolute; z-index: 5; inset: 0; pointer-events: none; opacity: var(--bloom); mix-blend-mode: screen;
@@ -633,13 +634,10 @@ img { user-select: none; -webkit-user-drag: none; }
 @media (prefers-reduced-motion: reduce) { .mb-scene.playing .mb-glint { animation: none; } }
 
 /* chuyển cảnh mèo -> hộp nhạc: mặt nạ mềm kéo từ dưới lên, mép là dải sáng vàng */
-.xf-box { visibility: var(--bv); pointer-events: var(--bpe); -webkit-mask-image: linear-gradient(to top, #000 0, #000 calc(var(--by) - 14%), transparent var(--by)); mask-image: linear-gradient(to top, #000 0, #000 calc(var(--by) - 14%), transparent var(--by)); }
-.xf-box > .tree-scene { position: absolute; inset: 0; height: auto; transform: scale(var(--bz)); transform-origin: 50% 60%; will-change: transform; }
-.xf-cats > .tree-scene { transform: scale(calc(var(--cz) * var(--cs, 1))); }
+.xf-box { pointer-events: var(--bpe, auto); }
+.xf-box > .tree-scene { position: absolute; inset: 0; height: auto; transform: scale(var(--bs, 1)); transform-origin: 50% 60%; will-change: transform; }
 .xf-gold { position: absolute; z-index: 6; left: -5%; right: -5%; bottom: calc(var(--by) - 7%); height: 90px; transform: translateY(50%); pointer-events: none; opacity: var(--bring, 0);
   background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,226,160,.55), rgba(255,180,80,.22) 45%, transparent 75%); }
 .xf-gold::after { content: ""; position: absolute; left: 4%; right: 4%; top: 50%; height: 2px; background: linear-gradient(90deg, transparent, rgba(255,240,200,.95) 30%, rgba(255,240,200,.95) 70%, transparent); box-shadow: 0 0 18px 4px rgba(255,200,110,.7); }
-.xf-box .sec-text, .xf-box .mb-veil { opacity: var(--bt, 0); }
-.scroll-cue.cue2 { left: auto; right: max(22px, env(safe-area-inset-right, 0px)); opacity: var(--cue2, 0); pointer-events: var(--cue2pe, none); }
-@media (max-aspect-ratio: 7/10) { .scroll-cue.cue2 { top: 72px; right: max(16px, env(safe-area-inset-right, 0px)); } }
+.xf-box .sec-text, .xf-box .mb-veil, .xf-box .tr-sound, .xf-box .tr-lights, .xf-box .tr-tip { opacity: var(--bt, 0); }
 @media (prefers-reduced-motion: reduce) { .xf-gold { display: none; } }
