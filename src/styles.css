@@ -451,3 +451,23 @@ img { user-select: none; -webkit-user-drag: none; }
 
 .tr-gifthit { stroke: transparent; stroke-width: 2.6; stroke-linejoin: round; transition: stroke .2s, filter .2s; }
 .tr-gifthit:hover, .tr-gifthit:focus-visible { stroke: rgba(255,236,176,.98); filter: drop-shadow(0 0 4px rgba(255,214,130,1)) drop-shadow(0 0 12px rgba(255,190,90,.8)); }
+
+/* khổ giấy gọn, vừa một màn hình */
+.lt-sheet { width: min(600px, 100%, calc((100dvh - 56px) * 1.1)); }
+.lt-sheet.wide { width: min(800px, 100%, calc((100dvh - 56px) * 1.5)); }
+.lt-sheet .lt-body { padding: 44px clamp(30px, 5vw, 52px) 30px; }
+.lt-sheet .lt-body h2 { font-size: clamp(1.7rem, 4vw, 2.2rem); }
+.lt-sheet .lt-body p { font-size: 1.02rem; line-height: 1.5; margin: 6px 0; }
+.lt-sheet.memory .lt-body p { font-size: 1.04rem; line-height: 1.52; }
+.lt-sheet .lt-body p.hand { font-size: 1.25rem; line-height: 1.4; }
+.lt-sheet.memory .lt-body p.hand { font-size: 1.3rem; margin-top: 8px; }
+.lt-cameo { width: 178px; height: 196px; }
+.lt-sheet.memory .ic, .ic { width: 150px; height: 165px; }
+@media (min-width: 780px) { .lt-sheet.memory .lt-cols { grid-template-columns: 190px minmax(0, 1fr); gap: 12px 24px; } .lt-sheet.memory .ic { width: 150px; height: 165px; } }
+.lt-photos { margin-top: 12px; gap: 6px 16px; }
+.lt-snap { width: 112px; padding: 6px 6px 16px; }
+.lt-snap div { font-size: .72rem; padding: 5px; }
+.lt-close { margin-top: 12px; }
+.lt-body { padding-bottom: 40px; }
+.lt-reply textarea { min-height: 150px; }
+.lt-qr svg { width: 140px; height: 140px; }
