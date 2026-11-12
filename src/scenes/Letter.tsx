@@ -169,12 +169,14 @@ export function ModalView({ modal, onClose }: { modal: NonNullable<Modal>; onClo
           {m && (
             <div className="lt-cols">
               <div className="lt-col lt-left">
-                <div className="lt-icon">{iconFor((modal as { id: string }).id)}</div>
-                <div className="lt-photo"><span>{treeText.photo}</span></div>
+                <div className="lt-icon"><div className="lt-cameo">{iconFor((modal as { id: string }).id)}</div></div>
               </div>
               <div className="lt-col">
                 {m.meaning.map((t, i) => <p key={i}>{t}</p>)}
                 <p className="hand">{m.story}</p>
+                <div className="lt-photos">
+                  {[0, 1, 2].map((i) => <figure key={i} className={`lt-snap s${i}`}><i className="tape" /><div><span>{treeText.photo}</span></div></figure>)}
+                </div>
               </div>
             </div>
           )}
