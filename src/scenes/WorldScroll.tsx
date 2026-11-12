@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Tree from './Tree'
 import Cats from './Cats'
+import MusicBox from './MusicBox'
 import { reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
 
@@ -9,6 +10,11 @@ const smooth = (a: number, b: number, x: number) => { const t = Math.min(1, Math
 /** Quãng cuộn (tính theo chiều cao màn hình) để đi hết một lần chuyển cảnh: dài hơn thì chậm và mượt hơn. */
 const SPAN = 1.7
 const CY = 0.58
+/** Chuyển cảnh thứ hai (mèo -> hộp nhạc): màn ánh sáng vàng kéo từ dưới lên, kéo theo nốt nhạc và tia sáng. */
+const SPAN2 = 1.5
+/** Dừng ngắm cảnh mèo trước khi chuyển (tính theo chiều cao màn hình) và đoạn nghỉ cuối cùng ở cảnh hộp nhạc. */
+const HOLD = 0.45
+const END = 0.5
 
 type Fx = { p: number; R: number; cx: number; cy: number; on: boolean }
 
@@ -73,6 +79,52 @@ function Sparks({ fx }: { fx: React.MutableRefObject<Fx> }) {
   return <canvas ref={ref} className="xf-fx" aria-hidden />
 }
 
+
+type Fx2 = { e: number; on: boolean; edge: number }
+
+/** Nốt nhạc và tia sáng nhỏ bay lên dọc mép màn ánh sáng khi chuyển sang cảnh hộp nhạc. */
+function Notes({ fx }: { fx: React.MutableRefObject<Fx2> }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const cv = ref.current!, ctx = cv.getContext('2d')!
+    const calm = reducedMotion()
+    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; g: number; ph: number }
+    const ps: P[] = []
+    let raf = 0, last = performance.now(), W = 0, H = 0
+    const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight }
+    size(); addEventListener('resize', size)
+    const glyphs = ['♪', '♫', '♩', '♬']
+    const frame = (t: number) => {
+      const dt = Math.min(0.05, (t - last) / 1000); last = t
+      const f = fx.current
+      ctx.clearRect(0, 0, W, H)
+      if (f.on && !calm) {
+        const inten = Math.sin(Math.PI * Math.min(1, Math.max(0, f.e)))
+        const n = inten * 46 * dt
+        for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) {
+          const y = H * (1 - f.edge) + (Math.random() - 0.5) * 24
+          ps.push({ x: Math.random() * W, y, vx: (Math.random() - 0.5) * 24, vy: -(26 + Math.random() * 70), life: 0, max: 1.4 + Math.random() * 1.6, s: 9 + Math.random() * 15, g: Math.random() < 0.55 ? 1 : 0, ph: Math.random() * 6.28 })
+        }
+      }
+      for (let i = ps.length - 1; i >= 0; i--) {
+        const p = ps[i]; p.life += dt
+        if (p.life > p.max) { ps.splice(i, 1); continue }
+        p.x += (p.vx + Math.sin(t / 700 + p.ph) * 14) * dt; p.y += p.vy * dt
+        const k = 1 - p.life / p.max
+        ctx.globalAlpha = Math.min(1, k * 2) * 0.9
+        ctx.shadowColor = 'rgba(255,200,100,.9)'; ctx.shadowBlur = 8
+        if (p.g) { ctx.fillStyle = '#ffe9b0'; ctx.font = `${p.s}px serif`; ctx.fillText(glyphs[(i + (p.ph | 0)) % 4], p.x, p.y) }
+        else { ctx.fillStyle = '#fff3c8'; ctx.beginPath(); ctx.arc(p.x, p.y, p.s * 0.12 * (0.7 + 0.5 * Math.sin(t / 110 + p.ph)), 0, 6.283); ctx.fill() }
+      }
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0
+      raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+    return () => { cancelAnimationFrame(raf); removeEventListener('resize', size) }
+  }, [fx])
+  return <canvas ref={ref} className="xf-fx xf-notes" aria-hidden />
+}
+
 /**
  * Chuyển cảnh cây thông -> hai chú mèo, chạy theo thanh cuộn: cây thông phóng dần vào rồi tan thành ánh sáng,
  * một vòng kẹo Giáng sinh viền vàng loang ra từ giữa màn hình, kéo theo tuyết và những ngôi sao nhỏ, để lộ phòng của hai bé.
@@ -80,8 +132,10 @@ function Sparks({ fx }: { fx: React.MutableRefObject<Fx> }) {
 export default function WorldScroll() {
   const wrap = useRef<HTMLDivElement>(null)
   const fx = useRef<Fx>({ p: 0, R: 0, cx: 0, cy: 0, on: false })
+  const fx2 = useRef<Fx2>({ e: 0, on: false, edge: 0 })
   const prevP = useRef(0)
-  const [seen, setSeen] = useState({ tree: true, cats: false, near: false })
+  const prevQ = useRef(0)
+  const [seen, setSeen] = useState({ tree: true, cats: false, near: false, box: false })
 
   useEffect(() => {
     const el = wrap.current!
@@ -92,6 +146,8 @@ export default function WorldScroll() {
       const vh = innerHeight, vw = innerWidth
       const p = Math.min(1, Math.max(0, -el.getBoundingClientRect().top / (vh * SPAN)))
       const e = ease(p)
+      const q = Math.min(1, Math.max(0, (-el.getBoundingClientRect().top - vh * (SPAN + HOLD)) / (vh * SPAN2)))
+      const eq = ease(q)
       const R = e * 1.06 * Math.hypot(vw * 0.5, vh * Math.max(CY, 1 - CY))
       const st = el.style
       fx.current = { p, R, cx: vw / 2, cy: vh * CY, on: p > 0.003 && p < 0.997 }
@@ -103,15 +159,29 @@ export default function WorldScroll() {
       st.setProperty('--ring', String(Math.min(1, Math.sin(Math.PI * p) * 2.2) * (p > 0.003 ? 1 : 0)))
       st.setProperty('--bloom', String(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, p)), 2) * 0.75))
       st.setProperty('--cv', p > 0.003 ? 'visible' : 'hidden')
-      st.setProperty('--cpe', p > 0.985 ? 'auto' : 'none')
+      st.setProperty('--cpe', p > 0.985 && q < 0.02 ? 'auto' : 'none')
       st.setProperty('--tpe', p < 0.012 ? 'auto' : 'none')
       st.setProperty('--tt', String(1 - smooth(0.0, 0.16, p)))
-      st.setProperty('--ct', String(smooth(0.78, 0.97, p)))
+      st.setProperty('--ct', String(smooth(0.78, 0.97, p) * (1 - smooth(0, 0.22, q))))
       st.setProperty('--cue', String(1 - smooth(0, 0.06, p)))
+      const c2 = smooth(0.97, 1, p) * (1 - smooth(0, 0.05, q))
+      st.setProperty('--cue2', String(c2)); st.setProperty('--cue2pe', c2 > 0.5 ? 'auto' : 'none')
+      // chuyển cảnh thứ hai: màn ánh sáng vàng (mặt nạ mềm) kéo từ dưới lên để lộ cảnh hộp nhạc
+      st.setProperty('--by', `${(-14 + 128 * eq).toFixed(2)}%`)
+      st.setProperty('--bz', String(calm ? 1 : 1.1 - 0.1 * eq))
+      st.setProperty('--cs', String(calm ? 1 : 1 + 0.07 * eq))
+      st.setProperty('--bring', String(Math.min(1, Math.sin(Math.PI * q) * 2.4) * (q > 0.003 ? 1 : 0)))
+      st.setProperty('--bv', q > 0.003 ? 'visible' : 'hidden')
+      st.setProperty('--bpe', q > 0.985 ? 'auto' : 'none')
+      st.setProperty('--bt', String(smooth(0.78, 0.97, q)))
+      fx2.current = { e: q, on: q > 0.003 && q < 0.997, edge: Math.min(1, Math.max(0, (-14 + 128 * eq - 7) / 100)) }
       sfx.mix(smooth(0.2, 0.85, p))
+      sfx.stageBox(smooth(0.2, 0.85, q))
       const pp = prevP.current; prevP.current = p
       if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
-      setSeen((o) => { const n = { tree: p < 0.75, cats: p > 0.003, near: p > 0.6 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near ? o : n })
+      const pq = prevQ.current; prevQ.current = q
+      if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) sfx.sparkle()
+      setSeen((o) => { const n = { tree: p < 0.75, cats: p > 0.003 && q < 0.995, near: p > 0.6, box: q > 0.003 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
     apply()
@@ -122,19 +192,25 @@ export default function WorldScroll() {
   const down = (e: React.MouseEvent) => {
     e.preventDefault()
     const top = (wrap.current?.getBoundingClientRect().top ?? 0) + scrollY
-    scrollTo({ top: top + innerHeight * (SPAN + 0.02), behavior: 'smooth' })
+    scrollTo({ top: top + innerHeight * (prevP.current > 0.9 ? SPAN + HOLD + SPAN2 + 0.02 : SPAN + 0.02), behavior: 'smooth' })
   }
 
   return (
-    <div className="xf" ref={wrap}>
+    <div className="xf" ref={wrap} style={{ height: `${(1 + SPAN + HOLD + SPAN2 + END) * 100}dvh` }}>
       <div className="xf-sticky">
         <div className="xf-layer xf-tree"><Tree paused={!seen.tree} /></div>
         <div className="xf-layer xf-cats"><Cats active={seen.cats} /></div>
+        <div className="xf-layer xf-box"><MusicBox active={seen.box} /></div>
+        <i className="xf-gold" aria-hidden />
         <i className="xf-glow" aria-hidden />
         <i className="xf-candy" aria-hidden />
         <i className="xf-bloom" aria-hidden />
         <Sparks fx={fx} />
+        <Notes fx={fx2} />
         <a className="scroll-cue" href="#cats" aria-label="Cuộn xuống cảnh kế tiếp" onClick={down}>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
+        </a>
+        <a className="scroll-cue cue2" href="#musicbox" aria-label="Cuộn xuống cảnh hộp nhạc" onClick={down}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
         </a>
       </div>
