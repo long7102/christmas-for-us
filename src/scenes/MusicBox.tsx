@@ -83,12 +83,13 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
       if (nFire <= 0) { nFire = 0.5 + Math.random() * 0.9; tFire = Math.random() < 0.12 ? 0.55 + Math.random() * 0.15 : 0.75 + Math.random() * 0.25 }
       fire += ((calm ? 0.85 : tFire) - fire) * (1 - Math.exp(-dt / 0.3))
       const c = Math.cos(s.th), sn = Math.sin(s.th)
-      const bright = Math.min(1, 0.6 + 0.4 * (0.5 + 0.5 * c) + 0.1 * sn) * (0.82 + 0.18 * fire)
-      dEl.style.transform = `scaleX(${(Math.abs(c) < 0.02 ? 0.02 * Math.sign(c || 1) : c).toFixed(3)})`
-      dEl.style.filter = `brightness(${bright.toFixed(3)})`
+      // tạm thời: chưa có ảnh vũ công quay đủ góc nên chỉ lắc nhẹ, KHÔNG xoay giả (trông dẹt); sẽ thay bằng chuỗi ảnh Long tạo
+      const sway = Math.min(1, s.w / 1.5)
+      dEl.style.transform = `rotate(${(sn * 1.6 * sway).toFixed(2)}deg) scaleX(${(1 + 0.012 * c * sway).toFixed(3)})`
+      dEl.style.filter = `brightness(${(0.9 + 0.1 * fire).toFixed(3)})`
       // bóng: ánh lửa ở bên trái nên bóng đổ sang phải, lệch thêm theo độ rộng hiện tại; lửa mạnh thì bóng đậm và gần hơn
       const near = 26 - 5 * (fire - 0.8)
-      sEl.style.transform = `translateX(${(near + 7 * sn).toFixed(2)}px) scaleX(${(c * 1.05).toFixed(3)}) scaleY(1.02)`
+      sEl.style.transform = `translateX(${(near + 1.5 * sn * sway).toFixed(2)}px) rotate(${(sn * 1.6 * sway).toFixed(2)}deg) scaleY(1.02)`
       sEl.style.opacity = (0.3 + 0.18 * fire).toFixed(3)
       root.style.setProperty('--mfl', fire.toFixed(3))
       root.style.setProperty('--mspin', Math.min(1, s.w / 1.5).toFixed(3))
