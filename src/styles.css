@@ -641,3 +641,6 @@ img { user-select: none; -webkit-user-drag: none; }
 .xf-gold::after { content: ""; position: absolute; left: 4%; right: 4%; top: 50%; height: 2px; background: linear-gradient(90deg, transparent, rgba(255,240,200,.95) 30%, rgba(255,240,200,.95) 70%, transparent); box-shadow: 0 0 18px 4px rgba(255,200,110,.7); }
 .xf-box .sec-text, .xf-box .mb-veil, .xf-box .tr-sound, .xf-box .tr-lights, .xf-box .tr-tip { opacity: var(--bt, 0); }
 @media (prefers-reduced-motion: reduce) { .xf-gold { display: none; } }
+
+/* nút mở cánh cửa: chữ dày và rõ hơn */
+.door-cta .btn-gold { font-size: 1.08rem; font-weight: 800; letter-spacing: .24em; -webkit-text-stroke: .7px #3a1d06; text-shadow: 0 1px 0 rgba(255,244,214,.7), 0 0 1px rgba(58,29,6,.6); padding: 1.05rem 2.7rem; }

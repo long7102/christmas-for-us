@@ -76,7 +76,8 @@ export const memories: Record<string, { title: string; tip: string; meaning: str
   books: {
     title: 'Chồng sách cũ', tip: 'Mấy cuốn sách bìa da, gáy mạ vàng đã sờn. Bấm để đọc.',
     meaning: ['Ở Iceland có một thói quen rất dễ thương mang tên Jólabókaflóð, nghĩa là "cơn lũ sách đêm Giáng sinh": tối 24, mỗi người tặng nhau một cuốn sách, rồi cả nhà nằm đọc đến khuya với một cốc sô-cô-la nóng.', 'Sách bìa da cũ không cần gì nhiều, chỉ cần một ngọn đèn vàng và một người ngồi cạnh. Mỗi cuốn sờn gáy là một cuốn từng được mở ra rất nhiều lần.'],
-    story: 'Chuyện của hai đứa về những cuốn sách sẽ được viết ở đây.',
+    // [nháp] Long kể: có thói quen tặng sách cho người yêu, như cách chia sẻ kiến thức và tình yêu. Chờ Long sửa lời.
+    story: 'Anh có thói quen tặng sách cho người anh yêu, như một cách chia sẻ kiến thức và chia sẻ tình yêu. Cuốn nào anh tặng, cũng là một điều anh muốn em biết.',
   },
   pine: {
     title: 'Cành thông và quả đỏ', tip: 'Quả thông khô, quả mọng đỏ, mùi của mùa đông. Bấm để đọc.',

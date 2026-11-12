@@ -165,7 +165,7 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
             {(['books', 'pine'] as const).map((id) => {
               const m = getMemory(id)!, open = () => { setTip(null); setModal({ kind: 'memory', id }) }
               return (
-                <polygon key={id} className="cat-hs" points={pts(L.polys[id])} tabIndex={0} role="button" aria-label={m.title}
+                <polygon key={id} className="tr-hs" points={pts(L.polys[id])} tabIndex={0} role="button" aria-label={m.title}
                   onMouseEnter={() => show(m.title, m.tip, L.polys[id])} onMouseLeave={() => setTip(null)} onFocus={() => show(m.title, m.tip, L.polys[id])} onBlur={() => setTip(null)}
                   onClick={open} onKeyDown={key(open)} />
               )
