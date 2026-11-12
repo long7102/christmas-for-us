@@ -75,6 +75,8 @@ export default function Cats({ active = true }: { active?: boolean }) {
   const [hov, setHov] = useState<Who | null>(null)
   const [busy, setBusy] = useState<Who | 'lamp' | null>(null)
   const lampT = useRef({ k: 1, tau: 0.3 })
+  const lampBusy = useRef(false)
+  const [lampOn, setLampOn] = useState(true)
   const [tbox, setTbox] = useState({ h: 0 })
   const [show, setShow] = useState<string | null>(null)
   const timers = useRef<number[]>([])
@@ -143,40 +145,44 @@ export default function Cats({ active = true }: { active?: boolean }) {
     timers.current.push(window.setTimeout(() => setShow(null), hold))
     timers.current.push(window.setTimeout(() => setBusy(null), hold + FADE_OUT))
   }
-  /** Bấm đèn lồng: thổi tắt, cả phòng tối xuống, rồi thắp lại và bùng sáng ấm lên một nhịp. */
+  /** Bấm đèn lồng: bật hoặc tắt hẳn (không hẹn giờ). Tắt thì cả phòng tối xuống, bật lại thì bùng sáng ấm lên một nhịp rồi ổn định. */
   const pokeLamp = () => {
-    if (busy) return
-    setTip(null); setHov(null); setBusy('lamp')
+    if (lampBusy.current) return
+    lampBusy.current = true
     const calm = reducedMotion()
-    sfx.puff()
-    lampT.current = { k: 0.04, tau: calm ? 0.1 : 0.28 }
-    timers.current.push(window.setTimeout(() => { sfx.relight(); lampT.current = { k: 1.28, tau: 0.16 } }, calm ? 900 : 2000))
-    timers.current.push(window.setTimeout(() => { lampT.current = { k: 1, tau: 0.5 } }, calm ? 1200 : 2700))
-    timers.current.push(window.setTimeout(() => setBusy(null), calm ? 1500 : 3500))
+    setTip(null)
+    if (lampOn) {
+      sfx.puff(); lampT.current = { k: 0.04, tau: calm ? 0.1 : 0.3 }; setLampOn(false)
+      timers.current.push(window.setTimeout(() => { lampBusy.current = false }, 450))
+    } else {
+      sfx.relight(); lampT.current = { k: 1.28, tau: 0.16 }; setLampOn(true)
+      timers.current.push(window.setTimeout(() => { lampT.current = { k: 1, tau: 0.5 } }, 700))
+      timers.current.push(window.setTimeout(() => { lampBusy.current = false }, 1000))
+    }
   }
-  const enterLamp = () => { if (!busy) setTip({ title: copy.lamp.title, text: copy.lamp.tip, b: polyBox(L.lampPoly) }) }
+  const enterLamp = () => setTip({ title: copy.lamp.title, text: lampOn ? copy.lamp.tipOn : copy.lamp.tipOff, b: polyBox(L.lampPoly) })
   const enter = (c: (typeof cats)[number]) => {
     if (busy) return
     setHov(c.id); setTip({ title: c.info.title, text: c.info.tip, b: polyBox(c.cat.poly) })
   }
   const leave = () => { setHov(null); setTip(null) }
 
-  // chữ nằm ở góc trên trái, trừ ngọn đèn lồng; điện thoại thì ở dải tối phía dưới
-  const lampRight = (L.lamp[0] + L.lamp[2] * 0.55) * g.s + g.x
-  const headLeft = (mode === 'wide' ? 640 : 0) * g.s + g.x
-  const left = Math.max(22, lampRight + 2)
-  const textWidth = mode === 'wide' ? Math.max(250, Math.min(430, headLeft - left - 24)) : 0
-  const avail = mode === 'wide' ? (L.bong.poly.reduce((m, q) => Math.min(m, q[1]), 1e9) + 40) * g.s + g.y - 26 - 14 : 0
-  // chữ phải nằm gọn trên đầu hai bé: nếu chỗ trống ít thì bỏ bớt từng phần cho vừa khít
+  // chữ nằm ở góc dưới trái (dưới ngọn đèn lồng, bên trái hai bé); điện thoại thì ở dải tối phía dưới
+  const left = 22
+  const bongLeft = L.bong.poly.reduce((m, q) => Math.min(m, q[0]), 1e9) * g.s + g.x
+  const textWidth = mode === 'wide' ? Math.max(230, Math.min(430, bongLeft - left - 20)) : 0
+  // chữ phải nằm gọn trong khoảng trống dưới đèn lồng: nếu chỗ ít thì bỏ bớt từng phần cho vừa khít
   useLayoutEffect(() => {
-    const el = txt.current
-    if (!el) return
+    const el = txt.current, sc = sec.current
+    if (!el || !sc) return
     if (mode !== 'wide') { el.dataset.fit = '0'; return }
+    const lampBottom = Math.max(...L.lampPoly.map((q) => q[1])) * g.s + g.y
+    const avail = sc.clientHeight - 22 - lampBottom - 10
     let lvl = 0
     for (; lvl < 5; lvl++) { el.dataset.fit = String(lvl); if (el.offsetHeight <= avail) break }
     el.dataset.fit = String(Math.min(lvl, 4))
     setTbox((o) => (o.h === el.offsetHeight ? o : { h: el.offsetHeight }))
-  }, [mode, avail, textWidth, g.s])
+  }, [mode, textWidth, g.s, g.y, L])
   const textStyle = mode === 'wide' ? { left, width: textWidth } : undefined
 
   return (

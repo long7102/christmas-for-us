@@ -522,7 +522,7 @@ img { user-select: none; -webkit-user-drag: none; }
 .cat-dim { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; background: rgba(34,10,0, calc((1 - var(--fl, .8)) * .24)); }
 .cats-scene .tr-warm.cat-warm { display: none; }
 /* chữ ở góc trên trái (máy tính), tránh ngọn đèn lồng; điện thoại giữ dải tối phía dưới */
-.cats-scene.wide .sec-text { right: auto; bottom: auto; top: max(26px, env(safe-area-inset-top, 0px)); text-align: left; }
+.cats-scene.wide .sec-text { right: auto; top: auto; bottom: max(22px, env(safe-area-inset-bottom, 0px)); text-align: left; }
 .cats-scene.wide .sec-text::before { inset: -70px -140px -90px -110px; background: radial-gradient(ellipse 100% 100% at 0% 0%, rgba(26,13,6,.92) 0%, rgba(34,18,8,.78) 38%, rgba(40,22,10,.4) 66%, rgba(40,22,10,0) 100%); }
 .cats-scene.wide .sec-title { font-size: clamp(2.3rem, 3.6vw, 3.4rem); }
 .cats-scene.wide .sec-orn { justify-content: flex-start; margin: .5rem 0; } .cats-scene.wide .sec-orn i:first-child { display: none; }
@@ -559,10 +559,21 @@ img { user-select: none; -webkit-user-drag: none; }
 
 /* nền tối mờ sau chữ cảnh mèo: bám sát góc trên trái màn hình, không chừa khoảng hở bên lề */
 .cats-scene.wide .sec-text::before { display: none; }
-.cats-veil { position: absolute; z-index: 3; left: 0; top: 0; pointer-events: none;
-  background: radial-gradient(ellipse 100% 100% at 0% 0%, rgba(24,11,5,.94) 0%, rgba(30,15,7,.86) 40%, rgba(34,18,8,.5) 72%, rgba(40,22,10,0) 100%); }
+.cats-veil { position: absolute; z-index: 3; left: 0; bottom: 0; pointer-events: none;
+  background: radial-gradient(ellipse 100% 100% at 0% 100%, rgba(24,11,5,.94) 0%, rgba(30,15,7,.86) 40%, rgba(34,18,8,.5) 72%, rgba(40,22,10,0) 100%); }
 .cats-scene.tall .cats-veil { display: none; }
 .xf-cats .cats-veil { opacity: var(--ct, 0); }
 
 /* thổi tắt đèn lồng: cả phòng tối xuống (biến --dark do mã điều khiển) */
 .cat-dark { position: absolute; inset: 0; pointer-events: none; background: rgba(8,3,0, calc(var(--dark, 0) * .62)); }
+/* màn hình hẹp nhưng vẫn là bố cục ngang: giữ chữ cảnh mèo ở góc dưới trái (ghi đè luật của cảnh cây thông) */
+.cats-scene.compact.wide .sec-text { top: auto; bottom: max(22px, env(safe-area-inset-bottom, 0px)); right: auto; text-align: left; }
+.cats-scene.compact.wide .sec-text::before { display: none; }
+.cats-scene.compact.wide .sec-title { font-size: clamp(2rem, 4.6vw, 2.8rem); }
+.cats-scene.compact.wide .sec-orn { display: flex; }
+.cats-scene.compact.wide .sec-hint { display: block; }
+.cats-scene.compact.wide .sec-desc { font-size: .88rem; }
+.cats-scene.compact.wide .sec-text[data-fit="1"] .sec-hint, .cats-scene.compact.wide .sec-text[data-fit="1"] .sec-orn,
+.cats-scene.compact.wide .sec-text[data-fit="2"] .sec-hint, .cats-scene.compact.wide .sec-text[data-fit="2"] .sec-orn,
+.cats-scene.compact.wide .sec-text[data-fit="3"] .sec-hint, .cats-scene.compact.wide .sec-text[data-fit="3"] .sec-orn,
+.cats-scene.compact.wide .sec-text[data-fit="4"] .sec-hint, .cats-scene.compact.wide .sec-text[data-fit="4"] .sec-orn { display: none; }
