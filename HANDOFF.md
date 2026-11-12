@@ -1,0 +1,47 @@
+# HANDOFF: Trang quà Giáng sinh cho Khánh Hạ
+
+Brief gốc (7 cảnh, 4 món quà khóa theo giờ VN, trò chơi...) nằm trong file `christmas-world-brief.md` Long đã gửi. Mọi chữ hiển thị trên web dùng **tiếng Việt**, xưng "em" với Khánh Hạ. Nhánh làm việc: `claude/awesome-hypatia-psbikp`. Mỗi thay đổi: commit + push.
+
+## Trạng thái hiện tại
+Chỉ có **cổng mật khẩu + cảnh mở đầu (làng -> cánh cửa -> mở cửa)** là xong và đã được Long duyệt ("OK tốt rồi"). Các cảnh sau cánh cửa **đã xóa**, sẽ làm lại **từng cảnh một, mỗi cảnh Long duyệt xong mới làm tiếp**. Sau khi cửa mở xong, `App.tsx` chuyển sang `phase = 'world'` và hiện `<main className="world" />` rỗng.
+
+## Chạy và xem
+```bash
+npm install
+npx vite          # http://localhost:5173 (host: true, allowedHosts: true)
+npx tsc -b        # kiểm tra kiểu
+```
+- Mật khẩu: `khanhha25122026` (lưu dạng hash SHA-256 trong `src/content/content.ts`, không lưu chữ thường).
+- Trạng thái lưu `localStorage` tiền tố `olcw:` (`unlocked`, `opened`, `muted`). Xóa `olcw:opened` để mất nút "Bỏ qua".
+- Bản xem trước trên Artifact: dựng `npx vite build --assetsInlineLimit 100000000`, gộp JS+CSS vào 1 file HTML, đăng lên https://claude.ai/artifact/Jg22BhS8eJBULaGtsnzhBx (artifact có thể không cập nhật được từ phiên mới, khi đó đăng bản mới).
+- Chụp thử bằng Playwright (đã cài sẵn): chụp ở 1440x900, 993x893 và 390x844. Luôn tự xem ảnh chụp trước khi báo xong.
+
+## Cấu trúc mã
+- `src/App.tsx`: pha `gate` -> `door` -> `world`; khóa cuộn khi chưa vào `world`.
+- `src/components/PasswordGate.tsx`, `SnowParticles.tsx` (tuyết canvas, sprite, có gió).
+- `src/scenes/Door.tsx`: toàn bộ cảnh mở đầu. `doorGeometry.ts`: hình học vòm cửa + tay nắm + vòng hoa cho từng ảnh (LAND/PORT). `VillageLife.tsx`: khói ống khói, đèn nhấp nháy trên ảnh làng.
+- `src/lib/`: `audio.ts` (âm thanh WebAudio tự tạo: gió, kẹt cửa, đập tường, vụt gió; nút loa), `storage.ts`, `device.ts`, `hash.ts`.
+- `src/content/content.ts`: toàn bộ nội dung chữ + hash mật khẩu. Hiện chỉ có `door`, `gate`, `ui` (các mục `[ĐIỀN]` của brief sẽ thêm lại khi làm cảnh tương ứng, **không tự bịa nội dung cá nhân**).
+- `src/assets/`: `door-land.jpg` (1680x944), `door-port.jpg` (944x1680), `village-land.webp` (1600x899), `village-port.webp` (449x799). Đây là ảnh AI do Long chọn/gửi; Canva tạo ảnh cho Claude chỉ trả bản xem trước nhỏ, nên Long phải tải ảnh đủ nét về rồi gửi lại.
+
+## Cách cảnh mở đầu hoạt động (đã chốt, đừng đổi nếu Long không yêu cầu)
+1. Ảnh làng (tuyết/khói/đèn do mã làm, ảnh không có tuyết) hiện dần, hai dòng chữ nằm trên mặt đường, rồi **một chuyển động zoom liền mạch** tới đúng ngôi nhà: ảnh làng và ảnh cận cảnh phóng cùng một hệ số, cửa hai ảnh chồng khít, ảnh cận cảnh hòa vào bằng rìa mềm (`.feather`, không blur). Sau ~10s nút "MỞ CÁNH CỬA" hiện.
+2. Ảnh cửa phủ kín màn hình (`cover`); điện thoại quá dọc thì `contain` + phần nối là bản phản chiếu (`.mir`).
+3. Cánh cửa là **khối đặc** (mặt trước, mặt sau tối, viền gỗ liền). Hai cánh được tách khỏi ảnh bằng canvas (texture dựng lúc tải), thụt sâu trong ô cửa (`RECESS`, `THICK`); phép lùi + phóng bù nằm ở wrapper `.door-recess` để khe giữa luôn nằm giữa.
+4. **Vòng hoa nguyên vẹn treo trên CÁNH TRÁI** (tách khỏi ảnh theo màu + elip, vá gỗ theo thớ dọc, nhiều lớp để có độ dày + bóng). Vì nó nhô sang phía cánh phải, **cánh phải (trơn) phải mở trước**, cánh trái mở sau; đừng đảo thứ tự (lỗi cũ: vòng hoa bị cánh phải che).
+5. Tay nắm: tách theo màu, mỗi cánh một khối đặc (các lớp cách nhau 0.8px).
+6. Mở cửa: rung nhẹ, tuyết trượt khỏi dây thông (hạt bụi mịn, ít), cánh phải kẹt + mở, cánh trái mở, đập tường (rung màn hình), dừng một nhịp ngắm cửa mở, rồi lao vào giữa hai cánh, ánh hổ phách dịu tan vào cảnh kế tiếp.
+7. Âm thanh chỉ phát sau thao tác đầu tiên (luật trình duyệt); gió rít nền, nút loa góc trên trái, nhớ lựa chọn.
+
+## Việc còn lại (theo thứ tự brief, mỗi cảnh Long duyệt rồi mới làm tiếp)
+- Cảnh tiếp theo: Long chưa chọn; đã đề xuất ngôi làng/hộp nhạc/bàn trà/cây thông.
+- Khi làm cảnh sau: dựng lại xe tuần lộc bay theo cuộn, thanh tiến trình bánh gừng, các cảnh 02-07 (hộp nhạc YouTube, bàn trà, cây thông + 4 quà khóa theo `+07:00`, quả cầu tuyết, trò chơi, cảnh kết). Phiên bản 2D vẽ bằng SVG từng làm đủ 7 cảnh nhưng **Long đã bỏ** vì xấu; hãy dùng **ảnh AI do Long duyệt**, xếp lớp + chuyển động bằng mã. Có thể tham khảo mã cũ trong lịch sử git (commit "Dựng lại trang bằng SVG 2D").
+- Thông tin Long cần cung cấp: nội dung `[ĐIỀN]` (thư, lời nhắn, 4 món quà, 5 link YouTube), ngoại hình 2 nhân vật cảnh cuối.
+- Ảnh độ phân giải cao hơn (khoảng 2500-3000px ngang) cho cửa + làng để lúc zoom bớt mềm; muốn khớp tuyệt đối thì tạo lại ảnh cận cảnh từ chính ảnh làng.
+- Chưa kiểm tra trên điện thoại thật; âm thanh chưa nghe thử (môi trường không có loa); chưa tối ưu thêm cho máy yếu (nếu giật có thể làm bản video dự phòng).
+
+## Gotcha kỹ thuật đã gặp
+- GSAP chuyển `transform: translate(-50%,-50%)` thành px cố định lúc set đầu, nên khung xem đổi kích thước thì lệch. Dùng thuộc tính riêng `translate: -50% -50%` hoặc flex để căn giữa.
+- `will-change: transform` làm ảnh bị dựng ở độ phân giải thấp khi zoom, gây nhòe. Không dùng cho lớp phóng to.
+- `filter`/`clip-path` trên phần tử con của `preserve-3d` có thể làm phẳng 3D; kiểm tra bằng ảnh chụp.
+- Tên tệp ảnh Canva trả về chỉ là bản nhỏ (~200px); không dùng làm ảnh chính thức.
