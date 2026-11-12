@@ -334,26 +334,29 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
     tl.add(() => dust(12), 0.6).add(() => dust(14), 1.2)
       .fromTo(q('.door-light'), { opacity: 0 }, { opacity: 0.8, duration: 2, ease: 'power1.in' }, 1.2)
       .fromTo(q('.door-glow'), { opacity: 0 }, { opacity: 0.7, duration: 2.4, ease: 'power1.in' }, 1.2)
-    // 2. the heavy leaves creak off their latch, then swing open with their own weight and settle against the walls
-    tl.to(q('.door-panel-l'), { rotateY: 12, duration: 1.2, ease: 'power2.in' }, 0.9)
-      .to(q('.door-panel-r'), { rotateY: -12, duration: 1.2, ease: 'power2.in' }, 1.0)
+    // 2. The wreath hangs on the LEFT leaf and overhangs the seam, so the plain RIGHT leaf must swing away first.
+    //    Only then does the left leaf (with the wreath) follow; this way the wreath never swings behind the other leaf.
+    tl.to(q('.door-panel-r'), { rotateY: -12, duration: 1.2, ease: 'power2.in' }, 0.9)
       .add(() => dust(22), 2.0)
       .add(() => { sfx.creak(1.9, 88, 150, 0.26); sfx.windLevel(0.75, 1.2) }, 2.1)
-      .to(q('.door-panel-l'), { rotateY: 84, duration: 1.7, ease: 'power1.inOut' }, 2.1)
-      .to(q('.door-panel-r'), { rotateY: -84, duration: 1.7, ease: 'power1.inOut' }, 2.2)
-      .to(q('.door-shade'), { opacity: 0.55, duration: 1.8, ease: 'power1.inOut' }, 2.1)
-      .add(() => dust(26), 2.7)
-      // thud
-      .to(q('.door-panel-l'), { rotateY: 79, duration: 0.45, ease: 'power2.out' }, 3.8)
-      .to(q('.door-panel-r'), { rotateY: -79, duration: 0.45, ease: 'power2.out' }, 3.9)
-    rumble(tl, 3.8, 8, 7)
-    tl.add(() => { dust(16); sfx.thud() }, 3.85)
+      .to(q('.door-panel-r'), { rotateY: -84, duration: 1.7, ease: 'power1.inOut' }, 2.1)
+      .to(q('.door-panel-r .door-shade'), { opacity: 0.55, duration: 1.8, ease: 'power1.inOut' }, 2.1)
+      .to(q('.door-panel-r'), { rotateY: -79, duration: 0.45, ease: 'power2.out' }, 3.8)
+      .add(() => { dust(16); sfx.thud(0.6) }, 3.85)
+      // the left leaf follows once the right one is well out of the way
+      .add(() => { sfx.creak(1.7, 80, 140, 0.24); dust(26) }, 3.3)
+      .to(q('.door-panel-l'), { rotateY: 84, duration: 1.7, ease: 'power1.inOut' }, 3.3)
+      .to(q('.door-panel-l .door-shade'), { opacity: 0.55, duration: 1.8, ease: 'power1.inOut' }, 3.3)
+      .to(q('.door-panel-l'), { rotateY: 79, duration: 0.45, ease: 'power2.out' }, 5.0)
+    rumble(tl, 3.8, 6, 6)
+    rumble(tl, 5.0, 8, 7)
+    tl.add(() => { dust(20); sfx.thud() }, 5.05)
     // 3. a beat to look at the open door, then we run in between the leaves toward the light
-    tl.add(() => sfx.whoosh(2.4), 4.7).add(() => sfx.windLevel(0.2, 2.5), 6.4)
-      .to(box.current, { scale: 14, duration: 2.6, ease: 'power3.in' }, 4.6)
-      .set(q('.door-img, .door-panels, .door-scrim, .door-glow'), { visibility: 'hidden' }, 7.0)
-      .to(q('.door-flash'), { opacity: 0.85, duration: 1.4, ease: 'power1.in' }, 6.2)
-      .to(root.current, { opacity: 0, duration: 1.4 }, 7.0)
+    tl.add(() => sfx.whoosh(2.4), 5.9).add(() => sfx.windLevel(0.2, 2.5), 7.6)
+      .to(box.current, { scale: 14, duration: 2.6, ease: 'power3.in' }, 5.8)
+      .set(q('.door-img, .door-panels, .door-scrim, .door-glow'), { visibility: 'hidden' }, 8.2)
+      .to(q('.door-flash'), { opacity: 0.85, duration: 1.4, ease: 'power1.in' }, 7.4)
+      .to(root.current, { opacity: 0, duration: 1.4 }, 8.2)
   }
 
   const geo = portrait ? PORT : LAND
