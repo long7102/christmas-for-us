@@ -173,3 +173,19 @@ export const treeText = {
 }
 
 export const ui = { enter: 'Vào', skip: 'Bỏ qua ›' }
+
+/** Chữ cảnh hộp nhạc. [nháp] lời Long, chờ Long sửa; chưa có chuyện riêng nào của hai người. */
+export const musicbox = {
+  title: 'Hộp nhạc',
+  tagline: 'Chỉ cần vặn khoá, cô vũ công nhỏ lại bước ra.',
+  body: [
+    'Có những điều không cần nói thành lời. Chỉ cần một chiếc hộp nhỏ, một cú vặn khoá khẽ, là cả căn phòng chậm lại để nghe.',
+    'Anh để em vặn khoá, cô nàng nhỏ xíu xoay mãi một điệu, và mình ngồi đây nghe cho hết bài.',
+  ],
+  hint: 'Em bấm vào cô vũ công hoặc chiếc hộp để vặn khoá nhé.',
+  dancer: { title: 'Cô vũ công', tip: 'Bấm để vặn khoá, cô nàng sẽ xoay một điệu nhỏ.', tipOn: 'Bấm để dừng điệu nhạc.' },
+  box: { title: 'Chiếc hộp nhạc', tip: 'Gỗ óc chó cũ, bộ lược đồng bên trong. Bấm để vặn khoá.', tipOn: 'Bấm để dừng điệu nhạc.' },
+  lamp: { title: 'Ngọn đèn lồng', tipOn: 'Bấm để thổi tắt đèn.', tipOff: 'Bấm để thắp đèn lại.' },
+  books: { title: 'Chồng sách cũ', tip: 'Mấy cuốn sách bìa da, gáy mạ vàng đã sờn.' },
+  pine: { title: 'Cành thông', tip: 'Quả mọng đỏ và quả thông khô, mùi của mùa đông.' },
+}

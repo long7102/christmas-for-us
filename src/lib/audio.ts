@@ -18,6 +18,7 @@ class Sfx {
   private subs = new Set<() => void>()
   private purrOn = false
   private mixV = 0
+  private boxV = 0
   private purrGain?: GainNode
 
   constructor() {
@@ -168,8 +169,50 @@ class Sfx {
     m = Math.min(1, Math.max(0, m))
     if (Math.abs(m - this.mixV) < 0.01) return
     this.mixV = m
-    if (this.music) this.music.volume = 0.42 - 0.14 * m
+    if (this.music) this.music.volume = 0.42 - 0.14 * m + 0.2 * this.boxV
     this.syncFire(); this.syncPurr()
+  }
+
+  /** Hoà âm cho cảnh hộp nhạc: n = 0 là cảnh mèo, n = 1 là cảnh hộp nhạc (tắt gừ gừ và lửa, nhạc nền rõ hơn). */
+  stageBox(n: number) {
+    n = Math.min(1, Math.max(0, n))
+    if (Math.abs(n - this.boxV) < 0.01) return
+    this.boxV = n
+    if (this.music) this.music.volume = 0.42 - 0.14 * this.mixV + 0.2 * n
+    if (this.fireGain && this.ctx) this.fireGain.gain.setTargetAtTime(this.fireOn ? (1 - 0.85 * this.mixV) * (1 - n) : 0, this.ctx.currentTime, 0.3)
+    if (this.purrGain && this.ctx) this.purrGain.gain.setTargetAtTime(this.purrOn ? 0.1 * this.mixV * (1 - n) : 0, this.ctx.currentTime, 0.5)
+  }
+
+  /** Vặn khoá hộp nhạc: những tiếng "tạch" của bánh cóc, chậm dần. */
+  ratchet() {
+    if (!this.ctx || !this.master || !this.noise || this.ctx.state !== 'running') return
+    const c = this.ctx, t0 = c.currentTime
+    for (let i = 0; i < 9; i++) {
+      const t = t0 + i * (0.09 + i * 0.012)
+      const n = this.src(false), f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2200 + (i % 2) * 500; f.Q.value = 4
+      const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.22, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035)
+      n.connect(f); f.connect(g); g.connect(this.master); n.start(t, Math.random() * 2); n.stop(t + 0.05)
+      const o = c.createOscillator(); o.type = 'triangle'; o.frequency.value = 180 + i * 6
+      const og = c.createGain(); og.gain.setValueAtTime(0.0001, t); og.gain.linearRampToValueAtTime(0.08, t + 0.004); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.06)
+      o.connect(og); og.connect(this.master); o.start(t); o.stop(t + 0.08)
+    }
+  }
+
+  /** Một nốt lược đồng của hộp nhạc: trong, ngắn, ngân nhẹ. (Tạm thời, sẽ thay bằng nhạc thật Long gửi.) */
+  pluck(freq: number, vol = 0.1) {
+    if (!this.ctx || !this.master || this.ctx.state !== 'running') return
+    const c = this.ctx, t = c.currentTime
+    for (const [mul, v, dec] of [[1, 1, 1.6], [2.0, 0.35, 0.8], [4.1, 0.12, 0.3]] as const) {
+      const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = freq * mul
+      const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol * v, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + dec)
+      o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dec + 0.05)
+    }
+  }
+
+  /** Chùm nốt lấp lánh đi lên khi chuyển sang cảnh hộp nhạc. */
+  sparkle() {
+    if (!this.ctx) return
+    ;[1175, 1319, 1568, 1760, 2093, 2349].forEach((f, i) => setTimeout(() => this.pluck(f, 0.07), i * 110))
   }
 
   /** Hơi thổi tắt đèn: tiếng hơi ngắn, nghe xa dần. */
