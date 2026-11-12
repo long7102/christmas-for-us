@@ -275,13 +275,13 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       .to(q('.door-panel-r'), { rotateY: -12, duration: 1.2, ease: 'power2.in' }, 1.0)
       .add(() => dust(22), 2.0)
       .add(() => { sfx.creak(1.9, 88, 150, 0.26); sfx.windLevel(0.75, 1.2) }, 2.1)
-      .to(q('.door-panel-l'), { rotateY: 78, duration: 1.7, ease: 'power1.inOut' }, 2.1)
-      .to(q('.door-panel-r'), { rotateY: -78, duration: 1.7, ease: 'power1.inOut' }, 2.2)
+      .to(q('.door-panel-l'), { rotateY: 84, duration: 1.7, ease: 'power1.inOut' }, 2.1)
+      .to(q('.door-panel-r'), { rotateY: -84, duration: 1.7, ease: 'power1.inOut' }, 2.2)
       .to(q('.door-shade'), { opacity: 0.55, duration: 1.8, ease: 'power1.inOut' }, 2.1)
       .add(() => dust(26), 2.7)
       // thud
-      .to(q('.door-panel-l'), { rotateY: 73, duration: 0.45, ease: 'power2.out' }, 3.8)
-      .to(q('.door-panel-r'), { rotateY: -73, duration: 0.45, ease: 'power2.out' }, 3.9)
+      .to(q('.door-panel-l'), { rotateY: 79, duration: 0.45, ease: 'power2.out' }, 3.8)
+      .to(q('.door-panel-r'), { rotateY: -79, duration: 0.45, ease: 'power2.out' }, 3.9)
     rumble(tl, 3.8, 8, 7)
     tl.add(() => { dust(16); sfx.thud() }, 3.85)
     // 3. a beat to look at the open door, then we run in between the leaves toward the light
@@ -350,7 +350,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
           <div className="door-glow" />
           <div className="door-light" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }} />
           {tex && <img src={tex.frame} className="door-img" alt="" draggable={false} />}
-          <div ref={panels} className="door-panels" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height }}>
+          <div ref={panels} className="door-panels" style={{ left: g.area.left, top: g.area.top, width: g.area.width, height: g.area.height, clipPath: g.lightClip }}>
             {leaf('l')}{leaf('r')}
           </div>
         </div>
