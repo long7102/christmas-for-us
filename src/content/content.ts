@@ -29,7 +29,7 @@ export const gifts: { id: number; title: string; unlockAt: string; body: string 
 export const tree = {
   eyebrow: 'Khu vực 05 / 06',
   title: 'Cây thông',
-  body: 'Dưới gốc cây có bốn món quà, mỗi món mở vào một ngày riêng. Em rê chuột vào hộp quà (hoặc chạm trên điện thoại) để xem.',
+  body: 'Bốn món quà, mỗi món mở vào một ngày riêng. Em rê chuột hoặc chạm vào hộp quà để xem.',
 }
 
 export const treeText = {

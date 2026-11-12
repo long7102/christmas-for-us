@@ -214,7 +214,9 @@ export default function Tree() {
   useEffect(() => {
     const el = host.current!
     const fit = () => {
-      setG({ s: el.clientWidth / L.w, x: 0, y: 0 })
+      const vw = el.clientWidth, vh = el.clientHeight
+      const s = Math.max(vw / L.w, vh / L.h)
+      setG({ s, x: (vw - L.w * s) / 2, y: (vh - L.h * s) / 2 })
     }
     fit()
     const ro = new ResizeObserver(fit)
@@ -238,7 +240,7 @@ export default function Tree() {
         <h2 className="sec-title">{treeCopy.title}</h2>
         <p className="sec-desc">{treeCopy.body}</p>
       </div>
-      <div className="sec-frame" ref={host} style={{ aspectRatio: `${L.w} / ${L.h}` }}>
+      <div className="sec-frame" ref={host}>
       <div className="tr-stage" style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
         <img src={L.src} alt="Cây thông Giáng sinh và bốn món quà" draggable={false} />
         <WindowSnow r={L.win} />
