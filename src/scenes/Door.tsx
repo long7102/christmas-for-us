@@ -17,7 +17,10 @@ const villageUrl = (portrait: boolean) => Object.entries(villageFiles).find(([k]
 /** x,y: the door in the village photo; s: zoom until it fills the door shot; dy: shift so its centre lands where the door shot's centre is. */
 const VILL = { land: { x: 0.5, y: 0.634, s: 2.0, w: 0.108 }, port: { x: 0.508, y: 0.6, s: 1.7, w: 0.194 } }
 
-const SLICES = 11 // layers that give each leaf its thickness
+/** Leaf thickness and how deep it hangs inside the doorway, as fractions of the leaf width. */
+const THICK = 0.36
+const RECESS = 0.75
+const PERSP = 1100
 
 type Tex = { frame: string; left: string; right: string; leftDark: string; rightDark: string; hl: string; hr: string; hlDark: string; hrDark: string }
 
@@ -152,7 +155,7 @@ function useShed() {
 
 /** Wide screens fill (cover, up to 40% crop). Tall phones show the whole photo (contain) and the extra space is a mirrored continuation of the wall/snow. */
 function useFit(ar: number): 'cover' | 'contain' {
-  const calc = () => { const A = innerWidth / innerHeight; const crop = A > ar ? 1 - ar / A : 1 - A / ar; return crop <= (A < 1 ? 0.04 : 0.4) ? 'cover' : 'contain' }
+  const calc = () => { const A = innerWidth / innerHeight; const crop = A > ar ? 1 - ar / A : 1 - A / ar; return crop <= (ar < 1 && A < ar ? 0.04 : 0.4) ? 'cover' : 'contain' }
   const [fit, setFit] = useState<'cover' | 'contain'>(calc)
   useEffect(() => { const f = () => setFit(calc()); f(); addEventListener('resize', f); return () => removeEventListener('resize', f) }, [ar])
   return fit
@@ -195,7 +198,10 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
       if (!box.current || !panels.current) return
       const r = box.current.offsetWidth / (portrait ? PORT : LAND).w
       setRs(r)
-      panels.current.style.setProperty('--depth', `${((portrait ? PORT : LAND).hw * r * 0.2).toFixed(1)}px`)
+      panels.current.style.setProperty('--depth', `${((portrait ? PORT : LAND).hw * r * THICK).toFixed(1)}px`)
+      // the leaves hang deeper inside the doorway; scale compensates the perspective so they still fill the opening when shut
+      const rec = (portrait ? PORT : LAND).hw * r * RECESS
+      gsap.set(panels.current.querySelectorAll('.door-panel'), { z: -rec, scale: (PERSP + rec) / PERSP })
     }
     set(); addEventListener('resize', set); return () => removeEventListener('resize', set)
   }, [g, fit, portrait])
@@ -310,13 +316,13 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
   /** One solid slab: front face (photo), back face (dark), and a continuous rim around the outline. No stacked layers. */
   const leaf = (side: 'l' | 'r') => {
     const pts = (side === 'l' ? sh.leafL : sh.leafR).map(([x, y]) => [(x - (side === 'l' ? sh.x0 : sh.cx)) * rs, (y - sh.y0) * rs] as [number, number])
-    const D = sh.bw * rs * 0.2
+    const D = sh.bw * rs * THICK
     const rim = rs
       ? pts.map((p, i) => {
           const q = pts[(i + 1) % pts.length], dx = q[0] - p[0], dy = q[1] - p[1], len = Math.hypot(dx, dy)
           if (len < 0.8) return null
           const ang = (Math.atan2(dy, dx) * 180) / Math.PI
-          const lit = 0.5 + 0.4 * Math.abs(Math.cos((ang * Math.PI) / 180)) // flatter edges (arch top) catch more light
+          const lit = 0.72 + 0.3 * Math.abs(Math.cos((ang * Math.PI) / 180)) // flatter edges (arch top) catch more light
           const c1 = `rgb(${Math.round(120 * lit)},${Math.round(72 * lit)},${Math.round(38 * lit)})`, c2 = `rgb(${Math.round(78 * lit)},${Math.round(46 * lit)},${Math.round(24 * lit)})`
           return <i key={i} className="rim" style={{ width: len + 0.6, height: D, background: `linear-gradient(${c1}, ${c2})`, transform: `translate3d(${p[0]}px,${p[1]}px,0) rotateZ(${ang}deg) rotateX(-90deg)` }} />
         })
