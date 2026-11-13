@@ -854,15 +854,13 @@ canvas.mb-dancer, canvas.mb-shadow { position: absolute; }
 @keyframes sw-flick { 0%,100% { opacity: .85 } 18% { opacity: 1 } 42% { opacity: .7 } 63% { opacity: .95 } 80% { opacity: .78 } }
 .snow-scene .tr-lights { top: max(16px, env(safe-area-inset-top, 0px)); }
 
-/* xoay góc phòng: cảnh hai bé (mặt trước) và cảnh ngắm tuyết (mặt phải) là hai mặt của một khối; cuộn thì khối xoay 90 độ */
-.xf-stage3d { position: absolute; inset: 0; perspective: calc(100vw * 1.4); perspective-origin: 50% 50%; pointer-events: none; }
-.xf-cube { position: absolute; inset: 0; transform-style: preserve-3d; transform: translateZ(calc(-50vw - var(--dz, 0px))) rotateY(var(--rot, 0deg)); }
-.xf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.xf-front { transform: translateZ(50vw); }
-.xf-side { transform: rotateY(90deg) translateZ(50vw); }
-.xf-front::after, .xf-side::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(8,4,2,.0), rgba(8,4,2,1)); }
-.xf-front::after { opacity: var(--shF, 0); background: linear-gradient(90deg, rgba(8,4,2,.35), rgba(8,4,2,1)); }
-.xf-side::after { opacity: var(--shS, 0.6); background: linear-gradient(90deg, rgba(8,4,2,1), rgba(8,4,2,.35)); }
+/* chuyển cảnh mèo -> ngắm tuyết: ánh nến loang ra từ góc dưới trái, kéo máy quay lùi ra từ góc ấy (không có đường cắt cứng, mép ánh sáng mềm) */
+.xf-cats { transform: scale(var(--cz2, 1)); transform-origin: var(--cx2, 12%) var(--cy2, 100%); }
+.xf-cats::after { content: ""; position: absolute; inset: 0; z-index: 30; pointer-events: none; background: #0a0502; opacity: var(--cd, 0); }
+.xf-snow { -webkit-mask-image: radial-gradient(circle at var(--cx2, 12%) var(--cy2, 100%), #000 calc(var(--R2, 0px) - var(--F2, 0px)), transparent var(--R2, 0px)); mask-image: radial-gradient(circle at var(--cx2, 12%) var(--cy2, 100%), #000 calc(var(--R2, 0px) - var(--F2, 0px)), transparent var(--R2, 0px)); }
+.xf-snow > .tree-scene { transform: scale(var(--sz, 1)); transform-origin: var(--cx2, 12%) var(--cy2, 100%); }
+.xf-corner { position: absolute; z-index: 6; left: var(--cx2, 12%); top: var(--cy2, 100%); width: var(--D2, 0px); height: var(--D2, 0px); transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; opacity: var(--cring, 0);
+  background: radial-gradient(circle closest-side, rgba(255,170,80,.0) 0%, rgba(255,170,80,.12) 52%, rgba(255,205,130,.42) 86%, rgba(255,230,170,.0) 100%); }
 .xf-snow { visibility: var(--sv, hidden); pointer-events: var(--spe, none); }
 .xf-snow .sec-text, .xf-snow .tr-lights { opacity: var(--st, 0); }
 .xf-snow .sec-text { transform: translateY(calc((1 - var(--st, 0)) * 18px)); }

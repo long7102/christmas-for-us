@@ -10,13 +10,25 @@ import { SNOW as L } from './snowLayout'
 
 const GLASS = L.panes.map(([x, y, w, h]) => `M${x} ${y}H${x + w}V${y + h}H${x}Z`).join('')
 const ROOM = `M0 0H${L.w}V${L.h}H0Z${GLASS}`
-/** Độ tối theo khoảng cách tới nến: dùng chung cho cả phòng lẫn hai người nên ranh giới giữa họ và đồ vật xung quanh liền mạch. Nến ở phía trước họ (bàn trà bên trái, đèn lồng bên phải), nên lưng họ được ánh nến hắt lên, gần nến thì sáng hơn. */
-const bodyHoles = L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(0,0,0,.12) 0, rgba(0,0,0,.5) ${220 * k}px, #000 ${700 * k}px)`)
-/** Ánh nến ấm hắt lên lưng và vai (mạnh nhất ở phía nến, yếu dần), cộng ánh xanh lạnh của tuyết ngoài cửa sổ phủ lên đỉnh đầu và vai. */
-const warmLow = L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(255,165,80,${0.42 * k}) 0, rgba(255,120,45,${0.18 * k}) ${340 * k}px, rgba(255,100,30,0) ${900 * k}px)`).join(',')
+/**
+ * Trường sáng chung của phòng khi tắt đèn (dùng cho cả đồ vật lẫn hai người nên không có ranh giới giả):
+ * hai ngọn nến và đèn lồng đặt ngay phía trước lưng họ, ở gần máy quay, nên cả mặt hướng về phía máy quay (lưng, vai, chăn, gối, bàn) được chiếu sáng,
+ * sáng nhất ở phía dưới và nhạt dần lên phía đầu, ra xa hai bên thì tối. Đó là một vùng sáng hình elip trải rộng
+ * (ellipse), cộng thêm quầng sáng gắt hơn sát từng ngọn nến.
+ */
+const LIT = { x: 760, y: 900, rx: 880, ry: 560 }
+const bodyHoles = [
+  `radial-gradient(ellipse ${LIT.rx}px ${LIT.ry}px at ${LIT.x}px ${LIT.y}px, rgba(0,0,0,.28) 0, rgba(0,0,0,.52) 45%, rgba(0,0,0,.86) 80%, #000 100%)`,
+  ...L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(0,0,0,.2) 0, rgba(0,0,0,.6) ${200 * k}px, #000 ${520 * k}px)`),
+]
+/** Ánh ấm trải theo cùng vùng elip (không còn là một đốm sát nến), cộng ánh xanh lạnh của tuyết ngoài cửa sổ phủ lên đỉnh đầu và vai. */
+const warmLow = [
+  ...L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(255,165,80,${0.4 * k}) 0, rgba(255,120,45,${0.16 * k}) ${300 * k}px, rgba(255,100,30,0) ${700 * k}px)`),
+  `radial-gradient(ellipse ${LIT.rx}px ${LIT.ry}px at ${LIT.x}px ${LIT.y}px, rgba(255,150,65,.34) 0, rgba(255,125,50,.2) 50%, rgba(255,110,40,0) 100%)`,
+].join(',')
 const warmBg = [
-  ...L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(255,165,80,${0.42 * k}) 0, rgba(255,120,45,${0.18 * k}) ${340 * k}px, rgba(255,100,30,0) ${900 * k}px)`),
-  'linear-gradient(180deg, rgba(150,185,240,.34) 200px, rgba(120,160,225,.12) 430px, rgba(120,160,225,0) 640px)',
+  warmLow,
+  'linear-gradient(180deg, rgba(150,185,240,.3) 200px, rgba(120,160,225,.1) 430px, rgba(120,160,225,0) 640px)',
 ].join(',')
 /** Gộp mặt nạ hình (hai người hoặc ngược lại) với độ tối theo khoảng cách tới nến. */
 const lay = (shape: string[]): React.CSSProperties => {

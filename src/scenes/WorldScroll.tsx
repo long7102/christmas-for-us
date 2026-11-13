@@ -20,12 +20,15 @@ const HOLD0 = 0.45
 /** Dừng ngắm cây thông trước khi sang cảnh mèo (tính theo chiều cao màn hình) và đoạn nghỉ cuối ở cảnh mèo. */
 const HOLD = 0.45
 const END = 0.5
-/** Dừng ngắm hai bé, rồi xoay cả căn phòng sang góc bên cạnh (cảnh ngắm tuyết): đứng yên HOLD3, xoay SPAN3 (đơn vị: chiều cao màn hình). */
+/** Dừng ngắm hai bé, rồi ánh nến từ một góc phòng loang ra, kéo máy quay lùi ra từ góc ấy sang cảnh ngắm tuyết: đứng yên HOLD3, chuyển SPAN3 (đơn vị: chiều cao màn hình). */
 const HOLD3 = 0.45
 const SPAN3 = 1.3
 const Y_CATS = HOLD0 + SPAN2 + HOLD + SPAN
 const Y_SNOW = Y_CATS + HOLD3 + SPAN3
 
+/** Bán kính để đến cuối chuyển cảnh, phần đặc của mặt nạ (đã trừ vùng mờ ở mép) phủ tới tận góc xa nhất, không còn sót cảnh cũ. */
+const R2max = (vw: number, vh: number) => (1.02 * Math.hypot(vw * 0.88, vh) + 40) / 0.58
+const R2c = (r: number, vw: number, vh: number) => ease(r) * R2max(vw, vh)
 type Fx = { p: number; R: number; cx: number; cy: number; on: boolean }
 
 /** Lớp hạt Giáng sinh: tuyết rơi theo gió và tia sao vàng bắn ra từ mép vòng sáng. */
@@ -165,7 +168,9 @@ export default function WorldScroll() {
       const er = ease(r)
       const R = e * 1.06 * Math.hypot(vw * 0.5, vh * Math.max(CY, 1 - CY))
       const st = el.style
-      fx.current = { p, R, cx: vw / 2, cy: vh * CY, on: p > 0.003 && p < 0.997 }
+      fx.current = r > 0.003 && r < 0.997
+        ? { p: r, R: R2c(r, vw, vh), cx: vw * 0.12, cy: vh, on: true }
+        : { p, R, cx: vw / 2, cy: vh * CY, on: p > 0.003 && p < 0.997 }
       st.setProperty('--tz', String(calm ? 1 : 1 + 0.34 * e))
       st.setProperty('--to', String(1 - smooth(0.38, 0.88, p)))
       st.setProperty('--cz', String(calm ? 1 : 1.18 - 0.18 * e))
@@ -175,14 +180,20 @@ export default function WorldScroll() {
       st.setProperty('--bloom', String(Math.max(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, p)), 2) * 0.75, Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, q)), 2) * 0.55)))
       st.setProperty('--cv', p > 0.003 ? 'visible' : 'hidden')
       st.setProperty('--cpe', p > 0.985 && r < 0.012 ? 'auto' : 'none')
-      // xoay góc phòng (cảnh mèo -> cảnh ngắm tuyết): cả hai cảnh là hai mặt của một khối, khối xoay 90 độ quanh trục đứng
-      st.setProperty('--rot', `${(calm ? (er > 0.5 ? -90 : 0) : -90 * er).toFixed(2)}deg`)
-      st.setProperty('--dz', `${calm ? 0 : (Math.sin(Math.PI * er) * 0.1 * vw).toFixed(1)}px`)
+      // chuyển sang cảnh ngắm tuyết: ánh nến loang ra từ góc dưới trái (chỗ ngọn nến bên bàn) như ánh sáng lan dần trong phòng tối;
+      // cảnh mới được kéo lùi ra từ chính góc ấy, cảnh mèo cũ phóng nhẹ về phía góc và tối dần
+      const R2 = er * R2max(vw, vh)
+      st.setProperty('--cx2', '12%'); st.setProperty('--cy2', '100%')
+      st.setProperty('--R2', `${R2.toFixed(1)}px`)
+      st.setProperty('--F2', `${Math.min(R2, 0.42 * R2 + 40).toFixed(1)}px`)
+      st.setProperty('--D2', `${(R2 * 2.1).toFixed(1)}px`)
+      st.setProperty('--sz', String(calm ? 1 : (1.3 - 0.3 * er).toFixed(4)))
+      st.setProperty('--cz2', String(calm ? 1 : (1 + 0.1 * er).toFixed(4)))
+      st.setProperty('--cd', String((er * 0.6).toFixed(3)))
+      st.setProperty('--cring', String((Math.sin(Math.PI * Math.min(1, r * 1.04)) * (r > 0.003 && r < 0.997 ? 1 : 0)).toFixed(3)))
       st.setProperty('--sv', r > 0.003 ? 'visible' : 'hidden')
       st.setProperty('--spe', r > 0.985 ? 'auto' : 'none')
       st.setProperty('--st', String(smooth(0.74, 0.97, r)))
-      st.setProperty('--shF', String((er * 0.6).toFixed(3)))
-      st.setProperty('--shS', String(((1 - er) * 0.6).toFixed(3)))
       st.setProperty('--tv', q > 0.003 ? 'visible' : 'hidden')
       st.setProperty('--tpe', q > 0.985 && p < 0.012 ? 'auto' : 'none')
       st.setProperty('--tt', String(smooth(0.78, 0.97, q) * (1 - smooth(0.0, 0.16, p))))
@@ -277,12 +288,9 @@ export default function WorldScroll() {
       <div className="xf-sticky">
         <div className={`xf-layer xf-box${seen.box ? '' : ' idle'}`}><MusicBox active={seen.box} /></div>
         <div className={`xf-layer xf-tree${seen.tree ? '' : ' idle'}`}><Tree paused={!seen.tree} /></div>
-        <div className="xf-stage3d">
-          <div className="xf-cube">
-            <div className="xf-face xf-front"><div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div></div>
-            <div className="xf-face xf-side"><div className={`xf-layer xf-snow${seen.snow ? '' : ' idle'}`}><SnowWatch active={seen.snow} /></div></div>
-          </div>
-        </div>
+        <div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div>
+        <div className={`xf-layer xf-snow${seen.snow ? '' : ' idle'}`}><SnowWatch active={seen.snow} /></div>
+        <i className="xf-corner" aria-hidden />
         <i className="xf-gold" aria-hidden />
         <i className="xf-glow" aria-hidden />
         <i className="xf-candy" aria-hidden />
