@@ -70,7 +70,7 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
       const band = mode === 'tall' ? txt.current?.offsetHeight ?? 0 : 0
       const vis = vh - band
       let s = Math.max(vw / MB.w, vh / MB.h)
-      if (mode === 'tall') s = Math.max(vw / MB.w, Math.min(s, vis / (F.y2 - F.y1 + 20)))
+      if (mode === 'tall') s = Math.max(vw / MB.w, vis / MB.h)
       const cx = (F.x1 + F.x2) / 2
       const x = Math.min(0, Math.max(vw - MB.w * s, vw / 2 - cx * s))
       const y = mode === 'tall' ? Math.min(0, Math.max(vis - MB.h * s, 8 - F.y1 * s)) : Math.min(0, vh - MB.h * s)
