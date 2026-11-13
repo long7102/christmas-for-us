@@ -95,34 +95,32 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
     const dEl = dancer.current, sEl = shadow.current, root = stage.current
     if (!dEl || !sEl || !root || !active) return
     const calm = reducedMotion()
-    let raf = 0, last = performance.now(), fire = 0.85, tFire = 0.85, nFire = 0, th = 0, w = 0, amp = 0, shown = -1
-    const TAU = Math.PI * 2
+    let raf = 0, last = performance.now(), fire = 0.85, tFire = 0.85, nFire = 0, th = 0, amp = 0, shown = -1
+    const HOLD = 2.4, FLIP = 0.9, C = 2 * (HOLD + FLIP)
     const sm = (a: number, b: number, x: number) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k) }
     const layers = Array.from(dEl.children) as HTMLElement[]
     const draw = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       const on = live.current.playing && live.current.lid === 2 && !calm
       amp += ((on ? 1 : 0) - amp) * (1 - Math.exp(-dt / 0.5))
-      // quay chậm như hộp nhạc thật (khoảng 6 giây một vòng); dừng nhạc thì quay nốt về mặt trước rồi đứng yên
-      if (on) w += (1.05 - w) * (1 - Math.exp(-dt / 0.8))
-      else { const rem = Math.ceil((th - 0.02) / TAU) * TAU - th; w = Math.min(Math.max(w, rem > 0.02 ? 0.5 : 0), Math.max(0.12, rem * 1.4)); if (rem < 0.012) { th = 0; w = 0 } }
-      th += w * dt
+      // Nhịp xoay: đứng mặt trước, lật nửa vòng sang lưng, đứng một lúc, lật về. Chỉ có ảnh mặt trước và mặt lưng nên không hoà ảnh
+      // (hoà ảnh làm ra hai bóng chồng nhau); lật bằng co ngang rồi đổi ảnh đúng lúc mỏng nhất, như tấm hình quay một nửa vòng.
+      if (on) th += dt
+      else if (th % C >= HOLD) { const nx = (Math.floor(th / C) + 1) * C; th = Math.min(nx, th + dt); if (nx - th < 1e-6) th = nx } // đang ở nửa sau: quay nốt về mặt trước rồi đứng yên
       nFire -= dt
       if (nFire <= 0) { nFire = 0.5 + Math.random() * 0.9; tFire = Math.random() < 0.12 ? 0.55 + Math.random() * 0.15 : 0.75 + Math.random() * 0.25 }
       fire += ((calm ? 0.85 : tFire) - fire) * (1 - Math.exp(-dt / 0.3))
-      // góc hiện tại (độ, 0..360). Ba ảnh thật: mặt trước (0), quay lưng lệch phải (~165), quay lưng lệch trái (~195).
-      // Giữa mặt trước và lưng chưa có ảnh nghiêng nên hai ảnh hoà vào nhau, kèm co ngang vừa phải cho ra cảm giác đang xoay.
-      const deg = ((th % TAU) + TAU) % TAU * 180 / Math.PI
-      const front = deg < 180 ? 1 - sm(52, 100, deg) : sm(260, 308, deg)
-      const split = sm(168, 192, deg)
-      const op = [front, (1 - front) * (1 - split), (1 - front) * split]
-      layers.forEach((el, i) => { el.style.opacity = op[i].toFixed(3) })
-      const turn = Math.sin(Math.PI * front) // 0 khi rõ một mặt, 1 ở giữa lúc chuyển
-      const sx = 1 - 0.42 * turn
-      const bob = Math.abs(Math.sin(th * 2)) * -1.2 * amp
+      const m = th % C, cyc = Math.floor(th / C)
+      let side = 0, sx = 1, dip = 0
+      if (m < HOLD) side = 0
+      else if (m < HOLD + FLIP) { const u = sm(0, 1, (m - HOLD) / FLIP); side = u < 0.5 ? 0 : 1 + (cyc % 2); sx = 0.2 + 0.8 * Math.abs(Math.cos(Math.PI * u)); dip = Math.sin(Math.PI * u) }
+      else if (m < 2 * HOLD + FLIP) side = 1 + (cyc % 2)
+      else { const u = sm(0, 1, (m - 2 * HOLD - FLIP) / FLIP); side = u < 0.5 ? 1 + (cyc % 2) : 0; sx = 0.2 + 0.8 * Math.abs(Math.cos(Math.PI * u)); dip = Math.sin(Math.PI * u) }
+      layers.forEach((el, i) => { el.style.opacity = i === side ? '1' : '0' })
+      const bob = Math.abs(Math.sin(th * 2.4)) * -1.1 * amp
       dEl.style.transform = `translateY(${bob.toFixed(2)}px) scaleX(${sx.toFixed(3)})`
-      dEl.style.filter = `brightness(${((0.9 + 0.1 * fire) * (1 - 0.1 * turn)).toFixed(3)})`
-      const dom = op[0] >= 0.5 ? 0 : op[1] >= op[2] ? 1 : 2
+      dEl.style.filter = `brightness(${((0.9 + 0.1 * fire) * (1 - 0.14 * dip)).toFixed(3)})`
+      const dom = side
       if (dom !== shown) { shown = dom; const u = `url(${MB.dancer.frames[dom]})`; sEl.style.maskImage = u; sEl.style.setProperty('-webkit-mask-image', u) }
       const near = 26 - 5 * (fire - 0.8)
       sEl.style.transform = `translateX(${near.toFixed(2)}px) translateY(${bob.toFixed(2)}px) scaleX(${(1.04 * sx).toFixed(3)}) scaleY(1.02)`
@@ -226,7 +224,7 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
               onMouseEnter={() => show(boxCopy.title, boxCopy.tip, boxPoly)} onMouseLeave={() => setTip(null)}
               onFocus={() => show(boxCopy.title, boxCopy.tip, boxPoly)} onBlur={() => setTip(null)} onClick={toggleLid} onKeyDown={key(toggleLid)} />
             {lid === 2 && (
-              <polygon className={`cat-hs${pulse === 2 ? ' pulse' : ''}`} points={pts(L.polys.bal)} tabIndex={0} role="button" aria-label="Cô vũ công"
+              <polygon className={`cat-hs${pulse === 2 && !playing ? ' pulse' : ''}`} points={pts(L.polys.bal)} tabIndex={0} role="button" aria-label="Cô vũ công"
                 onMouseEnter={() => show(copy.dancer.title, copy.dancer.tip, L.polys.bal)} onMouseLeave={() => setTip(null)}
                 onFocus={() => show(copy.dancer.title, copy.dancer.tip, L.polys.bal)} onBlur={() => setTip(null)} onClick={() => sfx.toggleMusic()} onKeyDown={key(() => sfx.toggleMusic())} />
             )}
