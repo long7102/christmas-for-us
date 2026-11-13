@@ -6,6 +6,7 @@ import { lights, useLights } from '../lib/lights'
 import { CAT_LAND, CAT_PORT, type Cat, type CatLayout, type Pose } from './catsLayout'
 import { Dust, WindowSnow } from './Tree'
 import { useHintPulse } from '../lib/hintPulse'
+import { LitSpot, Stardust } from '../components/LitSpot'
 import { polyBox, type R } from './treeLayout'
 
 type Who = 'bong' | 'mochi'
@@ -75,6 +76,7 @@ export default function Cats({ active = true }: { active?: boolean }) {
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [tip, setTip] = useState<{ title: string; text: string; b: { x: number; y: number; w: number; h: number } } | null>(null)
   const [hov, setHov] = useState<Who | null>(null)
+  const [lampHov, setLampHov] = useState(false)
   const [busy, setBusy] = useState<Who | 'lamp' | null>(null)
   const lampT = useRef({ k: 1, tau: 0.3 })
   const lampBusy = useRef(false)
@@ -166,12 +168,12 @@ export default function Cats({ active = true }: { active?: boolean }) {
     lampT.current = { k: 1.28, tau: 0.16 }
     timers.current.push(window.setTimeout(() => { lampT.current = { k: 1, tau: 0.5 } }, 700))
   }, [lampOn])
-  const enterLamp = () => setTip({ title: copy.lamp.title, text: lampOn ? copy.lamp.tipOn : copy.lamp.tipOff, b: polyBox(L.lampPoly) })
+  const enterLamp = () => { setLampHov(true); setTip({ title: copy.lamp.title, text: lampOn ? copy.lamp.tipOn : copy.lamp.tipOff, b: polyBox(L.lampPoly) }) }
   const enter = (c: (typeof cats)[number]) => {
     if (busy) return
     setHov(c.id); setTip({ title: c.info.title, text: c.info.tip, b: polyBox(c.cat.poly) })
   }
-  const leave = () => { setHov(null); setTip(null) }
+  const leave = () => { setHov(null); setLampHov(false); setTip(null) }
 
   // chữ nằm ở góc dưới trái (dưới ngọn đèn lồng, bên trái hai bé); điện thoại thì ở dải tối phía dưới
   const left = 22
@@ -212,7 +214,9 @@ export default function Cats({ active = true }: { active?: boolean }) {
 
           {cats.map((c) => c.cat.poses.map((p, i) => <Over key={`${c.id}${i}`} L={L} pose={p} on={show === `${c.id}-${i}`} />))}
           {cats.map((c, i) => <Glow key={c.id} L={L} cat={c.cat} on={(hov === c.id || pulse === i) && !busy} />)}
+          {cats.map((c, i) => <Stardust key={c.id} poly={c.cat.poly} on={(hov === c.id || pulse === i) && !busy} />)}
 
+          <LitSpot src={L.src} w={L.w} h={L.h} poly={L.lampPoly} on={lampHov} strength={0.7} />
           {/* đèn lồng chập chờn */}
           <i className="cat-lamp halo" style={{ left: L.lamp[0] - L.lamp[2] * 3.4, top: L.lamp[1] - L.lamp[2] * 3.4, width: L.lamp[2] * 6.8, height: L.lamp[2] * 6.8 }} />
           <i className="cat-lamp" style={{ left: L.lamp[0] - L.lamp[2], top: L.lamp[1] - L.lamp[2], width: L.lamp[2] * 2, height: L.lamp[2] * 2 }} />
