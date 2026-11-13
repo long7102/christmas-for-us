@@ -99,7 +99,7 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
     if (!dEl || !sEl || !root || !active) return
     const calm = reducedMotion()
     let raf = 0, last = performance.now(), fire = 0.85, tFire = 0.85, nFire = 0, th = 0, w = 0, amp = 0, drawn = -9, mt = 0, drawnK = -1
-    const AMP = 0.35, PER = 2.8, SEG = PER * 2, WH = 0.55, CYC = 2 * (SEG + WH)
+    const AMP = 0.38, PER = 3.4, SEG = 1e6, WH = 0.55, CYC = 2 * (SEG + WH) // chỉ lắc trái phải quanh mặt trước (SEG rất lớn = không bao giờ lướt sang lưng)
     const sm01 = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
     const settled = (t: number) => { const m = t % CYC; return m === 0 || (m < SEG && Math.abs(Math.sin(m * TAU / PER)) < 1e-6) }
     const TAU = Math.PI * 2
