@@ -3,8 +3,16 @@ import { snow as copy } from '../content/content'
 import { isLite, reducedMotion } from '../lib/device'
 import { weather } from '../lib/weather'
 import { Dust } from './Tree'
+import { lights, useLights } from '../lib/lights'
 import { SNOW as L } from './snowLayout'
 
+const GLASS = L.panes.map(([x, y, w, h]) => `M${x} ${y}H${x + w}V${y + h}H${x}Z`).join('')
+const ROOM = `M0 0H${L.w}V${L.h}H0Z${GLASS}`
+/** Mặt nạ cho lớp tối: tối khắp nơi, riêng quanh từng ngọn nến thì sáng dần lên (các mặt nạ nhân với nhau nên chỗ nào có nến thì chỗ đó sáng). */
+const holes = (() => {
+  const m = L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(0,0,0,0) 0, rgba(0,0,0,.22) ${70 * k}px, #000 ${420 * k}px)`).join(',')
+  return { WebkitMaskImage: m, maskImage: m, WebkitMaskComposite: 'source-in', maskComposite: 'intersect' } as React.CSSProperties
+})()
 const POSE_HOLD = 6500
 const FADE = 1000
 
@@ -227,23 +235,16 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
   return <canvas ref={ref} className="sw-cv sw-fog" aria-hidden />
 }
 
-export default function SnowWatch() {
-  const sec = useRef<HTMLElement>(null)
+export default function SnowWatch({ active }: { active: boolean }) {
   const host = useRef<HTMLDivElement>(null)
   const stage = useRef<HTMLDivElement>(null)
-  const [active, setActive] = useState(false)
+  const lightsOn = useLights()
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [pose, setPose] = useState(0)
   const [maskPose, setMaskPose] = useState(0)
   const [fire, setFire] = useState(0)
   const wipeRef = useRef<(x: number, y: number, px: number, py: number) => void>(() => {})
   const prev = useRef<[number, number] | null>(null)
-
-  useEffect(() => {
-    const io = new IntersectionObserver(([e]) => setActive(e.isIntersecting), { threshold: 0.12 })
-    io.observe(sec.current!)
-    return () => io.disconnect()
-  }, [])
 
   useEffect(() => {
     const el = host.current!
@@ -293,11 +294,15 @@ export default function SnowWatch() {
   const gb = L.panes.reduce((m, [x, y, w, h]) => ({ x1: Math.min(m.x1, x), y1: Math.min(m.y1, y), x2: Math.max(m.x2, x + w), y2: Math.max(m.y2, y + h) }), { x1: 1e9, y1: 1e9, x2: 0, y2: 0 })
 
   return (
-    <section id="snow" className="tree-scene snow-scene" ref={sec}>
+    <section id="snow" className={`tree-scene snow-scene${lightsOn ? '' : ' lights-off'}`}>
       <div className="sec-frame" ref={host}>
         <div className="tr-stage" ref={stage} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img className="sw-img" src={L.poses[0].src} alt="Hai người ngồi sát nhau dưới chăn len, quay lưng nhìn tuyết rơi ngoài cửa sổ lớn" draggable={false} />
           <img className={`sw-img sw-top${pose ? ' on' : ''}`} src={L.poses[1].src} alt="" draggable={false} />
+
+          {/* tắt đèn: cả phòng tối đi (trừ ô kính, ngoài trời vẫn sáng tuyết), chỉ còn ánh các ngọn nến; hai người tối riêng vì đứng trước kính */}
+          <div className="sw-dark" style={{ clipPath: `path(evenodd, '${ROOM}')`, ...holes }} />
+          <div className="sw-dark" style={{ clipPath: `path('${GLASS}')`, WebkitMaskImage: `url(${L.poses[maskPose].cut})`, maskImage: `url(${L.poses[maskPose].cut})`, WebkitMaskSize: '100% 100%', maskSize: '100% 100%' }} />
 
           {/* tuyết, hơi nước và sao băng ở sau kính: đi sau lưng hai người nhờ mặt nạ theo dáng ngồi hiện tại */}
           <div className="sw-fx" style={maskStyle}>
@@ -310,9 +315,14 @@ export default function SnowWatch() {
             onPointerMove={(e) => { if (e.pointerType === 'mouse' || e.buttons || e.pointerType === 'touch') move(e) }}
             onPointerLeave={() => { prev.current = null }} onPointerUp={() => { prev.current = null }} />
 
+          {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 260 * k, top: y - 260 * k, width: 520 * k, height: 520 * k, animationDelay: `-${i * 0.7}s` }} />)}
           {active && <Dust w={L.w} h={L.h} />}
         </div>
       </div>
+
+      <button className="tr-lights" aria-label={lightsOn ? 'Tắt đèn' : 'Bật đèn'} title={lightsOn ? 'Tắt đèn, chỉ còn ánh nến' : 'Bật đèn lại'} onClick={() => lights.toggle()}>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill={lightsOn ? 'currentColor' : 'none'} fillOpacity=".25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" />{lightsOn && <path d="M12 1v0M4 6L3 5M20 6l1-1M2 12H1M23 12h-1" strokeWidth="1.4" />}</svg>
+      </button>
 
       <div className="sec-text">
         <h2 className="sec-title">{copy.title}</h2>

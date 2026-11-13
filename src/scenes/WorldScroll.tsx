@@ -20,6 +20,11 @@ const HOLD0 = 0.45
 /** Dừng ngắm cây thông trước khi sang cảnh mèo (tính theo chiều cao màn hình) và đoạn nghỉ cuối ở cảnh mèo. */
 const HOLD = 0.45
 const END = 0.5
+/** Dừng ngắm hai bé, rồi xoay cả căn phòng sang góc bên cạnh (cảnh ngắm tuyết): đứng yên HOLD3, xoay SPAN3 (đơn vị: chiều cao màn hình). */
+const HOLD3 = 0.45
+const SPAN3 = 1.3
+const Y_CATS = HOLD0 + SPAN2 + HOLD + SPAN
+const Y_SNOW = Y_CATS + HOLD3 + SPAN3
 
 type Fx = { p: number; R: number; cx: number; cy: number; on: boolean }
 
@@ -141,7 +146,7 @@ export default function WorldScroll() {
   const prevP = useRef(0)
   const prevQ = useRef(0)
   const lenis = useRef<Lenis | null>(null)
-  const [seen, setSeen] = useState({ tree: false, cats: false, near: false, box: true })
+  const [seen, setSeen] = useState({ tree: false, cats: false, near: false, box: true, snow: false, turned: false })
 
   useEffect(() => {
     const el = wrap.current!
@@ -156,6 +161,8 @@ export default function WorldScroll() {
       const p = Math.min(1, Math.max(0, (y - (HOLD0 + SPAN2 + HOLD)) / SPAN))
       const eq = ease(q)
       const e = ease(p)
+      const r = Math.min(1, Math.max(0, (y - (Y_CATS + HOLD3)) / SPAN3))
+      const er = ease(r)
       const R = e * 1.06 * Math.hypot(vw * 0.5, vh * Math.max(CY, 1 - CY))
       const st = el.style
       fx.current = { p, R, cx: vw / 2, cy: vh * CY, on: p > 0.003 && p < 0.997 }
@@ -167,13 +174,21 @@ export default function WorldScroll() {
       st.setProperty('--ring', String(Math.min(1, Math.sin(Math.PI * p) * 2.2) * (p > 0.003 ? 1 : 0)))
       st.setProperty('--bloom', String(Math.max(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, p)), 2) * 0.75, Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, q)), 2) * 0.55)))
       st.setProperty('--cv', p > 0.003 ? 'visible' : 'hidden')
-      st.setProperty('--cpe', p > 0.985 ? 'auto' : 'none')
+      st.setProperty('--cpe', p > 0.985 && r < 0.012 ? 'auto' : 'none')
+      // xoay góc phòng (cảnh mèo -> cảnh ngắm tuyết): cả hai cảnh là hai mặt của một khối, khối xoay 90 độ quanh trục đứng
+      st.setProperty('--rot', `${(calm ? (er > 0.5 ? -90 : 0) : -90 * er).toFixed(2)}deg`)
+      st.setProperty('--dz', `${calm ? 0 : (Math.sin(Math.PI * er) * 0.1 * vw).toFixed(1)}px`)
+      st.setProperty('--sv', r > 0.003 ? 'visible' : 'hidden')
+      st.setProperty('--spe', r > 0.985 ? 'auto' : 'none')
+      st.setProperty('--st', String(smooth(0.74, 0.97, r)))
+      st.setProperty('--shF', String((er * 0.6).toFixed(3)))
+      st.setProperty('--shS', String(((1 - er) * 0.6).toFixed(3)))
       st.setProperty('--tv', q > 0.003 ? 'visible' : 'hidden')
       st.setProperty('--tpe', q > 0.985 && p < 0.012 ? 'auto' : 'none')
       st.setProperty('--tt', String(smooth(0.78, 0.97, q) * (1 - smooth(0.0, 0.16, p))))
-      st.setProperty('--ct', String(smooth(0.78, 0.97, p)))
+      st.setProperty('--ct', String(smooth(0.78, 0.97, p) * (1 - smooth(0, 0.3, r))))
       // mũi tên cuộn: ở cảnh hộp nhạc và ở cảnh cây thông (lúc đứng yên)
-      st.setProperty('--cue', String(Math.max(1 - smooth(0, 0.06, q), smooth(0.97, 1, q) * (1 - smooth(0, 0.06, p)))))
+      st.setProperty('--cue', String(Math.max(1 - smooth(0, 0.06, q), smooth(0.97, 1, q) * (1 - smooth(0, 0.06, p)), smooth(0.97, 1, p) * (1 - smooth(0, 0.06, r)))))
       // chuyển cảnh hộp nhạc -> cây thông: màn ánh sáng vàng (mặt nạ mềm) kéo từ dưới lên để lộ cây thông
       st.setProperty('--by', `${(-14 + 128 * eq).toFixed(2)}%`)
       st.setProperty('--bz', String(calm ? 1 : 1.1 - 0.1 * eq))
@@ -188,7 +203,7 @@ export default function WorldScroll() {
       if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
       const pq = prevQ.current; prevQ.current = q
       if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) { sfx.chime(); sfx.sparkle() }
-      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.75, cats: p > 0.003, near: p > 0.6, box: q < 0.995 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box ? o : n })
+      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.75, cats: p > 0.003 && r < 0.97, near: p > 0.6, box: q < 0.995, snow: r > 0.003, turned: r > 0.5 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box && o.snow === n.snow && o.turned === n.turned ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
     // cuộn có quán tính (mượt như kéo bằng tay) trên máy tính; điện thoại giữ cuộn gốc của trình duyệt
@@ -211,11 +226,11 @@ export default function WorldScroll() {
     if (!calm && matchMedia('(pointer: fine)').matches) { addEventListener('pointermove', mv, { passive: true }); document.documentElement.addEventListener('pointerleave', ml) }
     // điện thoại: sau khi ngừng vuốt, nếu đang lửng giữa hai cảnh thì tự trượt tới cảnh gần nhất cho gọn
     let snapT = 0
-    const stopsAt = [0, HOLD0 + SPAN2 + 0.02, HOLD0 + SPAN2 + HOLD + SPAN + 0.02]
+    const stopsAt = [0, HOLD0 + SPAN2 + 0.02, Y_CATS + 0.02, Y_SNOW + 0.02]
     const snap = () => {
       if (!matchMedia('(pointer: coarse)').matches) return
       const top = el.getBoundingClientRect().top, y = -top / innerHeight
-      if (y < -0.05 || y > stopsAt[2] + 0.02) return
+      if (y < -0.05 || y > stopsAt[3] + 0.02) return
       let best = 0
       stopsAt.forEach((v, i) => { if (Math.abs(v - y) < Math.abs(stopsAt[best] - y)) best = i })
       if (Math.abs(stopsAt[best] - y) < 0.04 || Math.abs(stopsAt[best] - y) > 1.05) return
@@ -236,18 +251,20 @@ export default function WorldScroll() {
   }
   const down = (e: React.MouseEvent) => {
     e.preventDefault()
-    goTo(prevQ.current > 0.9 ? HOLD0 + SPAN2 + HOLD + SPAN + 0.02 : HOLD0 + SPAN2 + 0.02)
+    const y = -(wrap.current?.getBoundingClientRect().top ?? 0) / innerHeight
+    goTo(y > Y_CATS - 0.1 ? Y_SNOW + 0.02 : prevQ.current > 0.9 ? Y_CATS + 0.02 : HOLD0 + SPAN2 + 0.02)
   }
   /** Ba chấm bên phải: đi thẳng tới từng cảnh. */
   const stops: { label: string; at: number; on: boolean }[] = [
     { label: 'Hộp nhạc', at: 0, on: seen.box && !seen.tree },
     { label: 'Cây thông', at: HOLD0 + SPAN2 + 0.02, on: seen.tree && !seen.cats },
-    { label: 'Bông và Mochi', at: HOLD0 + SPAN2 + HOLD + SPAN + 0.02, on: seen.cats },
+    { label: 'Bông và Mochi', at: Y_CATS + 0.02, on: seen.cats && !seen.turned },
+    { label: 'Ngắm tuyết', at: Y_SNOW + 0.02, on: seen.turned },
   ]
 
   // bản xem thử: App gửi sự kiện nhảy thẳng tới một cảnh (0 hộp nhạc, 1 cây thông, 2 hai bé)
   const jump = useRef<(i: number, instant: boolean) => void>(() => {})
-  jump.current = (i, instant) => goTo(stops[Math.min(2, Math.max(0, i))].at, instant)
+  jump.current = (i, instant) => goTo(stops[Math.min(3, Math.max(0, i))].at, instant)
   useEffect(() => {
     const h = (e: Event) => { const d = (e as CustomEvent<{ i: number; instant?: boolean }>).detail; jump.current(d.i, !!d.instant) }
     addEventListener('olcw:goto', h)
@@ -256,11 +273,16 @@ export default function WorldScroll() {
 
   return (
     <>
-    <div className="xf" ref={wrap} style={{ height: `${(1 + HOLD0 + SPAN2 + HOLD + SPAN + END) * 100}dvh` }}>
+    <div className="xf" ref={wrap} style={{ height: `${(1 + HOLD0 + SPAN2 + HOLD + SPAN + HOLD3 + SPAN3 + END) * 100}dvh` }}>
       <div className="xf-sticky">
         <div className={`xf-layer xf-box${seen.box ? '' : ' idle'}`}><MusicBox active={seen.box} /></div>
         <div className={`xf-layer xf-tree${seen.tree ? '' : ' idle'}`}><Tree paused={!seen.tree} /></div>
-        <div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div>
+        <div className="xf-stage3d">
+          <div className="xf-cube">
+            <div className="xf-face xf-front"><div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div></div>
+            <div className="xf-face xf-side"><div className={`xf-layer xf-snow${seen.snow ? '' : ' idle'}`}><SnowWatch active={seen.snow} /></div></div>
+          </div>
+        </div>
         <i className="xf-gold" aria-hidden />
         <i className="xf-glow" aria-hidden />
         <i className="xf-candy" aria-hidden />
@@ -275,7 +297,6 @@ export default function WorldScroll() {
         </a>
       </div>
     </div>
-    <SnowWatch />
     </>
   )
 }

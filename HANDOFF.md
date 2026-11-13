@@ -142,3 +142,9 @@ npx tsc -b        # kiểm tra kiểu
 - Tuyết 3 lớp xa gần theo gió chung (`weather`). Hơi nước: bảng độ lau `Uint8Array`, rê chuột (hoặc kéo ngón tay, `touch-action: pan-y`) để lau, tự phủ lại ~30 giây, thỉnh thoảng một giọt nước chảy thành vệt. Chỉ tính lại khi có thay đổi. Cảnh không hiện thì dừng (`IntersectionObserver`).
 - CHƯA có: ảnh dọc cho điện thoại (hiện cắt cover quanh hai người, `focus` trong layout), ảnh bấm riêng cho sao băng (sao băng vẽ bằng mã), âm thanh cho cảnh này, chữ chính thức (chữ hiện tại trong mục `snow` của `content.ts` là bản nháp).
 - Mặt nạ làm bằng script ngoài repo; muốn đổi ảnh thì tách lại bằng grabCut (xem cách làm ở phần mèo).
+
+### Tắt đèn ở cảnh ngắm tuyết + xoay góc phòng (cảnh mèo -> cảnh ngắm tuyết)
+- Cảnh ngắm tuyết giờ là mặt thứ hai của một "khối" trong `WorldScroll.tsx` (không còn là section cuộn thường): `.xf-stage3d > .xf-cube > .xf-front (mèo) + .xf-side (ngắm tuyết)`. Cuộn thì khối xoay `rotateY` 0 -> -90 độ (biến `--rot`), lùi nhẹ (`--dz`) và hai mặt tối dần ở mép (`--shF`, `--shS`). Hằng số: `HOLD3`, `SPAN3`, `Y_CATS`, `Y_SNOW`. Chế độ giảm chuyển động (`reducedMotion`) thì nhảy thẳng, không xoay. `SnowWatch` nhận prop `active` (không còn IntersectionObserver).
+- Có thêm chấm thứ tư "Ngắm tuyết" ở thanh chấm bên phải, bảng `stopsAt` (tự trượt trên điện thoại) và sự kiện `olcw:goto` đã mở rộng tới chỉ số 3.
+- Tắt đèn: dùng chung `lights` (công tắc cả trang), nút bóng đèn `.tr-lights` ở góc trên phải cảnh ngắm tuyết. `.sw-dark` (hai lớp): lớp phòng dùng `clip-path: path(evenodd)` để chừa các ô kính (ngoài trời vẫn sáng tuyết) và `mask` nhiều `radial-gradient` + `mask-composite: intersect` để sáng quanh ba ngọn nến (`SNOW.flames`); lớp thứ hai tối riêng hai người bằng mặt nạ `snow-cut-*.png` (họ đứng trước kính). Ánh nến `.sw-flame` chập chờn.
+- Chưa có: ảnh dọc cho điện thoại (cảnh ngắm tuyết đang cắt cover quanh hai người), âm thanh cho cảnh này, nút loa trong cảnh này.
