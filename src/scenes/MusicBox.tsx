@@ -7,6 +7,7 @@ import { Dust } from './Tree'
 import { polyBox } from './treeLayout'
 import { ModalView, type Modal } from './Letter'
 import { MB } from './musicLayout'
+import { Figurine } from '../lib/figurine'
 import SoundControl from '../components/SoundControl'
 import { useHintPulse } from '../lib/hintPulse'
 import { LitSpot } from '../components/LitSpot'
@@ -37,8 +38,8 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
   const host = useRef<HTMLDivElement>(null)
   const txt = useRef<HTMLDivElement>(null)
   const stage = useRef<HTMLDivElement>(null)
-  const dancer = useRef<HTMLDivElement>(null)
-  const shadow = useRef<HTMLDivElement>(null)
+  const dancer = useRef<HTMLCanvasElement>(null)
+  const shadow = useRef<HTMLCanvasElement>(null)
   const [mode, setMode] = useState<'wide' | 'tall'>(() => (innerWidth / innerHeight < 1.05 ? 'tall' : 'wide'))
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [lid, setLid] = useState<Lid>(0)
@@ -97,35 +98,40 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
     const dEl = dancer.current, sEl = shadow.current, root = stage.current
     if (!dEl || !sEl || !root || !active) return
     const calm = reducedMotion()
-    let raf = 0, last = performance.now(), fire = 0.85, tFire = 0.85, nFire = 0, th = 0, amp = 0, shown = -1
-    const HOLD = 2.4, FLIP = 0.9, C = 2 * (HOLD + FLIP)
-    const sm = (a: number, b: number, x: number) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k) }
-    const layers = Array.from(dEl.children) as HTMLElement[]
+    let raf = 0, last = performance.now(), fire = 0.85, tFire = 0.85, nFire = 0, th = 0, w = 0, amp = 0, drawn = -9
+    const TAU = Math.PI * 2
+    const fig = new Figurine()
+    const dctx = dEl.getContext('2d')!, sctx = sEl.getContext('2d')!
+    const dImg = dctx.createImageData(fig.w, fig.h), sImg = sctx.createImageData(fig.w, fig.h)
+    // sẵn sàng thì vẽ ngay mặt trước
+    fig.load(MB.dancer.frames[0], MB.dancer.frames[1]).then(() => { drawn = -9 }).catch(() => {})
     const draw = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       const on = live.current.playing && live.current.lid === 2 && !calm
       amp += ((on ? 1 : 0) - amp) * (1 - Math.exp(-dt / 0.5))
-      // Nhịp xoay: đứng mặt trước, lật nửa vòng sang lưng, đứng một lúc, lật về. Chỉ có ảnh mặt trước và mặt lưng nên không hoà ảnh
-      // (hoà ảnh làm ra hai bóng chồng nhau); lật bằng co ngang rồi đổi ảnh đúng lúc mỏng nhất, như tấm hình quay một nửa vòng.
-      if (on) th += dt
-      else if (th % C >= HOLD) { const nx = (Math.floor(th / C) + 1) * C; th = Math.min(nx, th + dt); if (nx - th < 1e-6) th = nx } // đang ở nửa sau: quay nốt về mặt trước rồi đứng yên
+      // Quay liên tục quanh trục như hộp nhạc thật (khoảng 6,5 giây một vòng), tăng tốc êm lúc bắt đầu.
+      // Dừng nhạc thì giảm tốc và dừng đúng lúc quay mặt về phía trước.
+      if (on) w += (0.97 - w) * (1 - Math.exp(-dt / 0.9))
+      else {
+        const rem = Math.ceil((th - 0.02) / TAU) * TAU - th
+        if (rem < 0.01) { th = Math.ceil((th - 0.02) / TAU) * TAU; w = 0 }
+        else w = Math.min(Math.max(w, 0.35), Math.max(0.2, rem * 1.3))
+      }
+      // chậm ở mặt trước và mặt lưng (nơi hình đẹp nhất), nhanh lướt qua hai bên (nơi chưa có ảnh nghiêng)
+      th += w * dt * (0.5 + 1.25 * Math.pow(Math.sin(th), 2))
       nFire -= dt
       if (nFire <= 0) { nFire = 0.5 + Math.random() * 0.9; tFire = Math.random() < 0.12 ? 0.55 + Math.random() * 0.15 : 0.75 + Math.random() * 0.25 }
       fire += ((calm ? 0.85 : tFire) - fire) * (1 - Math.exp(-dt / 0.3))
-      const m = th % C, cyc = Math.floor(th / C)
-      let side = 0, sx = 1, dip = 0
-      if (m < HOLD) side = 0
-      else if (m < HOLD + FLIP) { const u = sm(0, 1, (m - HOLD) / FLIP); side = u < 0.5 ? 0 : 1 + (cyc % 2); sx = 0.2 + 0.8 * Math.abs(Math.cos(Math.PI * u)); dip = Math.sin(Math.PI * u) }
-      else if (m < 2 * HOLD + FLIP) side = 1 + (cyc % 2)
-      else { const u = sm(0, 1, (m - 2 * HOLD - FLIP) / FLIP); side = u < 0.5 ? 1 + (cyc % 2) : 0; sx = 0.2 + 0.8 * Math.abs(Math.cos(Math.PI * u)); dip = Math.sin(Math.PI * u) }
-      layers.forEach((el, i) => { el.style.opacity = i === side ? '1' : '0' })
-      const bob = Math.abs(Math.sin(th * 2.4)) * -1.1 * amp
-      dEl.style.transform = `translateY(${bob.toFixed(2)}px) scaleX(${sx.toFixed(3)})`
-      dEl.style.filter = `brightness(${((0.9 + 0.1 * fire) * (1 - 0.14 * dip)).toFixed(3)})`
-      const dom = side
-      if (dom !== shown) { shown = dom; const u = `url(${MB.dancer.frames[dom]})`; sEl.style.maskImage = u; sEl.style.setProperty('-webkit-mask-image', u) }
+      if (fig.ready && Math.abs(th - drawn) > 0.004) {
+        drawn = th
+        fig.render(th, dImg, sImg)
+        dctx.putImageData(dImg, 0, 0); sctx.putImageData(sImg, 0, 0)
+      }
+      const bob = Math.abs(Math.sin(th * 2)) * -0.9 * amp
+      dEl.style.transform = `translateY(${bob.toFixed(2)}px)`
+      dEl.style.filter = `brightness(${(0.92 + 0.1 * fire).toFixed(3)})`
       const near = 26 - 5 * (fire - 0.8)
-      sEl.style.transform = `translateX(${near.toFixed(2)}px) translateY(${bob.toFixed(2)}px) scaleX(${(1.04 * sx).toFixed(3)}) scaleY(1.02)`
+      sEl.style.transform = `translateX(${(near + 4 * Math.sin(th)).toFixed(2)}px) translateY(${bob.toFixed(2)}px) scaleY(1.02)`
       sEl.style.opacity = (0.3 + 0.18 * fire).toFixed(3)
       root.style.setProperty('--mfl', fire.toFixed(3))
       root.style.setProperty('--mspin', amp.toFixed(3))
@@ -197,12 +203,10 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
           {/* khi nắp mở: bóng vũ công đổ lên lòng nắp (cắt theo lòng nắp), bóng chạm dưới chân, và cô vũ công */}
           <div className={`mb-dance${lid === 2 ? ' on' : ''}`}>
             <div className="mb-shadowclip" style={{ clipPath: `ellipse(${L.lid.rx}px ${L.lid.ry}px at ${L.lid.cx}px ${L.lid.cy}px)` }}>
-              <div className="mb-shadow" ref={shadow} style={{ left: d.box.x, top: d.box.y, width: d.box.w, height: d.box.h, transformOrigin: `${d.axis - d.box.x}px 100%`, WebkitMaskImage: `url(${d.frames[0]})`, maskImage: `url(${d.frames[0]})` }} />
+              <canvas className="mb-shadow" ref={shadow} width={189} height={316} style={{ left: d.box.x, top: d.box.y, width: d.box.w, height: d.box.h, transformOrigin: `${d.axis - d.box.x}px 100%` }} />
             </div>
             <i className="mb-contact" style={{ left: d.axis - 30, top: d.feetY - 7, width: 60, height: 14 }} />
-            <div className={`mb-dancer${lit === 'bal' || (lit === null && pulse === 2 && lid === 2) ? ' hot' : ''}`} ref={dancer} style={{ left: d.box.x, top: d.box.y, width: d.box.w, height: d.box.h, transformOrigin: `${d.axis - d.box.x}px 100%` }}>
-              {d.frames.map((f, i) => <i key={i} style={{ backgroundImage: `url(${f})`, opacity: i ? 0 : 1 }} />)}
-            </div>
+            <canvas className={`mb-dancer${lit === 'bal' || (lit === null && pulse === 2 && lid === 2) ? ' hot' : ''}`} ref={dancer} width={189} height={316} style={{ left: d.box.x, top: d.box.y, width: d.box.w, height: d.box.h, transformOrigin: `${d.axis - d.box.x}px 100%` }} />
             <i className="mb-glint disk" style={{ left: 893, top: 503, width: 84, height: 18 }} />
             <i className="mb-glint comb" style={{ left: 866, top: 548, width: 110, height: 28 }} />
           </div>
