@@ -40,6 +40,8 @@ export function startTimeOfDay() {
     const L = lightAt(h)
     root.style.setProperty('--tod-sky', `rgba(${L.sky},${L.sa.toFixed(3)})`)
     root.style.setProperty('--tod-wash', `rgba(${L.wash},${L.wa.toFixed(3)})`)
+    // ánh sáng xiên vào phòng: chỉ có khi trời sáng (theo độ sáng của bầu trời), đêm thì tắt hẳn
+    root.style.setProperty('--tod-beam', Math.min(1, L.sa / 0.68).toFixed(3))
     root.style.setProperty('--tod-in', `rgba(${L.wash},${(L.wa * 0.45).toFixed(3)})`)
   }
   apply()
