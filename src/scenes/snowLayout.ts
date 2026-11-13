@@ -18,6 +18,8 @@ export const SNOW = {
   focus: { x1: 380, x2: 1260, y1: 120, y2: 900 },
   /** Ba ngọn nến (x, y, độ mạnh): khi tắt đèn, phòng tối đi và chỉ còn ánh các ngọn lửa này. */
   flames: [[345, 912, 1], [264, 801, 0.7], [1608, 815, 1]] as [number, number, number][],
+  /** Chiếc đèn bàn bên trái: bấm vào để tắt hoặc bật đèn. */
+  lamp: [[0, 488], [118, 488], [148, 668], [100, 672], [98, 800], [0, 800]] as [number, number][],
   poses: [
     { src: base, hide: hide1, cut: cut1 },
     { src: point, hide: hide2, cut: cut2 },

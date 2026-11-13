@@ -3,16 +3,30 @@ import { snow as copy } from '../content/content'
 import { isLite, reducedMotion } from '../lib/device'
 import { weather } from '../lib/weather'
 import { Dust } from './Tree'
+import { LitSpot } from '../components/LitSpot'
+import { useHintPulse } from '../lib/hintPulse'
 import { lights, useLights } from '../lib/lights'
 import { SNOW as L } from './snowLayout'
 
 const GLASS = L.panes.map(([x, y, w, h]) => `M${x} ${y}H${x + w}V${y + h}H${x}Z`).join('')
 const ROOM = `M0 0H${L.w}V${L.h}H0Z${GLASS}`
-/** Mặt nạ cho lớp tối: tối khắp nơi, riêng quanh từng ngọn nến thì sáng dần lên (các mặt nạ nhân với nhau nên chỗ nào có nến thì chỗ đó sáng). */
-const holes = (() => {
-  const m = L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(0,0,0,0) 0, rgba(0,0,0,.22) ${70 * k}px, #000 ${420 * k}px)`).join(',')
-  return { WebkitMaskImage: m, maskImage: m, WebkitMaskComposite: 'source-in', maskComposite: 'intersect' } as React.CSSProperties
-})()
+/** Độ tối theo khoảng cách tới nến: dùng chung cho cả phòng lẫn hai người nên ranh giới giữa họ và đồ vật xung quanh liền mạch. Nến ở phía trước họ (bàn trà bên trái, đèn lồng bên phải), nên lưng họ được ánh nến hắt lên, gần nến thì sáng hơn. */
+const bodyHoles = L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(0,0,0,.12) 0, rgba(0,0,0,.5) ${220 * k}px, #000 ${700 * k}px)`)
+/** Ánh nến ấm hắt lên lưng và vai (mạnh nhất ở phía nến, yếu dần), cộng ánh xanh lạnh của tuyết ngoài cửa sổ phủ lên đỉnh đầu và vai. */
+const warmLow = L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(255,165,80,${0.42 * k}) 0, rgba(255,120,45,${0.18 * k}) ${340 * k}px, rgba(255,100,30,0) ${900 * k}px)`).join(',')
+const warmBg = [
+  ...L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(255,165,80,${0.42 * k}) 0, rgba(255,120,45,${0.18 * k}) ${340 * k}px, rgba(255,100,30,0) ${900 * k}px)`),
+  'linear-gradient(180deg, rgba(150,185,240,.34) 200px, rgba(120,160,225,.12) 430px, rgba(120,160,225,0) 640px)',
+].join(',')
+/** Gộp mặt nạ hình (hai người hoặc ngược lại) với độ tối theo khoảng cách tới nến. */
+const lay = (shape: string[]): React.CSSProperties => {
+  const m = [...shape, ...bodyHoles].join(',')
+  return { WebkitMaskImage: m, maskImage: m, WebkitMaskSize: '100% 100%', maskSize: '100% 100%', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskComposite: 'source-in', maskComposite: 'intersect' }
+}
+/** Ánh nến trên người nhạt dần khi xuống tới chăn, còn ánh nến trên chăn và bàn đậm dần: hai lớp bù nhau nên không có ranh giới ở thắt lưng. */
+const FADE_OUT = 'linear-gradient(180deg, #000 600px, rgba(0,0,0,0) 780px)'
+const FADE_IN = 'linear-gradient(180deg, rgba(0,0,0,0) 600px, #000 780px)'
+const lay2 = (m: string[]): React.CSSProperties => ({ WebkitMaskImage: m.join(','), maskImage: m.join(','), WebkitMaskSize: '100% 100%', maskSize: '100% 100%', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskComposite: 'source-in', maskComposite: 'intersect' })
 const POSE_HOLD = 6500
 const FADE = 1000
 
@@ -239,6 +253,8 @@ export default function SnowWatch({ active }: { active: boolean }) {
   const host = useRef<HTMLDivElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const lightsOn = useLights()
+  const [lampHov, setLampHov] = useState(false)
+  const pulse = useHintPulse(1, active, lampHov)
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [pose, setPose] = useState(0)
   const [maskPose, setMaskPose] = useState(0)
@@ -301,8 +317,12 @@ export default function SnowWatch({ active }: { active: boolean }) {
           <img className={`sw-img sw-top${pose ? ' on' : ''}`} src={L.poses[1].src} alt="" draggable={false} />
 
           {/* tắt đèn: cả phòng tối đi (trừ ô kính, ngoài trời vẫn sáng tuyết), chỉ còn ánh các ngọn nến; hai người tối riêng vì đứng trước kính */}
-          <div className="sw-dark" style={{ clipPath: `path(evenodd, '${ROOM}')`, ...holes }} />
-          <div className="sw-dark" style={{ clipPath: `path('${GLASS}')`, WebkitMaskImage: `url(${L.poses[maskPose].cut})`, maskImage: `url(${L.poses[maskPose].cut})`, WebkitMaskSize: '100% 100%', maskSize: '100% 100%' }} />
+          <div className="sw-dark" style={{ clipPath: `path(evenodd, '${ROOM}')`, ...lay([`url(${L.poses[maskPose].hide})`]) }} />
+          <div className="sw-dark" style={lay([`url(${L.poses[maskPose].cut})`])} />
+          {/* cây thông và đèn bàn bên trái cũng tắt hẳn (chúng là đèn điện, không phải nến) */}
+          <div className="sw-dark" style={{ background: 'radial-gradient(ellipse 200px 430px at 70px 560px, rgba(9,4,2,.9) 0%, rgba(9,4,2,.65) 55%, rgba(9,4,2,0) 100%)' }} />
+          <div className="sw-warm" style={{ backgroundImage: warmBg, ...lay2([`url(${L.poses[maskPose].cut})`, FADE_OUT]) }} />
+          <div className="sw-warm" style={{ backgroundImage: warmLow, ...lay2([FADE_IN]) }} />
 
           {/* tuyết, hơi nước và sao băng ở sau kính: đi sau lưng hai người nhờ mặt nạ theo dáng ngồi hiện tại */}
           <div className="sw-fx" style={maskStyle}>
@@ -315,8 +335,15 @@ export default function SnowWatch({ active }: { active: boolean }) {
             onPointerMove={(e) => { if (e.pointerType === 'mouse' || e.buttons || e.pointerType === 'touch') move(e) }}
             onPointerLeave={() => { prev.current = null }} onPointerUp={() => { prev.current = null }} />
 
+          <LitSpot src={L.poses[0].src} w={L.w} h={L.h} poly={L.lamp} on={lampHov || pulse === 0} strength={0.8} />
           {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 260 * k, top: y - 260 * k, width: 520 * k, height: 520 * k, animationDelay: `-${i * 0.7}s` }} />)}
           {active && <Dust w={L.w} h={L.h} />}
+
+          <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
+            <polygon className="cat-hs" points={L.lamp.map((q) => q.join(',')).join(' ')} tabIndex={0} role="button" aria-label={lightsOn ? 'Đèn bàn, đang sáng' : 'Đèn bàn, đang tắt'}
+              onMouseEnter={() => setLampHov(true)} onMouseLeave={() => setLampHov(false)} onFocus={() => setLampHov(true)} onBlur={() => setLampHov(false)}
+              onClick={() => lights.toggle()} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lights.toggle() } }} />
+          </svg>
         </div>
       </div>
 
