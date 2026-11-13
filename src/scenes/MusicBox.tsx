@@ -98,7 +98,10 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
     const dEl = dancer.current, sEl = shadow.current, root = stage.current
     if (!dEl || !sEl || !root || !active) return
     const calm = reducedMotion()
-    let raf = 0, last = performance.now(), fire = 0.85, tFire = 0.85, nFire = 0, th = 0, w = 0, amp = 0, drawn = -9
+    let raf = 0, last = performance.now(), fire = 0.85, tFire = 0.85, nFire = 0, th = 0, w = 0, amp = 0, drawn = -9, mt = 0, drawnK = -1
+    const AMP = 0.35, PER = 2.8, SEG = PER * 2, WH = 0.55, CYC = 2 * (SEG + WH)
+    const sm01 = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
+    const settled = (t: number) => { const m = t % CYC; return m === 0 || (m < SEG && Math.abs(Math.sin(m * TAU / PER)) < 1e-6) }
     const TAU = Math.PI * 2
     const fig = new Figurine()
     const dctx = dEl.getContext('2d')!, sctx = sEl.getContext('2d')!
@@ -109,31 +112,36 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       const on = live.current.playing && live.current.lid === 2 && !calm
       amp += ((on ? 1 : 0) - amp) * (1 - Math.exp(-dt / 0.5))
-      // Quay liên tục quanh trục như hộp nhạc thật (khoảng 6,5 giây một vòng), tăng tốc êm lúc bắt đầu.
-      // Dừng nhạc thì giảm tốc và dừng đúng lúc quay mặt về phía trước.
-      if (on) w += (0.97 - w) * (1 - Math.exp(-dt / 0.9))
-      else {
-        const rem = Math.ceil((th - 0.02) / TAU) * TAU - th
-        if (rem < 0.01) { th = Math.ceil((th - 0.02) / TAU) * TAU; w = 0 }
-        else w = Math.min(Math.max(w, 0.35), Math.max(0.2, rem * 1.3))
-      }
-      // chậm ở mặt trước và mặt lưng (nơi hình đẹp nhất), nhanh lướt qua hai bên (nơi chưa có ảnh nghiêng)
-      th += w * dt * (0.36 + 5.2 * Math.pow(Math.sin(th), 4))
+      // Nhịp: lắc nhẹ quanh mặt trước (±20 độ, hai nhịp), lướt nhanh nửa vòng sang mặt lưng, lắc nhẹ quanh mặt lưng, lướt về.
+      // Chỉ có ảnh mặt trước và mặt lưng nên chỉ cho khối tròn quay trong khoảng 20 độ quanh hai mặt đó (luôn đẹp);
+      // lúc lướt ngang dùng tấm phẳng kèm nhoè chuyển động ngắn. Dừng nhạc thì đứng yên đúng chính diện.
+      if (on) w = Math.min(1, w + dt * 3)
+      else w = Math.max(0, w - dt * 3)
+      const adv = (on ? dt : 0)
+      if (on) mt += adv
+      else if (mt % CYC < SEG) { const nm = mt + dt, hp = PER / 2; if (Math.floor(mt / hp) !== Math.floor(nm / hp)) mt = Math.ceil(mt / hp - 1e-9) * hp; else if (!settled(mt)) mt = nm }
+      else if (!settled(mt)) mt = Math.min(Math.ceil(mt / CYC) * CYC, mt + dt)
+      const m = mt % CYC, half = m < SEG + WH ? 0 : 1, mm = half ? m - SEG - WH : m
+      const sway = (u: number) => AMP * Math.sin(u * TAU / PER)
+      let k = 1
+      if (mm < SEG) th = half * Math.PI + sway(mm)
+      else { const u = Math.min(1, (mm - SEG) / WH), e = u * u * (3 - 2 * u), a0 = sway(SEG), a1 = Math.PI + 0; th = half * Math.PI + a0 + (Math.PI - a0) * e; k = Math.min(1, 1 - sm01(0, 0.22, u) + sm01(0.78, 1, u)) }
+      const whirl = mm >= SEG ? Math.sin(Math.PI * Math.min(1, (mm - SEG) / WH)) : 0
       nFire -= dt
       if (nFire <= 0) { nFire = 0.5 + Math.random() * 0.9; tFire = Math.random() < 0.12 ? 0.55 + Math.random() * 0.15 : 0.75 + Math.random() * 0.25 }
       fire += ((calm ? 0.85 : tFire) - fire) * (1 - Math.exp(-dt / 0.3))
-      if (fig.ready && Math.abs(th - drawn) > 0.004) {
-        drawn = th
-        fig.render(th, dImg, sImg)
+      if (fig.ready && (Math.abs(th - drawn) > 0.004 || k !== drawnK)) {
+        drawn = th; drawnK = k
+        fig.render(th, dImg, sImg, k)
         dctx.putImageData(dImg, 0, 0); sctx.putImageData(sImg, 0, 0)
       }
-      const bob = Math.abs(Math.sin(th * 2)) * -0.9 * amp
+      const bob = Math.abs(Math.sin(th * 2)) * -0.7 * amp * (1 - whirl)
       dEl.style.transform = `translateY(${bob.toFixed(2)}px)`
       // lúc lướt qua hai bên (chưa có ảnh nghiêng) làm nhoè chuyển động nhẹ, như ảnh chụp vật đang quay nhanh
-      const side = Math.pow(Math.sin(th), 2)
+      const side = whirl
       dEl.style.filter = `brightness(${(0.92 + 0.1 * fire).toFixed(3)}) blur(${(side * 2.6).toFixed(2)}px)`
       const near = 26 - 5 * (fire - 0.8)
-      sEl.style.transform = `translateX(${(near + 4 * Math.sin(th)).toFixed(2)}px) translateY(${bob.toFixed(2)}px) scaleY(1.02)`
+      sEl.style.transform = `translateX(${(near + 3 * Math.sin(th) * (1 - whirl)).toFixed(2)}px) translateY(${bob.toFixed(2)}px) scaleY(1.02)`
       sEl.style.opacity = ((0.3 + 0.18 * fire) * (1 - 0.4 * side)).toFixed(3)
       root.style.setProperty('--mfl', fire.toFixed(3))
       root.style.setProperty('--mspin', amp.toFixed(3))
