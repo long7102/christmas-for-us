@@ -136,7 +136,7 @@ npx tsc -b        # kiểm tra kiểu
 
 ### Cảnh 5: ngắm tuyết (`SnowWatch.tsx`, `snowLayout.ts`)
 - Nằm sau `.xf` trong `WorldScroll.tsx` (cuộn thường, chưa có chuyển cảnh riêng).
-- Ảnh Long gửi (khung 1672x941): `snow-land.webp` (ngồi sát), `snow-land-point.webp` (chỉ tay). Bấm hai người: chuyển mờ sang dáng chỉ tay ~6,5 giây rồi trở về, đồng thời một sao băng bay qua.
+- Ảnh Long gửi (khung 1672x941): `snow-land.webp` (ngồi sát), `snow-land-point.webp` (chỉ tay). KHÔNG còn bấm: bộ hẹn giờ trong `SnowWatch` cứ 14-32 giây một lần bắn sao băng; ~75% các lần hai người ngẩng chỉ tay đúng lúc (chuyển mờ ~6,5 giây rồi về), số còn lại chỉ có sao băng.
 - Mặt nạ hai người (grabCut + tinh chỉnh tay): `snow-hide-*.png` (che tuyết/hơi nước, để chúng ở SAU lưng hai người), `snow-cut-*.png` (vầng sáng khi rê chuột). Mặt nạ đổi theo dáng ở giữa lúc chuyển mờ. Viền bấm = `poly` trong `snowLayout.ts`.
 - Ô kính (`panes`) quy định nơi tuyết và hơi nước được phép xuất hiện (không đè lên khung gỗ).
 - Tuyết 3 lớp xa gần theo gió chung (`weather`). Hơi nước: bảng độ lau `Uint8Array`, rê chuột (hoặc kéo ngón tay, `touch-action: pan-y`) để lau, tự phủ lại ~30 giây, thỉnh thoảng một giọt nước chảy thành vệt. Chỉ tính lại khi có thay đổi. Cảnh không hiện thì dừng (`IntersectionObserver`).

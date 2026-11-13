@@ -218,6 +218,6 @@ export const snow = {
   title: 'Ngắm tuyết',
   tagline: 'Ngoài kia tuyết rơi, trong này có hai đứa.',
   body: [
-    'Kính phủ một lớp hơi nước mờ. Em lau một ô nhỏ rồi nhìn lên, biết đâu sẽ thấy một vì sao băng bay qua.',
+    'Kính phủ một lớp hơi nước mờ. Em lau một ô nhỏ rồi nhìn lên, biết đâu sẽ thấy một vì sao băng bay qua, và hai đứa mình cùng chỉ tay lên trời.',
   ],
 }
