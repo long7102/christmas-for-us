@@ -87,28 +87,42 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
     return () => { off(); clearInterval(iv) }
   }, [])
 
-  // vòng chạy: cô vũ công lắc nhẹ khi nhạc chạy, bóng đổ theo, ánh lửa chập chờn (chỉ khi cảnh đang hiện)
+  // vòng chạy: cô vũ công xoay chậm khi nhạc chạy, bóng đổ theo, ánh lửa chập chờn (chỉ khi cảnh đang hiện)
   useEffect(() => {
     const dEl = dancer.current, sEl = shadow.current, root = stage.current
     if (!dEl || !sEl || !root || !active) return
     const calm = reducedMotion()
-    let raf = 0, last = performance.now(), fire = 0.85, tFire = 0.85, nFire = 0, th = 0, w = 0, amp = 0
+    let raf = 0, last = performance.now(), fire = 0.85, tFire = 0.85, nFire = 0, th = 0, w = 0, amp = 0, shown = -1
+    const TAU = Math.PI * 2
+    const sm = (a: number, b: number, x: number) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k) }
+    const layers = Array.from(dEl.children) as HTMLElement[]
     const draw = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
-      const on = live.current.playing && live.current.lid === 2
-      amp += ((on && !calm ? 1 : 0) - amp) * (1 - Math.exp(-dt / 0.5))
-      w += ((on ? 1.7 : 0) - w) * (1 - Math.exp(-dt / 0.6))
+      const on = live.current.playing && live.current.lid === 2 && !calm
+      amp += ((on ? 1 : 0) - amp) * (1 - Math.exp(-dt / 0.5))
+      // quay chậm như hộp nhạc thật (khoảng 6 giây một vòng); dừng nhạc thì quay nốt về mặt trước rồi đứng yên
+      if (on) w += (1.05 - w) * (1 - Math.exp(-dt / 0.8))
+      else { const rem = Math.ceil((th - 0.02) / TAU) * TAU - th; w = Math.min(Math.max(w, rem > 0.02 ? 0.5 : 0), Math.max(0.12, rem * 1.4)); if (rem < 0.012) { th = 0; w = 0 } }
       th += w * dt
       nFire -= dt
       if (nFire <= 0) { nFire = 0.5 + Math.random() * 0.9; tFire = Math.random() < 0.12 ? 0.55 + Math.random() * 0.15 : 0.75 + Math.random() * 0.25 }
       fire += ((calm ? 0.85 : tFire) - fire) * (1 - Math.exp(-dt / 0.3))
-      const sn = Math.sin(th), c = Math.cos(th * 0.5)
-      // lắc nhẹ như đang xoay điệu: nghiêng vài độ và nhún theo nhịp; bóng lệch theo cùng chuyển động
-      const rot = sn * 2.2 * amp, bob = Math.abs(sn) * -1.6 * amp
-      dEl.style.transform = `translateY(${bob.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scaleX(${(1 + 0.02 * c * amp).toFixed(3)})`
-      dEl.style.filter = `brightness(${(0.9 + 0.1 * fire).toFixed(3)})`
+      // góc hiện tại (độ, 0..360). Ba ảnh thật: mặt trước (0), quay lưng lệch phải (~165), quay lưng lệch trái (~195).
+      // Giữa mặt trước và lưng chưa có ảnh nghiêng nên hai ảnh hoà vào nhau, kèm co ngang vừa phải cho ra cảm giác đang xoay.
+      const deg = ((th % TAU) + TAU) % TAU * 180 / Math.PI
+      const front = deg < 180 ? 1 - sm(52, 100, deg) : sm(260, 308, deg)
+      const split = sm(168, 192, deg)
+      const op = [front, (1 - front) * (1 - split), (1 - front) * split]
+      layers.forEach((el, i) => { el.style.opacity = op[i].toFixed(3) })
+      const turn = Math.sin(Math.PI * front) // 0 khi rõ một mặt, 1 ở giữa lúc chuyển
+      const sx = 1 - 0.42 * turn
+      const bob = Math.abs(Math.sin(th * 2)) * -1.2 * amp
+      dEl.style.transform = `translateY(${bob.toFixed(2)}px) scaleX(${sx.toFixed(3)})`
+      dEl.style.filter = `brightness(${((0.9 + 0.1 * fire) * (1 - 0.1 * turn)).toFixed(3)})`
+      const dom = op[0] >= 0.5 ? 0 : op[1] >= op[2] ? 1 : 2
+      if (dom !== shown) { shown = dom; const u = `url(${MB.dancer.frames[dom]})`; sEl.style.maskImage = u; sEl.style.setProperty('-webkit-mask-image', u) }
       const near = 26 - 5 * (fire - 0.8)
-      sEl.style.transform = `translateX(${(near + 2.2 * sn * amp).toFixed(2)}px) translateY(${bob.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scaleX(${(1.04 + 0.02 * c * amp).toFixed(3)}) scaleY(1.02)`
+      sEl.style.transform = `translateX(${near.toFixed(2)}px) translateY(${bob.toFixed(2)}px) scaleX(${(1.04 * sx).toFixed(3)}) scaleY(1.02)`
       sEl.style.opacity = (0.3 + 0.18 * fire).toFixed(3)
       root.style.setProperty('--mfl', fire.toFixed(3))
       root.style.setProperty('--mspin', amp.toFixed(3))
@@ -171,10 +185,12 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
           {/* khi nắp mở: bóng vũ công đổ lên lòng nắp (cắt theo lòng nắp), bóng chạm dưới chân, và cô vũ công */}
           <div className={`mb-dance${lid === 2 ? ' on' : ''}`}>
             <div className="mb-shadowclip" style={{ clipPath: `ellipse(${L.lid.rx}px ${L.lid.ry}px at ${L.lid.cx}px ${L.lid.cy}px)` }}>
-              <div className="mb-shadow" ref={shadow} style={{ left: d.box.x, top: d.box.y, width: d.box.w, height: d.box.h, transformOrigin: `${d.axis - d.box.x}px 100%`, WebkitMaskImage: `url(${d.src})`, maskImage: `url(${d.src})` }} />
+              <div className="mb-shadow" ref={shadow} style={{ left: d.box.x, top: d.box.y, width: d.box.w, height: d.box.h, transformOrigin: `${d.axis - d.box.x}px 100%`, WebkitMaskImage: `url(${d.frames[0]})`, maskImage: `url(${d.frames[0]})` }} />
             </div>
             <i className="mb-contact" style={{ left: d.axis - 30, top: d.feetY - 7, width: 60, height: 14 }} />
-            <div className="mb-dancer" ref={dancer} style={{ left: d.box.x, top: d.box.y, width: d.box.w, height: d.box.h, transformOrigin: `${d.axis - d.box.x}px 100%`, backgroundImage: `url(${d.src})` }} />
+            <div className="mb-dancer" ref={dancer} style={{ left: d.box.x, top: d.box.y, width: d.box.w, height: d.box.h, transformOrigin: `${d.axis - d.box.x}px 100%` }}>
+              {d.frames.map((f, i) => <i key={i} style={{ backgroundImage: `url(${f})`, opacity: i ? 0 : 1 }} />)}
+            </div>
             <i className="mb-glint disk" style={{ left: 893, top: 503, width: 84, height: 18 }} />
             <i className="mb-glint comb" style={{ left: 866, top: 548, width: 110, height: 28 }} />
           </div>
