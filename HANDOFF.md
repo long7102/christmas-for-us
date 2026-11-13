@@ -113,3 +113,9 @@ npx tsc -b        # kiểm tra kiểu
 - Muốn xoay thật hơn: cần Long tạo thêm ảnh nghiêng trái, nghiêng phải (và chéo 45, 315 độ), giữ vương miện và cùng khung.
 
 - Vũ công (sửa lần 2): bỏ hoà ảnh theo góc (gây bóng ma chồng hai hình). Giờ là nhịp: đứng mặt trước 2,4s, lật nửa vòng 0,9s (co ngang còn 20% rồi đổi ảnh đúng lúc mỏng nhất), đứng mặt lưng 2,4s, lật về; mỗi lượt xen hai dáng lưng. Dừng nhạc thì quay nốt về mặt trước. Hằng số HOLD, FLIP trong MusicBox.tsx. Muốn mượt thật hơn cần ảnh nghiêng 90 và 270 độ.
+
+### Lần 10
+- `lib/weather.ts`: gió và độ dày dùng chung (WindowSnow, Dust, tuyết chuyển cảnh) để cuộn qua cảnh tuyết không bị ngắt nhịp.
+- Chuyển cảnh nào cũng có chuông + chùm nốt lấp lánh (`sfx.chime` + `sparkle`). Trên cảm ứng, ngừng vuốt giữa hai cảnh thì tự trượt tới cảnh gần nhất (WorldScroll, `snap`).
+- Âm thanh: `sfx.fireNear(x)` (con trỏ gần mép trái thì lửa rõ hơn), `sfx.tap(kind)` tiếng chạm gỗ/giấy/chuông nhỏ gọi từ `lib/ripple.ts`.
+- Điện thoại: mũi tên cuộn dời xuống dưới nút đèn (trước đó đè lên nhau); hộp nhạc dọc tính tỉ lệ theo phần ảnh nhìn thấy nên hộp hiện trọn. Đã chụp ở 320x568, 360x640, 390x844, 412x915, 430x932: không tràn ngang.

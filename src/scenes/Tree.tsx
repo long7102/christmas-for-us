@@ -5,6 +5,7 @@ import { sfx } from '../lib/audio'
 import { lights, useLights } from '../lib/lights'
 import SoundControl from '../components/SoundControl'
 import { useHintPulse } from '../lib/hintPulse'
+import { weather } from '../lib/weather'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
@@ -21,7 +22,7 @@ export function WindowSnow({ r }: { r: R }) {
     let raf = 0, last = performance.now(), gust = 0
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
-      gust = 14 + Math.sin(t / 2600) * 9 + Math.sin(t / 900) * 3
+      gust = weather.gust(t)
       ctx.clearRect(0, 0, W, H)
       for (const f of fl) {
         const sp = 10 + 26 * f.z
@@ -168,7 +169,7 @@ export function Dust({ w, h }: { w: number; h: number }) {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       ctx.clearRect(0, 0, W, H)
       for (const m of ms) {
-        m.x += (Math.sin(t / 2300 + m.ph) * 4 + m.sp * 0.6) * dt; m.y += (Math.cos(t / 1900 + m.ph) * 3 - m.sp * 0.45) * dt
+        m.x += (weather.sway(t, m.ph) * 7 + m.sp * 0.6) * dt; m.y += (Math.cos(t / 1900 + m.ph) * 3 - m.sp * 0.45) * dt
         if (m.x > W + 5) m.x = -5; if (m.y < -5) m.y = H + 5; if (m.y > H + 5) m.y = -5
         const a = 0.15 + 0.4 * (0.5 + 0.5 * Math.sin(t / 1200 * m.tw + m.ph))
         ctx.fillStyle = `rgba(255,222,160,${a})`

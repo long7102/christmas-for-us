@@ -3,6 +3,7 @@ import Tree from './Tree'
 import Cats from './Cats'
 import MusicBox from './MusicBox'
 import Lenis from 'lenis'
+import { weather } from '../lib/weather'
 import { isLite, reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
 
@@ -46,7 +47,7 @@ function Sparks({ fx }: { fx: React.MutableRefObject<Fx> }) {
       // tuyết rơi xiên khắp màn hình
       if (ps.length < 230 && !calm) {
         const n = inten * 70 * dt
-        for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) ps.push({ x: Math.random() * (W + 200) - 100, y: -10, vx: 30 + Math.random() * 50, vy: 60 + Math.random() * 110, life: 0, max: 99, s: 1.2 + Math.random() * 3, star: false, ph: Math.random() * 6.28 })
+        for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) ps.push({ x: Math.random() * (W + 200) - 100, y: -10, vx: weather.gust(t) * (1.6 + Math.random() * 1.8), vy: 60 + Math.random() * 110, life: 0, max: 99, s: 1.2 + Math.random() * 3, star: false, ph: Math.random() * 6.28 })
       }
       // tia sao và bông tuyết bắn ra từ mép vòng sáng
       if (f.R > 8 && ps.length < 260) {
@@ -185,7 +186,7 @@ export default function WorldScroll() {
       const pp = prevP.current; prevP.current = p
       if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
       const pq = prevQ.current; prevQ.current = q
-      if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) sfx.sparkle()
+      if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) { sfx.chime(); sfx.sparkle() }
       setSeen((o) => { const n = { tree: q > 0.003 && p < 0.75, cats: p > 0.003, near: p > 0.6, box: q < 0.995 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
@@ -207,9 +208,23 @@ export default function WorldScroll() {
     }
     const ml = () => stick?.style.setProperty('--mo', '0')
     if (!calm && matchMedia('(pointer: fine)').matches) { addEventListener('pointermove', mv, { passive: true }); document.documentElement.addEventListener('pointerleave', ml) }
+    // điện thoại: sau khi ngừng vuốt, nếu đang lửng giữa hai cảnh thì tự trượt tới cảnh gần nhất cho gọn
+    let snapT = 0
+    const stopsAt = [0, HOLD0 + SPAN2 + 0.02, HOLD0 + SPAN2 + HOLD + SPAN + 0.02]
+    const snap = () => {
+      if (!matchMedia('(pointer: coarse)').matches) return
+      const top = el.getBoundingClientRect().top, y = -top / innerHeight
+      if (y < -0.05 || y > stopsAt[2] + 0.02) return
+      let best = 0
+      stopsAt.forEach((v, i) => { if (Math.abs(v - y) < Math.abs(stopsAt[best] - y)) best = i })
+      if (Math.abs(stopsAt[best] - y) < 0.04 || Math.abs(stopsAt[best] - y) > 1.05) return
+      scrollTo({ top: scrollY + (stopsAt[best] - y) * innerHeight, behavior: 'smooth' })
+    }
+    const onSnap = () => { clearTimeout(snapT); snapT = window.setTimeout(snap, 220) }
+    addEventListener('scroll', onSnap, { passive: true })
     apply()
     addEventListener('scroll', on, { passive: true }); addEventListener('resize', on)
-    return () => { removeEventListener('scroll', on); removeEventListener('resize', on); cancelAnimationFrame(raf); cancelAnimationFrame(lraf); removeEventListener('pointermove', mv); document.documentElement.removeEventListener('pointerleave', ml); cancelAnimationFrame(mr); lenis.current?.destroy(); lenis.current = null }
+    return () => { removeEventListener('scroll', on); removeEventListener('scroll', onSnap); clearTimeout(snapT); removeEventListener('resize', on); cancelAnimationFrame(raf); cancelAnimationFrame(lraf); removeEventListener('pointermove', mv); document.documentElement.removeEventListener('pointerleave', ml); cancelAnimationFrame(mr); lenis.current?.destroy(); lenis.current = null }
   }, [])
 
   const goTo = (screens: number, instant = false) => {

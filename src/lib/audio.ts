@@ -19,6 +19,7 @@ class Sfx {
   private purrOn = false
   private mixV = 0
   private boxV = 0
+  private prox = 1
   private fx?: GainNode
   private amb?: GainNode
   private fadeK = 1
@@ -136,7 +137,7 @@ class Sfx {
       }
       tick()
     }
-    if (this.fireGain) this.fireGain.gain.setTargetAtTime(this.fireOn ? 1 - 0.85 * this.mixV : 0, this.ctx.currentTime, 0.4)
+    if (this.fireGain) this.fireGain.gain.setTargetAtTime(this.fireOn ? (1 - 0.85 * this.mixV) * (1 - this.boxV) * this.prox : 0, this.ctx.currentTime, 0.4)
     if (!this.fireOn) { clearTimeout(this.fireTimer) }
   }
   /** Một tiếng nổ lách tách. */
@@ -230,7 +231,7 @@ class Sfx {
     if (Math.abs(n - this.boxV) < 0.01) return
     this.boxV = n
     this.applyMusicVol()
-    if (this.fireGain && this.ctx) this.fireGain.gain.setTargetAtTime(this.fireOn ? (1 - 0.85 * this.mixV) * (1 - n) : 0, this.ctx.currentTime, 0.3)
+    if (this.fireGain && this.ctx) this.fireGain.gain.setTargetAtTime(this.fireOn ? (1 - 0.85 * this.mixV) * (1 - n) * this.prox : 0, this.ctx.currentTime, 0.3)
     if (this.purrGain && this.ctx) this.purrGain.gain.setTargetAtTime(this.purrOn ? 0.1 * this.mixV * (1 - n) : 0, this.ctx.currentTime, 0.5)
   }
 
@@ -264,6 +265,24 @@ class Sfx {
   sparkle() {
     if (!this.ctx) return
     ;[1175, 1319, 1568, 1760, 2093, 2349].forEach((f, i) => setTimeout(() => this.pluck(f, 0.07), i * 110))
+  }
+
+  /** Bếp lửa ở bên trái mọi cảnh: con trỏ càng gần mép trái thì tiếng lửa càng rõ (0 = sát trái, 1 = sát phải). */
+  fireNear(x01: number) {
+    const v = 1.18 - 0.5 * Math.min(1, Math.max(0, x01))
+    if (Math.abs(v - this.prox) < 0.03) return
+    this.prox = v
+    if (this.fireGain && this.ctx) this.fireGain.gain.setTargetAtTime(this.fireOn ? (1 - 0.85 * this.mixV) * (1 - this.boxV) * v : 0, this.ctx.currentTime, 0.35)
+  }
+
+  /** Tiếng chạm nhỏ khi bấm: gỗ (vật trong phòng), giấy (nút), chuông nhỏ (đèn, sao). */
+  tap(kind: 'wood' | 'paper' | 'bell' = 'paper') {
+    if (!this.ctx || !this.master || !this.noise || this.ctx.state !== 'running') return
+    const c = this.ctx, t = c.currentTime
+    if (kind === 'bell') { this.pluck(1568 + Math.random() * 40, 0.05); return }
+    const n = this.src(false), f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = kind === 'wood' ? 6 : 1.2; f.frequency.value = kind === 'wood' ? 520 + Math.random() * 120 : 2600
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(kind === 'wood' ? 0.2 : 0.07, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + (kind === 'wood' ? 0.09 : 0.05))
+    n.connect(f); f.connect(g); g.connect(this.fx!); n.start(t, Math.random() * 2); n.stop(t + 0.12)
   }
 
   /** Hơi thổi tắt đèn: tiếng hơi ngắn, nghe xa dần. */
