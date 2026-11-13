@@ -1,7 +1,9 @@
 import closed from '../assets/musicbox-closed.webp'
 import ajar from '../assets/musicbox-ajar.webp'
 import open_ from '../assets/musicbox-open.webp'
-import ballerina from '../assets/musicbox-ballerina.webp'
+import d0 from '../assets/musicbox-dancer-0.webp'
+import d1 from '../assets/musicbox-dancer-1.webp'
+import d2 from '../assets/musicbox-dancer-2.webp'
 import type { P, R } from './treeLayout'
 
 /**
@@ -11,7 +13,8 @@ import type { P, R } from './treeLayout'
 export const MB = {
   w: 1672, h: 941,
   imgs: { closed, ajar, open: open_ },
-  dancer: { src: ballerina, box: { x: 871, y: 233, w: 159, h: 284 } as R, axis: 935, feetY: 512 },
+  /** Vũ công cắt rời từ các ảnh Long gửi: 0 = mặt trước, 1 và 2 = hai dáng quay lưng (lệch nhau một chút). Cùng một khung, đặt lên đĩa đồng. */
+  dancer: { frames: [d0, d1, d2], box: { x: 839, y: 218.5, w: 179.6, h: 300.2 } as R, axis: 935, feetY: 512 },
   /** Lòng nắp hộp khi mở (nơi bóng vũ công đổ lên): hình elip. */
   lid: { cx: 1040, cy: 305, rx: 172, ry: 172 },
   /** Khung phải luôn thấy được. */

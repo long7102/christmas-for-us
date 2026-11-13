@@ -106,3 +106,8 @@ npx tsc -b        # kiểm tra kiểu
 
 ### Bản xem thử nối ba phần
 - Bản Artifact build bằng `VITE_PREVIEW=1 npx vite build --assetsInlineLimit 100000000`: có thanh "Xem nhanh" (`components/PreviewBar.tsx`) nhảy thẳng tới Cổng, Cánh cửa, Hộp nhạc, Cây thông, Hai bé, và mở thẳng bằng `#hop-nhac`, `#cay-thong`, `#meo`. Bản chính thức (không đặt biến) KHÔNG có thanh này nên mật khẩu và cánh cửa vẫn như cũ. Nhảy cảnh trong thế giới dùng sự kiện `olcw:goto` (WorldScroll).
+
+### Lần 9: vũ công xoay bằng ảnh thật, bỏ thanh xem nhanh
+- Đã GỠ thanh "Xem nhanh" và `VITE_PREVIEW` (Long không cần; trang vốn là một trang kéo xuống). Bản Artifact build như thường: `npx vite build --assetsInlineLimit 100000000`. Sự kiện `olcw:goto` trong WorldScroll còn đó nhưng không ai gọi.
+- Vũ công: Long gửi 6 ảnh xoay (cùng khung với ảnh hộp nhạc đầu tiên, nắp dựng đứng). Chỉ 3 ảnh đồng nhất (có vương miện): mặt trước và hai dáng quay lưng; ba ảnh kia tóc búi không vương miện nên không dùng. Cắt rời bằng grabCut + hiệu với ảnh nền, lưu `musicbox-dancer-0/1/2.webp`, đặt lên đĩa đồng của ảnh mở hẳn (thu 0,95). `MusicBox.tsx` xoay theo góc: mặt trước quanh 0 độ, lưng quanh 165 và 195 độ, giữa hai mặt thì hoà ảnh + co ngang tối đa 42% (chưa có ảnh nghiêng 90 và 270 độ). Dừng nhạc thì quay nốt về mặt trước.
+- Muốn xoay thật hơn: cần Long tạo thêm ảnh nghiêng trái, nghiêng phải (và chéo 45, 315 độ), giữ vương miện và cùng khung.
