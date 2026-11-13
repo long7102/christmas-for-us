@@ -6,6 +6,7 @@ import { lights, useLights } from '../lib/lights'
 import SoundControl from '../components/SoundControl'
 import { useHintPulse } from '../lib/hintPulse'
 import { weather } from '../lib/weather'
+import { LitSpot, Stardust } from '../components/LitSpot'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
@@ -276,6 +277,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [modal, setModal] = useState<Modal>(null)
   const [hov, setHov] = useState<number | null>(null)
+  const [lit, setLit] = useState<P | null>(null)
   const [opened, setOpened] = useState<Record<number, boolean>>(() => store.get('giftsOpened', {}))
   const [opening, setOpening] = useState<number | null>(null)
   const [, tick] = useState(0)
@@ -354,7 +356,9 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
     later(() => setModal({ kind: 'memory', id: 'lamp', i }))
   }
 
+  useEffect(() => { if (!tip) setLit(null) }, [tip])
   const showTip = (id: string, poly: P, i?: number) => {
+    if (!id.startsWith('gift')) setLit(poly)
     if (id === 'lamp') { const m = lampStories[(i ?? 0) % lampStories.length]; setTip({ title: m.title, text: m.tip, b: polyBox(poly) }); return }
     if (id.startsWith('gift')) {
       const gf = gifts[i!]
@@ -419,6 +423,10 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
               <div className="tr-lit" style={{ clipPath: poly(opened[i] ? bodyPoly(i) : p), backgroundImage: `url(${L.src})` }} />
             </div>
           ))}
+
+          {/* rê chuột vào vật (hoặc lúc gợi ý nhẹ): vật sáng lên khẽ kèm bụi sao, không viền */}
+          <LitSpot src={L.src} w={L.w} h={L.h} poly={lit ?? (pulse !== null ? spots[pulse]?.poly ?? [[0, 0]] : [[0, 0]])} on={lit !== null || (pulse !== null && hov === null)} />
+          {hov !== null && <Stardust poly={opened[hov] ? bodyPoly(hov) : L.polys[hov]} on />}
 
           {/* nắp hộp: bay lên rồi nằm dưới đất */}
           {L.lids.map((d, i) => {
