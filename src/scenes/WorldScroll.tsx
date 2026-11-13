@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Tree from './Tree'
 import Cats from './Cats'
 import MusicBox from './MusicBox'
+import SnowWatch from './SnowWatch'
 import Lenis from 'lenis'
 import { weather } from '../lib/weather'
 import { isLite, reducedMotion } from '../lib/device'
@@ -254,6 +255,7 @@ export default function WorldScroll() {
   }, [])
 
   return (
+    <>
     <div className="xf" ref={wrap} style={{ height: `${(1 + HOLD0 + SPAN2 + HOLD + SPAN + END) * 100}dvh` }}>
       <div className="xf-sticky">
         <div className={`xf-layer xf-box${seen.box ? '' : ' idle'}`}><MusicBox active={seen.box} /></div>
@@ -273,5 +275,7 @@ export default function WorldScroll() {
         </a>
       </div>
     </div>
+    <SnowWatch />
+    </>
   )
 }

@@ -212,3 +212,12 @@ export const musicbox = {
   box: { closed: { title: 'Chiếc hộp nhạc', tip: 'Gỗ óc chó cũ, bộ lược đồng bên trong. Bấm để mở nắp.' }, open: { title: 'Chiếc hộp nhạc', tip: 'Bấm để đóng nắp lại.' } },
   lamp: { title: 'Ngọn đèn lồng', tipOn: 'Bấm để thổi tắt đèn.', tipOff: 'Bấm để thắp đèn lại.' },
 }
+
+/** Chữ cảnh ngắm tuyết. [nháp] lời Long, chờ Long sửa lại; chưa có chuyện riêng của hai đứa. */
+export const snow = {
+  title: 'Ngắm tuyết',
+  tagline: 'Ngoài kia tuyết rơi, trong này có hai đứa.',
+  body: [
+    'Kính phủ một lớp hơi nước mờ. Em lau một ô nhỏ rồi nhìn lên, biết đâu sẽ thấy một vì sao băng bay qua.',
+  ],
+}

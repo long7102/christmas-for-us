@@ -125,3 +125,20 @@ npx tsc -b        # kiểm tra kiểu
 - Vũ công (sửa lần 3, bản đang dùng): mặt trụ chỉ đẹp trong khoảng 20 độ quanh mặt trước và mặt lưng, quay ngang hơn thì méo (hai ảnh khác tư thế). Nên nhịp là: lắc ±20 độ hai nhịp ở mặt trước, lướt nửa vòng 0,55s bằng tấm phẳng kèm nhoè (k=0 trong `Figurine.render`), lắc ở mặt lưng, lướt về. Dừng nhạc thì dừng đúng chính diện. Muốn quay vòng thật cần ảnh nghiêng 90/270 độ.
 
 - Vũ công hiện chỉ lắc trái phải ±22 độ quanh mặt trước (không lướt sang lưng, theo yêu cầu của Long). SEG trong MusicBox.tsx rất lớn để tắt phần lướt.
+
+## Cập nhật (phiên mới): ánh sáng theo giờ thật + cảnh ngắm tuyết
+> Lưu ý: các mục hộp nhạc (3 trạng thái, vũ công lắc ±22°, danh sách phát, chế độ nhẹ `.lite`, tải sẵn ảnh) nằm ở các commit trước, chưa được ghi chi tiết ở trên. Đọc `MusicBox.tsx`, `musicLayout.ts`, `perf.ts`, `preload.ts` khi cần.
+
+### Ánh sáng theo giờ thật (`src/lib/timeOfDay.ts`)
+- Lấy giờ máy người xem, cập nhật mỗi phút, đặt các biến CSS `--tod-sky`, `--tod-wash`, `--tod-in`, `--tod-beam` trên `<html>`. Thử giờ bất kỳ: `?h=14.5`.
+- Ảnh làng gốc là đêm, nên ban đêm giữ nguyên. Ban ngày/bình minh/hoàng hôn: lớp `.door-tod` (trong `Door.tsx`) đổi màu bầu trời theo gradient từ trên xuống + lớp phủ rất nhẹ. Không dùng filter.
+- Trong nhà: `.tod-in` (App, cố định z-index 30, không bắt chuột) phủ rất nhẹ + hai dải sáng xiên (`::before`) khi trời sáng. Dải sáng khá mờ trên nền hổ phách, chưa xác nhận trên máy thật.
+
+### Cảnh 5: ngắm tuyết (`SnowWatch.tsx`, `snowLayout.ts`)
+- Nằm sau `.xf` trong `WorldScroll.tsx` (cuộn thường, chưa có chuyển cảnh riêng).
+- Ảnh Long gửi (khung 1672x941): `snow-land.webp` (ngồi sát), `snow-land-point.webp` (chỉ tay). Bấm hai người: chuyển mờ sang dáng chỉ tay ~6,5 giây rồi trở về, đồng thời một sao băng bay qua.
+- Mặt nạ hai người (grabCut + tinh chỉnh tay): `snow-hide-*.png` (che tuyết/hơi nước, để chúng ở SAU lưng hai người), `snow-cut-*.png` (vầng sáng khi rê chuột). Mặt nạ đổi theo dáng ở giữa lúc chuyển mờ. Viền bấm = `poly` trong `snowLayout.ts`.
+- Ô kính (`panes`) quy định nơi tuyết và hơi nước được phép xuất hiện (không đè lên khung gỗ).
+- Tuyết 3 lớp xa gần theo gió chung (`weather`). Hơi nước: bảng độ lau `Uint8Array`, rê chuột (hoặc kéo ngón tay, `touch-action: pan-y`) để lau, tự phủ lại ~30 giây, thỉnh thoảng một giọt nước chảy thành vệt. Chỉ tính lại khi có thay đổi. Cảnh không hiện thì dừng (`IntersectionObserver`).
+- CHƯA có: ảnh dọc cho điện thoại (hiện cắt cover quanh hai người, `focus` trong layout), ảnh bấm riêng cho sao băng (sao băng vẽ bằng mã), âm thanh cho cảnh này, chữ chính thức (chữ hiện tại trong mục `snow` của `content.ts` là bản nháp).
+- Mặt nạ làm bằng script ngoài repo; muốn đổi ảnh thì tách lại bằng grabCut (xem cách làm ở phần mèo).
