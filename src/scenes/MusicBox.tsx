@@ -118,7 +118,7 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
         else w = Math.min(Math.max(w, 0.35), Math.max(0.2, rem * 1.3))
       }
       // chậm ở mặt trước và mặt lưng (nơi hình đẹp nhất), nhanh lướt qua hai bên (nơi chưa có ảnh nghiêng)
-      th += w * dt * (0.5 + 1.25 * Math.pow(Math.sin(th), 2))
+      th += w * dt * (0.36 + 5.2 * Math.pow(Math.sin(th), 4))
       nFire -= dt
       if (nFire <= 0) { nFire = 0.5 + Math.random() * 0.9; tFire = Math.random() < 0.12 ? 0.55 + Math.random() * 0.15 : 0.75 + Math.random() * 0.25 }
       fire += ((calm ? 0.85 : tFire) - fire) * (1 - Math.exp(-dt / 0.3))
@@ -129,10 +129,12 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
       }
       const bob = Math.abs(Math.sin(th * 2)) * -0.9 * amp
       dEl.style.transform = `translateY(${bob.toFixed(2)}px)`
-      dEl.style.filter = `brightness(${(0.92 + 0.1 * fire).toFixed(3)})`
+      // lúc lướt qua hai bên (chưa có ảnh nghiêng) làm nhoè chuyển động nhẹ, như ảnh chụp vật đang quay nhanh
+      const side = Math.pow(Math.sin(th), 2)
+      dEl.style.filter = `brightness(${(0.92 + 0.1 * fire).toFixed(3)}) blur(${(side * 2.6).toFixed(2)}px)`
       const near = 26 - 5 * (fire - 0.8)
       sEl.style.transform = `translateX(${(near + 4 * Math.sin(th)).toFixed(2)}px) translateY(${bob.toFixed(2)}px) scaleY(1.02)`
-      sEl.style.opacity = (0.3 + 0.18 * fire).toFixed(3)
+      sEl.style.opacity = ((0.3 + 0.18 * fire) * (1 - 0.4 * side)).toFixed(3)
       root.style.setProperty('--mfl', fire.toFixed(3))
       root.style.setProperty('--mspin', amp.toFixed(3))
       raf = requestAnimationFrame(draw)
