@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LONG_EMAIL, gifts, getMemory, lampStories, treeText } from '../content/content'
 import { store } from '../lib/storage'
-import { BasketIcon, BellIcon, BooksIcon, PaintingIcon, BowIcon, PineIcon, FireIcon, LampIcon, OrnamentIcon, StarIcon, StockingIcon, WreathIcon } from './Icons'
+import { CurtainIcon, GarlandIcon, RugIcon, ShelfIcon, ToolsIcon, TreeIcon, WindowIcon, BasketIcon, BellIcon, BooksIcon, PaintingIcon, BowIcon, PineIcon, FireIcon, LampIcon, OrnamentIcon, StarIcon, StockingIcon, WreathIcon } from './Icons'
 import { sfx } from '../lib/audio'
 import { countdown, isUnlocked } from '../lib/unlock'
 
@@ -63,6 +63,14 @@ function iconFor(id: string) {
   if (id === 'star') return <StarIcon />
   if (id === 'books') return <BooksIcon />
   if (id === 'basket') return <BasketIcon />
+  if (id === 'shelf') return <ShelfIcon />
+  if (id === 'tools') return <ToolsIcon />
+  if (id === 'garland') return <GarlandIcon />
+  if (id === 'rug') return <RugIcon />
+  if (id === 'tree') return <TreeIcon />
+  if (id === 'window') return <WindowIcon />
+  if (id === 'curtainL') return <CurtainIcon />
+  if (id === 'curtainR') return <CurtainIcon flip />
   if (id === 'painting') return <PaintingIcon />
   if (id === 'painting2') return <PaintingIcon snow />
   if (id === 'pine') return <PineIcon />

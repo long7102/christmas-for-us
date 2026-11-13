@@ -8,6 +8,7 @@ import { polyBox } from './treeLayout'
 import { ModalView, type Modal } from './Letter'
 import { MB } from './musicLayout'
 import SoundControl from '../components/SoundControl'
+import { useHintPulse } from '../lib/hintPulse'
 import sugarUrl from '../assets/sugarplum-fairy.mp3'
 
 /** Tệp nhạc bỏ thêm vào src/assets/music/ (tên tệp = id bài) sẽ tự được nhận. */
@@ -49,6 +50,8 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
   const lightsOn = useLights()
   const [snd, setSnd] = useState(() => sfx.running && !sfx.muted)
   const timers = useRef<number[]>([])
+  // vật sáng nhẹ gợi ý: 0 sách, 1 cành thông, 2 hộp (lúc đóng) hoặc cô vũ công (lúc mở)
+  const pulse = useHintPulse(3, active && lid !== 1, modal !== null || tip !== null)
   const live = useRef({ playing, lid })
   live.current = { playing, lid }
 
@@ -209,9 +212,9 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             {(['books', 'pine'] as const).map((id) => {
-              const m = getMemory(id)!, openMemo = () => { setTip(null); setModal({ kind: 'memory', id }) }
+              const m = getMemory(id)!, idx = id === 'books' ? 0 : 1, openMemo = () => { setTip(null); setModal({ kind: 'memory', id }) }
               return (
-                <polygon key={id} className="tr-hs" points={pts(L.polys[id])} tabIndex={0} role="button" aria-label={m.title}
+                <polygon key={id} className={`tr-hs${pulse === idx ? ' pulse' : ''}`} points={pts(L.polys[id])} tabIndex={0} role="button" aria-label={m.title}
                   onMouseEnter={() => show(m.title, m.tip, L.polys[id])} onMouseLeave={() => setTip(null)} onFocus={() => show(m.title, m.tip, L.polys[id])} onBlur={() => setTip(null)}
                   onClick={openMemo} onKeyDown={key(openMemo)} />
               )
@@ -219,11 +222,11 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
             <polygon className="cat-hs" points={pts(L.lanternPoly)} tabIndex={0} role="button" aria-label="Đèn lồng"
               onMouseEnter={() => show(copy.lamp.title, lightsOn ? copy.lamp.tipOn : copy.lamp.tipOff, L.lanternPoly)} onMouseLeave={() => setTip(null)}
               onFocus={() => show(copy.lamp.title, lightsOn ? copy.lamp.tipOn : copy.lamp.tipOff, L.lanternPoly)} onBlur={() => setTip(null)} onClick={toggleLamp} onKeyDown={key(toggleLamp)} />
-            <polygon className="cat-hs" points={pts(boxPoly)} tabIndex={0} role="button" aria-label={lid === 2 ? 'Đóng hộp nhạc' : 'Mở hộp nhạc'}
+            <polygon className={`cat-hs${pulse === 2 && lid !== 2 ? ' pulse' : ''}`} points={pts(boxPoly)} tabIndex={0} role="button" aria-label={lid === 2 ? 'Đóng hộp nhạc' : 'Mở hộp nhạc'}
               onMouseEnter={() => show(boxCopy.title, boxCopy.tip, boxPoly)} onMouseLeave={() => setTip(null)}
               onFocus={() => show(boxCopy.title, boxCopy.tip, boxPoly)} onBlur={() => setTip(null)} onClick={toggleLid} onKeyDown={key(toggleLid)} />
             {lid === 2 && (
-              <polygon className="cat-hs" points={pts(L.polys.bal)} tabIndex={0} role="button" aria-label="Cô vũ công"
+              <polygon className={`cat-hs${pulse === 2 ? ' pulse' : ''}`} points={pts(L.polys.bal)} tabIndex={0} role="button" aria-label="Cô vũ công"
                 onMouseEnter={() => show(copy.dancer.title, copy.dancer.tip, L.polys.bal)} onMouseLeave={() => setTip(null)}
                 onFocus={() => show(copy.dancer.title, copy.dancer.tip, L.polys.bal)} onBlur={() => setTip(null)} onClick={() => sfx.toggleMusic()} onKeyDown={key(() => sfx.toggleMusic())} />
             )}
@@ -237,7 +240,6 @@ export default function MusicBox({ active = true }: { active?: boolean }) {
         <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>
         <p className="sec-tag">{copy.tagline}</p>
         {copy.body.map((t, i) => <p key={i} className="sec-desc">{t}</p>)}
-        <p className="sec-hint"><span aria-hidden>✦</span>{lid === 2 ? copy.hintOpen : copy.hintClosed}</p>
       </div>
 
       {/* danh sách nhạc: gọn một viên thuốc ở góc trên trái khi nắp mở, bấm để mở tấm thẻ đồng khắc; điều khiển nhạc của cả trang */}

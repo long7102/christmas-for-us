@@ -35,6 +35,8 @@ export type CatLayout = {
   focus: { x1: number; y1: number; x2: number; y2: number }
   /** Các bóng đèn nhỏ trên dây đèn (tâm, px ảnh gốc): sáng lên khi tắt đèn lớn. */
   bulbs: [number, number][]
+  /** Ô kính cửa sổ (tuyết rơi ngoài trời và hơi sương trên kính). */
+  win: R
 }
 
 export const CAT_LAND: CatLayout = {
@@ -47,6 +49,7 @@ export const CAT_LAND: CatLayout = {
   lampPoly: [[6, 118], [146, 118], [150, 452], [4, 452]],
   focus: { x1: 380, y1: 230, x2: 1420, y2: 760 },
   bulbs: BULBS_LAND,
+  win: { x: 150, y: 0, w: 245, h: 412 },
 }
 // Dáng của Mochi ở bản dọc chưa có (ảnh gửi không cùng khung với ảnh ngủ): bé chỉ cử động nhẹ.
 export const CAT_PORT: CatLayout = {
@@ -59,4 +62,5 @@ export const CAT_PORT: CatLayout = {
   lampPoly: [[0, 292], [122, 292], [124, 590], [0, 590]],
   focus: { x1: 40, y1: 480, x2: 900, y2: 960 },
   bulbs: BULBS_PORT,
+  win: { x: 82, y: 0, w: 165, h: 530 },
 }
