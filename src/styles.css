@@ -822,3 +822,8 @@ button, a, [role="button"] { touch-action: manipulation; -webkit-tap-highlight-c
 
 .mb-shadow { background: none; -webkit-mask-image: none; mask-image: none; }
 canvas.mb-dancer, canvas.mb-shadow { position: absolute; }
+
+/* ánh sáng theo giờ thật (biến do lib/timeOfDay.ts đặt): bầu trời đổi màu từ trên xuống, ban đêm giữ nguyên ảnh */
+.door-tod { position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(var(--tod-sky, transparent) 0%, transparent 46%), var(--tod-wash, transparent); }
+.tod-in { position: fixed; inset: 0; z-index: 2; pointer-events: none; background: var(--tod-in, transparent); }

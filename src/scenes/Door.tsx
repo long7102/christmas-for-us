@@ -420,6 +420,7 @@ export default function Door({ onOpen }: { onOpen: () => void }) {
 
   return (
     <div ref={root} className="door">
+      <div className="door-tod" />
       <div className="door-sky" />
 
       {vill && (
