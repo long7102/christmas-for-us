@@ -4,7 +4,8 @@ import { reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
 import { lights, useLights } from '../lib/lights'
 import { CAT_LAND, CAT_PORT, type Cat, type CatLayout, type Pose } from './catsLayout'
-import { Dust } from './Tree'
+import { Dust, WindowSnow } from './Tree'
+import { useHintPulse } from '../lib/hintPulse'
 import { polyBox, type R } from './treeLayout'
 
 type Who = 'bong' | 'mochi'
@@ -85,6 +86,7 @@ export default function Cats({ active = true }: { active?: boolean }) {
   const next = useRef<Record<Who, number>>({ bong: 0, mochi: 0 })
 
   useFlicker(stage, active, lampT)
+  const pulse = useHintPulse(2, active, !!busy || hov !== null)
 
   // tiếng gừ gừ nhẹ: mức to nhỏ do sfx.mix (chạy theo thanh cuộn) điều khiển
   useEffect(() => {
@@ -194,6 +196,8 @@ export default function Cats({ active = true }: { active?: boolean }) {
       <div className="sec-frame" ref={host}>
         <div className="tr-stage" ref={stage} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img src={L.src} alt="Bông và Mochi ngủ cạnh nhau trên ghế sofa" draggable={false} />
+          {active && <WindowSnow r={L.win} />}
+          <div className="tr-frost" style={rect(L.win)} />
           <div className="cat-room" />
 
           {/* mỗi bé thở nhẹ khi ngủ; bé nào đang đổi dáng thì lớp này ẩn đi */}
@@ -207,7 +211,7 @@ export default function Cats({ active = true }: { active?: boolean }) {
           })}
 
           {cats.map((c) => c.cat.poses.map((p, i) => <Over key={`${c.id}${i}`} L={L} pose={p} on={show === `${c.id}-${i}`} />))}
-          {cats.map((c) => <Glow key={c.id} L={L} cat={c.cat} on={hov === c.id && !busy} />)}
+          {cats.map((c, i) => <Glow key={c.id} L={L} cat={c.cat} on={(hov === c.id || pulse === i) && !busy} />)}
 
           {/* đèn lồng chập chờn */}
           <i className="cat-lamp halo" style={{ left: L.lamp[0] - L.lamp[2] * 3.4, top: L.lamp[1] - L.lamp[2] * 3.4, width: L.lamp[2] * 6.8, height: L.lamp[2] * 6.8 }} />
@@ -242,7 +246,6 @@ export default function Cats({ active = true }: { active?: boolean }) {
         <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>
         <p className="sec-tag">{copy.tagline}</p>
         {copy.body.map((t, i) => <p key={i} className="sec-desc">{t}</p>)}
-        <p className="sec-hint"><span aria-hidden>✦</span>{copy.hint}</p>
       </div>
 
       {tip && !busy && (() => {

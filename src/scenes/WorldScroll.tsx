@@ -197,9 +197,19 @@ export default function WorldScroll() {
       const loop = (t: number) => { l.raf(t); lraf = requestAnimationFrame(loop) }
       lraf = requestAnimationFrame(loop)
     }
+    // vệt sáng ấm theo con trỏ (chuột thật, tắt ở chế độ nhẹ): như cầm một ngọn nến soi quanh phòng
+    const stick = el.querySelector('.xf-sticky') as HTMLElement | null
+    let mr = 0, mx = 0, my = 0
+    const mv = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return
+      mx = e.clientX; my = e.clientY
+      if (!mr) mr = requestAnimationFrame(() => { mr = 0; stick?.style.setProperty('--mx', `${mx}px`); stick?.style.setProperty('--my', `${my}px`); stick?.style.setProperty('--mo', '1') })
+    }
+    const ml = () => stick?.style.setProperty('--mo', '0')
+    if (!calm && matchMedia('(pointer: fine)').matches) { addEventListener('pointermove', mv, { passive: true }); document.documentElement.addEventListener('pointerleave', ml) }
     apply()
     addEventListener('scroll', on, { passive: true }); addEventListener('resize', on)
-    return () => { removeEventListener('scroll', on); removeEventListener('resize', on); cancelAnimationFrame(raf); cancelAnimationFrame(lraf); lenis.current?.destroy(); lenis.current = null }
+    return () => { removeEventListener('scroll', on); removeEventListener('resize', on); cancelAnimationFrame(raf); cancelAnimationFrame(lraf); removeEventListener('pointermove', mv); document.documentElement.removeEventListener('pointerleave', ml); cancelAnimationFrame(mr); lenis.current?.destroy(); lenis.current = null }
   }, [])
 
   const goTo = (screens: number, instant = false) => {

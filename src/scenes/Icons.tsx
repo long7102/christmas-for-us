@@ -453,3 +453,127 @@ export function PaintingIcon({ snow = false }: { snow?: boolean }) {
     </Svg>
   )
 }
+
+/** Tủ sách gỗ cũ: ba tầng, gáy sách nhiều màu, một cây nến nhỏ và chậu cây trên đỉnh. */
+export function ShelfIcon() {
+  const r = rng(61), cols = ['#8a2a2c', '#2f5a3c', '#8b6236', '#3a4a6a', '#a8742e', '#5a2a4a', '#6f8a62']
+  const row = (y: number) => { let x = 44; const out = []; while (x < 150) { const w = 7 + r() * 8, h = 28 + r() * 14; out.push(<g key={x}><rect x={x} y={y - h} width={w} height={h} fill={cols[Math.floor(r() * 7)]} stroke="#1e1006" strokeWidth=".8" /><path d={`M${x + 1.5} ${y - h + 6} h${w - 3} M${x + 1.5} ${y - 6} h${w - 3}`} stroke="#e2c071" strokeWidth=".7" opacity=".8" /></g>); x += w + 1 } return out }
+  return (
+    <Svg label="Tủ sách gỗ">
+      <defs><linearGradient id="sh-w" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#6a4020" /><stop offset=".5" stopColor="#8b5a2c" /><stop offset="1" stopColor="#5a3416" /></linearGradient><radialGradient id="sh-g"><stop offset="0" stopColor="#ffe9a8" stopOpacity=".5" /><stop offset="1" stopColor="#ffc060" stopOpacity="0" /></radialGradient></defs>
+      <ellipse cx="100" cy="208" rx="62" ry="5" fill={INK} opacity=".25" /><circle className="ic-light" cx="100" cy="110" r="84" fill="url(#sh-g)" />
+      <rect x="30" y="32" width="140" height="170" rx="3" fill="url(#sh-w)" stroke="#2a1608" strokeWidth="1.6" />
+      <rect x="38" y="40" width="124" height="154" fill="#2a1608" />
+      {[92, 142, 192].map((y, i) => <g key={y}>{row(y - 2)}<rect x="38" y={y - 2} width="124" height="6" fill="#7a4a24" stroke="#2a1608" strokeWidth=".8" />{i === 0 && null}</g>)}
+      <rect x="26" y="24" width="148" height="10" rx="2" fill="#8b5a2c" stroke="#2a1608" strokeWidth="1.2" />
+      <g className="ic-sway" style={{ transformOrigin: '60px 24px' }}><rect x="56" y="6" width="9" height="18" rx="1.5" fill="#f3e6c4" stroke="#7a5a2a" strokeWidth=".8" /><path d="M60.5 6 q-3 -6 0 -9 q3 3 0 9Z" fill="#ffc850" /></g>
+      <path d="M132 24 q-6 -14 4 -20 q4 12 -4 20Z M138 24 q8 -12 18 -8 q-6 10 -18 8Z" fill="#2f7545" stroke="#12301c" strokeWidth=".7" /><rect x="128" y="20" width="22" height="6" rx="1.5" fill="#a8683f" />
+    </Svg>
+  )
+}
+
+/** Bộ dụng cụ lò sưởi: giá sắt đen, cái cời, xẻng nhỏ, chổi lông và kẹp gắp củi. */
+export function ToolsIcon() {
+  return (
+    <Svg label="Bộ dụng cụ lò sưởi">
+      <defs><linearGradient id="tl-i" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#2a2a2e" /><stop offset=".5" stopColor="#6a6a72" /><stop offset="1" stopColor="#222226" /></linearGradient><radialGradient id="tl-g"><stop offset="0" stopColor="#ffb060" stopOpacity=".45" /><stop offset="1" stopColor="#ff8030" stopOpacity="0" /></radialGradient></defs>
+      <ellipse cx="100" cy="208" rx="58" ry="5" fill={INK} opacity=".3" /><circle className="ic-light" cx="100" cy="150" r="80" fill="url(#tl-g)" />
+      <path d="M56 196 h88 M70 196 l-8 10 M130 196 l8 10 M100 196 v-14" stroke="#1c1c20" strokeWidth="4" strokeLinecap="round" />
+      <path d="M100 182 V34" stroke="url(#tl-i)" strokeWidth="5" strokeLinecap="round" /><circle cx="100" cy="30" r="7" fill="none" stroke="#2a2a2e" strokeWidth="3.4" />
+      {/* cái cời */}
+      <path d="M78 196 V44 q0 -12 10 -12 q8 0 8 8" stroke="url(#tl-i)" strokeWidth="4.4" fill="none" strokeLinecap="round" /><path d="M86 38 l10 -10" stroke="#2a2a2e" strokeWidth="3.4" strokeLinecap="round" />
+      {/* xẻng */}
+      <path d="M122 196 V66" stroke="url(#tl-i)" strokeWidth="4.4" strokeLinecap="round" /><path d="M112 66 h20 l-2 -20 h-16Z" fill="#3a3a40" stroke="#1c1c20" strokeWidth="1.4" /><path d="M115 60 h14" stroke="#8a8a92" strokeWidth="1" />
+      {/* chổi lông */}
+      <path d="M140 196 V90" stroke="#5a3a18" strokeWidth="6" strokeLinecap="round" /><path d="M132 92 q8 -26 16 0 q-8 6 -16 0Z" fill="#c8a468" stroke="#6a4a22" strokeWidth="1.2" />{[0, 1, 2, 3, 4].map((i) => <path key={i} d={`M${134 + i * 3} 90 v-14`} stroke="#8a6a3a" strokeWidth=".9" />)}
+      <path d="M60 196 V80 l-8 -6 M60 80 l8 -6" stroke="url(#tl-i)" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
+/** Vòng lá thông trên bệ lò sưởi: dải cành xanh võng xuống, quả thông, quả đỏ, đèn nhỏ nhấp nháy và nơ nhung. */
+export function GarlandIcon() {
+  const r = rng(73), pts = Array.from({ length: 22 }, (_, i) => { const t = i / 21; return { x: 14 + 172 * t, y: 70 + 52 * Math.sin(Math.PI * t) } })
+  return (
+    <Svg label="Vòng lá trên bệ lò sưởi">
+      <defs><radialGradient id="ga-g"><stop offset="0" stopColor="#fff2b0" /><stop offset="1" stopColor="#ffc850" stopOpacity="0" /></radialGradient><radialGradient id="ga-b" cx=".35" cy=".3" r=".8"><stop offset="0" stopColor="#f26a62" /><stop offset=".6" stopColor="#b3201f" /><stop offset="1" stopColor="#6e0f10" /></radialGradient></defs>
+      <path d="M8 40 H192" stroke="#5a3a18" strokeWidth="9" strokeLinecap="round" /><path d="M8 38 H192" stroke="#8b5a2c" strokeWidth="3" strokeLinecap="round" />
+      <path d={`M${pts.map((p) => `${p.x} ${p.y - 24}`).join(' L')}`} stroke="#12301c" strokeWidth="6" fill="none" />
+      {pts.flatMap((p, i) => [0, 1, 2, 3].map((j) => <path key={`${i}${j}`} d={`M${p.x} ${p.y - 24} l${(r() - 0.5) * 26} ${(r() * 20) + 2}`} stroke={['#1f5231', '#2f7040', '#43914f', '#2a6a3e'][j]} strokeWidth="2.3" strokeLinecap="round" />))}
+      {[3, 9, 15, 19].map((i) => <g key={i} transform={`translate(${pts[i].x} ${pts[i].y - 4})`}><ellipse rx="7" ry="10" fill="#7d4c22" stroke="#3a1f0a" strokeWidth="1" />{[-5, 0, 5].map((y) => <path key={y} d={`M-6 ${y} q6 4 12 0`} stroke="#3a1f0a" strokeWidth=".8" fill="none" />)}</g>)}
+      {[6, 12, 17].map((i) => <g key={i} transform={`translate(${pts[i].x} ${pts[i].y - 6})`}>{[[0, 0], [7, 2], [3, 8]].map(([x, y], j) => <g key={j}><circle cx={x} cy={y} r="4.6" fill="url(#ga-b)" stroke="#5a0d0f" strokeWidth=".6" /><circle cx={x - 1.4} cy={y - 1.6} r="1.3" fill="#ffe6da" /></g>)}</g>)}
+      {pts.filter((_, i) => i % 2 === 1).map((p, i) => <g key={i}><circle className="ic-light" cx={p.x} cy={p.y - 20 + (i % 2) * 4} r="8" fill="url(#ga-g)" style={{ animationDelay: `-${(i * 0.37).toFixed(2)}s` }} /><circle cx={p.x} cy={p.y - 20 + (i % 2) * 4} r="2" fill="#fff5c2" /></g>)}
+      <g transform="translate(100 118)"><path d="M0 0 q-22 -16 -34 -2 q10 18 34 2Z M0 0 q22 -16 34 -2 q-10 18 -34 2Z" fill="#a8242a" stroke="#5a1014" strokeWidth="1" /><circle r="5" fill="#8a1a20" stroke="#5a1014" strokeWidth=".8" /><path d="M-3 4 q-6 16 -14 26 M3 4 q6 16 14 26" stroke="#a8242a" strokeWidth="4" fill="none" strokeLinecap="round" /></g>
+    </Svg>
+  )
+}
+
+/** Tấm thảm cổ: hoa văn đối xứng đỏ và xanh thẫm, viền kép và tua rua hai đầu. */
+export function RugIcon() {
+  return (
+    <Svg label="Tấm thảm cổ">
+      <defs><pattern id="rg-p" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M7 0 L14 7 L7 14 L0 7Z" fill="none" stroke="#e8c880" strokeWidth=".9" /><circle cx="7" cy="7" r="1.6" fill="#e8c880" /></pattern><radialGradient id="rg-g"><stop offset="0" stopColor="#ffe9a8" stopOpacity=".4" /><stop offset="1" stopColor="#ffc060" stopOpacity="0" /></radialGradient></defs>
+      <ellipse cx="100" cy="190" rx="82" ry="7" fill={INK} opacity=".25" /><circle className="ic-light" cx="100" cy="120" r="84" fill="url(#rg-g)" />
+      <path d="M40 54 H160 L186 178 H14Z" fill="#7a1f24" stroke="#2b0a0c" strokeWidth="1.6" />
+      <path d="M48 62 H152 L174 170 H26Z" fill="#1f2f4a" stroke="#e8c880" strokeWidth="2" />
+      <path d="M56 70 H144 L164 162 H36Z" fill="url(#rg-p)" stroke="#e8c880" strokeWidth="1" />
+      <path d="M100 76 l24 40 l-24 40 l-24 -40Z" fill="#7a1f24" stroke="#e8c880" strokeWidth="1.6" /><path d="M100 90 l12 26 l-12 26 l-12 -26Z" fill="#c8a050" stroke="#5a3a0c" strokeWidth="1" /><circle cx="100" cy="116" r="5" fill="#7a1f24" />
+      {Array.from({ length: 22 }, (_, i) => <g key={i}><path d={`M${22 + i * 7.5} 178 v14`} stroke="#e8d4a2" strokeWidth="1.7" strokeLinecap="round" /><path d={`M${44 + i * 5.2} 54 v-10`} stroke="#e8d4a2" strokeWidth="1.7" strokeLinecap="round" /></g>)}
+    </Svg>
+  )
+}
+
+/** Cây thông nhỏ: ba tầng lá, chuỗi đèn, quả châu đỏ vàng, nơ nhung và ngôi sao trên đỉnh, đặt trong chậu gỗ. */
+export function TreeIcon() {
+  const tiers = [{ y: 60, w: 36 }, { y: 100, w: 56 }, { y: 142, w: 76 }]
+  return (
+    <Svg label="Cây thông">
+      <defs><radialGradient id="tr-g"><stop offset="0" stopColor="#fff2b0" /><stop offset="1" stopColor="#ffc850" stopOpacity="0" /></radialGradient><linearGradient id="tr-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#12301c" /><stop offset=".55" stopColor="#2f7545" /><stop offset="1" stopColor="#173a24" /></linearGradient></defs>
+      <ellipse cx="100" cy="208" rx="50" ry="5" fill={INK} opacity=".25" />
+      <rect x="92" y="170" width="16" height="22" fill="#5a3a18" stroke="#2a1608" strokeWidth="1" /><path d="M76 190 h48 l-6 16 h-36Z" fill="#8b5a2c" stroke="#2a1608" strokeWidth="1.2" />
+      {tiers.map((t, i) => <path key={i} d={`M100 ${t.y - 40} L${100 - t.w} ${t.y + 30} Q100 ${t.y + 18} ${100 + t.w} ${t.y + 30}Z`} fill="url(#tr-l)" stroke="#0e2316" strokeWidth="1.2" />)}
+      <path d="M96 38 q-26 22 -34 54 M104 38 q22 26 38 70 M70 110 q30 16 70 -2 M52 156 q48 20 98 -4" stroke="#ffe08a" strokeWidth="1.2" fill="none" strokeDasharray="1.5 5" strokeLinecap="round" />
+      {[[84, 66, '#d9373a'], [112, 86, '#f4c14e'], [74, 104, '#f4c14e'], [128, 120, '#d9373a'], [96, 128, '#2f8fd0'], [60, 150, '#d9373a'], [136, 156, '#f4c14e'], [102, 160, '#d9373a']].map(([x, y, c], i) => <g key={i}><circle cx={x as number} cy={y as number} r="5.6" fill={c as string} stroke="#2a1608" strokeWidth=".7" /><circle cx={(x as number) - 1.6} cy={(y as number) - 1.8} r="1.6" fill="#fff" opacity=".8" /></g>)}
+      {[[92, 82], [118, 104], [82, 132], [122, 146], [64, 168]].map(([x, y], i) => <circle key={i} className="ic-light" cx={x} cy={y} r="7" fill="url(#tr-g)" style={{ animationDelay: `-${(i * 0.43).toFixed(2)}s` }} />)}
+      <g transform="translate(100 112)"><path d="M0 0 q-16 -12 -24 -2 q8 14 24 2Z M0 0 q16 -12 24 -2 q-8 14 -24 2Z" fill="#a8242a" stroke="#5a1014" strokeWidth=".9" /><circle r="3.6" fill="#8a1a20" /></g>
+      <path className="ic-light" d="M100 8 l5 13 l14 1 l-11 9 l4 14 l-12 -8 l-12 8 l4 -14 l-11 -9 l14 -1Z" fill="#ffd866" stroke="#8a6212" strokeWidth="1.2" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
+/** Ô cửa sổ đêm đông: khung gỗ nhiều ô, bầu trời xanh thẫm điểm sao, tuyết phủ bệ cửa, ngọn nến ở góc. */
+export function WindowIcon() {
+  const r = rng(83)
+  return (
+    <Svg label="Cửa sổ ngập tuyết">
+      <defs><linearGradient id="wn-s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#0f1a3c" /><stop offset=".7" stopColor="#25407a" /><stop offset="1" stopColor="#4a6aa8" /></linearGradient><radialGradient id="wn-g"><stop offset="0" stopColor="#ffe9a8" stopOpacity=".6" /><stop offset="1" stopColor="#ffc060" stopOpacity="0" /></radialGradient></defs>
+      <ellipse cx="100" cy="210" rx="70" ry="5" fill={INK} opacity=".25" />
+      <rect x="34" y="20" width="132" height="170" rx="3" fill="#5a3a1c" stroke="#2a1608" strokeWidth="1.8" />
+      <rect x="44" y="30" width="112" height="150" fill="url(#wn-s)" stroke="#2a1608" strokeWidth="1.4" />
+      {Array.from({ length: 14 }, (_, i) => <circle key={'s' + i} cx={48 + r() * 104} cy={34 + r() * 70} r={0.7 + r() * 1.1} fill="#fff" opacity={0.5 + r() * 0.5} />)}
+      {Array.from({ length: 26 }, (_, i) => <circle key={'f' + i} className="ic-light" cx={48 + r() * 104} cy={34 + r() * 140} r={1 + r() * 1.7} fill="#f2f7ff" opacity=".85" style={{ animationDelay: `-${(i * 0.31).toFixed(2)}s` }} />)}
+      <path d="M44 150 Q70 138 100 148 T156 144 V180 H44Z" fill="#e6ecf8" opacity=".92" />
+      <path d="M100 30 V180 M44 80 H156 M44 130 H156" stroke="#5a3a1c" strokeWidth="4.4" /><path d="M100 30 V180 M44 80 H156 M44 130 H156" stroke="#8b6236" strokeWidth="1.4" />
+      <rect x="28" y="186" width="144" height="10" rx="2" fill="#7a4a24" stroke="#2a1608" strokeWidth="1.2" /><path d="M30 186 Q60 176 100 184 T170 182 V188 H30Z" fill="#f4f6fb" />
+      <circle className="ic-light" cx="60" cy="172" r="26" fill="url(#wn-g)" /><rect x="55" y="164" width="10" height="16" rx="1.5" fill="#f3e6c4" stroke="#7a5a2a" strokeWidth=".8" /><path d="M60 164 q-3.4 -6 0 -10 q3.4 4 0 10Z" fill="#ffc850" />
+    </Svg>
+  )
+}
+
+/** Tấm rèm nhung đỏ thẫm: nếp vải buông dài, dây buộc vàng có tua rua và thanh treo gỗ. */
+export function CurtainIcon({ flip = false }: { flip?: boolean }) {
+  return (
+    <Svg label="Tấm rèm nhung">
+      <defs><linearGradient id="ct-r" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#4a0d12" /><stop offset=".25" stopColor="#9a2230" /><stop offset=".5" stopColor="#5a1018" /><stop offset=".78" stopColor="#a8283a" /><stop offset="1" stopColor="#4a0d12" /></linearGradient></defs>
+      <g transform={flip ? 'translate(200 0) scale(-1 1)' : undefined}>
+        <ellipse cx="100" cy="212" rx="64" ry="5" fill={INK} opacity=".25" />
+        <rect x="22" y="12" width="156" height="8" rx="4" fill="#6a4020" stroke="#2a1608" strokeWidth="1.2" /><circle cx="22" cy="16" r="6" fill="#c8a050" stroke="#5a3a0c" strokeWidth="1" /><circle cx="178" cy="16" r="6" fill="#c8a050" stroke="#5a3a0c" strokeWidth="1" />
+        <path d="M34 20 H112 Q118 110 96 146 Q120 180 118 208 H26 Q22 110 34 20Z" fill="url(#ct-r)" stroke="#2b0a0c" strokeWidth="1.6" />
+        {[48, 60, 72, 84, 96, 106].map((x, i) => <path key={x} d={`M${x} 22 Q${x - 6 + i} 110 ${x - 4} 206`} stroke="#2b0a0c" strokeOpacity=".45" strokeWidth="1.6" fill="none" />)}
+        {[54, 78, 100].map((x) => <path key={x} d={`M${x} 26 Q${x + 6} 100 ${x} 160`} stroke="#d85a6a" strokeOpacity=".22" strokeWidth="3" fill="none" />)}
+        <path d="M32 140 Q78 128 118 150" stroke="#e2c071" strokeWidth="5" fill="none" strokeLinecap="round" /><path d="M32 140 Q78 128 118 150" stroke="#8a6a24" strokeWidth="1.4" fill="none" strokeDasharray="3 3" />
+        <g className="ic-swing" style={{ transformOrigin: '100px 146px' }}><circle cx="100" cy="148" r="5" fill="#e2c071" stroke="#8a6a24" strokeWidth="1" /><path d="M96 152 l-3 22 h14 l-3 -22Z" fill="#d9b25c" stroke="#8a6a24" strokeWidth="1" />{[-4, -1.5, 1, 3.5].map((x) => <path key={x} d={`M${100 + x} 174 v14`} stroke="#d9b25c" strokeWidth="1.8" strokeLinecap="round" />)}</g>
+      </g>
+    </Svg>
+  )
+}

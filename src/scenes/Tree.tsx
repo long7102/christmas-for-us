@@ -4,13 +4,14 @@ import { reducedMotion, isLite } from '../lib/device'
 import { sfx } from '../lib/audio'
 import { lights, useLights } from '../lib/lights'
 import SoundControl from '../components/SoundControl'
+import { useHintPulse } from '../lib/hintPulse'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
 import { LAND, PORT, polyBox, type Layout, type P, type R } from './treeLayout'
 
 /** Tuyết rơi ngoài cửa sổ: nhiều lớp xa gần, gió thổi chéo, bông to mờ ở gần, lớp tuyết đọng trên bậu cửa. */
-function WindowSnow({ r }: { r: R }) {
+export function WindowSnow({ r }: { r: R }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
@@ -184,6 +185,45 @@ export function Dust({ w, h }: { w: number; h: number }) {
 }
 
 /** Ánh đèn lồng / nến chập chờn. */
+/** Khi nắp hộp quà bật ra: ruy băng nhiều màu, mảnh giấy và tia sáng vàng bắn lên rồi rơi nhẹ xuống, kèm ánh toả từ lòng hộp. */
+function GiftBurst({ x, y, w }: { x: number; y: number; w: number }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  const W = Math.round(w + 260), H = 360
+  useEffect(() => {
+    const cv = ref.current!, ctx = cv.getContext('2d')!
+    cv.width = W; cv.height = H
+    const lite = reducedMotion() || isLite()
+    const cols = ['#d9373a', '#f4c14e', '#2f8a52', '#f7ecd0', '#e8845a', '#7fb7e6']
+    type P = { x: number; y: number; vx: number; vy: number; a: number; va: number; w: number; h: number; c: string; life: number; max: number; spark: boolean }
+    const ps: P[] = Array.from({ length: lite ? 22 : 70 }, (_, i) => {
+      const spark = i % 3 === 0, ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.5, sp = 160 + Math.random() * 260
+      return { x: W / 2 + (Math.random() - 0.5) * w * 0.6, y: H - 60, vx: Math.cos(ang) * sp * 0.7, vy: Math.sin(ang) * sp, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 10, w: spark ? 3 : 5 + Math.random() * 6, h: spark ? 3 : 10 + Math.random() * 12, c: spark ? '#ffe9a8' : cols[i % cols.length], life: 0, max: 1.6 + Math.random() * 1.2, spark }
+    })
+    let raf = 0, last = performance.now()
+    const frame = (t: number) => {
+      const dt = Math.min(0.05, (t - last) / 1000); last = t
+      ctx.clearRect(0, 0, W, H)
+      let alive = 0
+      for (const p of ps) {
+        p.life += dt; if (p.life > p.max) continue
+        alive++
+        p.vy += 420 * dt; p.vx *= 1 - 0.8 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt
+        const k = 1 - p.life / p.max
+        ctx.globalAlpha = Math.min(1, k * 2.2)
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c
+        if (p.spark) { ctx.shadowColor = 'rgba(255,214,120,.9)'; ctx.shadowBlur = 8; ctx.beginPath(); ctx.arc(0, 0, p.w * (0.6 + 0.6 * Math.sin(t / 60 + p.a)), 0, 6.283); ctx.fill() }
+        else ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.a * 1.3)) + 2)
+        ctx.restore()
+      }
+      ctx.globalAlpha = 1
+      if (alive) raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+    return () => cancelAnimationFrame(raf)
+  }, [W, w])
+  return <canvas ref={ref} className="tr-burst" style={{ left: x - 130, top: y - H + 40, width: W, height: H }} />
+}
+
 export function Lamps({ lamps, flare }: { lamps: Layout['lamps']; flare: Set<number> }) {
   return (
     <>
@@ -246,6 +286,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
     return () => { off(); sfx.fire(false) }
   }, [])
   const [kick, setKick] = useState(0)
+  const pulse = useHintPulse(spots.length, !paused, modal !== null || opening !== null || hov !== null)
   const [starKey, setStarKey] = useState(0)
   const [flash, setFlash] = useState(false)
   const [lampOn, setLampOn] = useState<Set<number>>(new Set())
@@ -343,6 +384,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
         <div className={`tr-stage${flash ? ' flash' : ''}`} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img src={L.src} alt="Cây thông Giáng sinh và bốn món quà" draggable={false} />
           {!paused && <WindowSnow r={L.win} />}
+          <div className="tr-frost" style={{ left: L.win.x, top: L.win.y, width: L.win.w, height: L.win.h }} />
           <Fire r={L.fire} flare={fireOn} />
           {!paused && <Flames r={L.fire} flare={fireOn} />}
           {!paused && <Embers r={L.fire} kick={kick} />}
@@ -363,6 +405,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
                 <div className="tr-patch" style={{ left: d.x1 - 6, top: d.top - 4, width: w, height: h, backgroundImage: `url(${L.src})`, backgroundSize: `${L.w}px ${L.h}px`, backgroundPosition: `${-(d.x1 - 6)}px ${-(d.top - 4 - h)}px` }} />
                 <div className="tr-inside" style={{ left: d.x1, top: d.y1, width: d.x2 - d.x1, height: d.y2 - d.y1 }} />
                 <div className="tr-beam" style={{ left: d.x1 + 6, top: d.y1 - 150, width: d.x2 - d.x1 - 12, height: 160 }} />
+                {opening === i && <GiftBurst x={d.x1} y={d.y1} w={d.x2 - d.x1} />}
               </div>
             )
           })}
@@ -400,7 +443,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
           <Twinkles t={L.tree} />
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             {spots.map((q) => (
-              <polygon key={q.id} className="tr-hs" points={q.poly.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button"
+              <polygon key={q.id} className={`tr-hs${pulse !== null && spots[pulse]?.id === q.id ? ' pulse' : ''}`} points={q.poly.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button"
                 aria-label={q.id} onMouseEnter={() => showTip(q.id, q.poly)} onMouseLeave={() => setTip(null)} onFocus={() => showTip(q.id, q.poly)} onBlur={() => setTip(null)}
                 onClick={() => { setTip(null); poke(q.id) }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(q.id) } }} />
             ))}
@@ -432,7 +475,6 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
         <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>
         <p className="sec-tag">{treeCopy.tagline}</p>
         <p className="sec-desc">{treeCopy.body}</p>
-        <p className="sec-hint"><span aria-hidden>✦</span>{treeCopy.hint}</p>
       </div>
 
       {tip && (() => {
