@@ -17,7 +17,7 @@ const pixels = (im: HTMLImageElement): Tex => {
   return { d, w: cv.width, h: cv.height, axis: n ? sx / n : cv.width / 2 }
 }
 /** Nửa bề rộng thân theo từng hàng (px ảnh): đầu, cổ, thân, váy xoè, chân. */
-const KEYS: [number, number][] = [[0, 12], [24, 12], [60, 14], [74, 12], [92, 19], [130, 20], [138, 34], [148, 54], [162, 66], [178, 64], [188, 36], [198, 14], [210, 10], [316, 9]]
+const KEYS: [number, number][] = [[0, 15], [24, 16], [60, 17], [74, 15], [92, 20], [118, 20], [134, 26], [146, 46], [160, 62], [178, 60], [190, 34], [200, 14], [212, 10], [316, 9]]
 const rowR = (y: number) => { for (let i = 1; i < KEYS.length; i++) if (y <= KEYS[i][0]) { const [y0, r0] = KEYS[i - 1], [y1, r1] = KEYS[i]; return r0 + (r1 - r0) * ((y - y0) / (y1 - y0)) } return 9 }
 
 export class Figurine {
@@ -33,6 +33,7 @@ export class Figurine {
     const [a, b] = await Promise.all([load(front), load(back)])
     this.f = pixels(a); this.b = pixels(b); this.ax = this.f.axis
     for (let y = 0; y < this.h; y++) this.R[y] = rowR(y)
+    { const sm = new Float32Array(this.h); for (let y = 0; y < this.h; y++) { let t = 0, n = 0; for (let k = -7; k <= 7; k++) { const yy = y + k; if (yy >= 0 && yy < this.h) { t += this.R[yy]; n++ } } sm[y] = t / n } this.R.set(sm) }
     // từ hàng bắt đầu váy trở xuống: bán kính lấy theo bề rộng thật (trung bình mặt trước và lưng) để mặt trụ khít hình
     const half = (t: Tex, y: number) => { let lo = t.w, hi = -1; for (let x = 0; x < t.w; x++) if (t.d[(y * t.w + x) * 4 + 3] > 100) { if (x < lo) lo = x; hi = x } return hi < 0 ? 0 : Math.max(t.axis - lo, hi - t.axis) }
     const meas = new Float32Array(this.h)
@@ -54,7 +55,7 @@ export class Figurine {
   }
 
   /** Dựng khung hình ở góc `th` (radian, 0 = mặt trước) vào hai ImageData: hình vũ công và hình bóng (đen, cùng độ phủ). */
-  render(th: number, img: ImageData, sh: ImageData) {
+  render(th: number, img: ImageData, sh: ImageData, k = 1) {
     if (!this.ready) return
     const F = this.f!, B = this.b!, W = this.w, H = this.h
     const c = Math.cos(th), PI = Math.PI
@@ -62,7 +63,7 @@ export class Figurine {
     const o = img.data, so = sh.data
     o.fill(0); so.fill(0)
     for (let y = 0; y < H; y++) {
-      const R = this.R[y]
+      const R = this.R[y] * k
       for (let x = 0; x < W; x++) {
         const xo = x - this.ax
         let r = 0, g = 0, bl = 0, a = 0
@@ -88,7 +89,7 @@ export class Figurine {
           else { this.sample(F, sf, y, ps); this.sample(B, sbk, y, px); for (let q = 0; q < 4; q++) ps[q] = ps[q] * (1 - wb) + px[q] * wb }
           const ba = ps[3] / 255
           if (ba > 0) {
-            const shade = 0.72 + 0.28 * Math.pow(Math.cos(phi0), 0.9)
+            const shade = 0.9 + 0.1 * Math.pow(Math.cos(phi0), 0.9)
             const k = shade / 65025
             r = ps[0] * k + r * (1 - ba); g = ps[1] * k + g * (1 - ba); bl = ps[2] * k + bl * (1 - ba); a = ba + a * (1 - ba)
           }

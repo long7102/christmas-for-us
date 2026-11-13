@@ -121,3 +121,5 @@ npx tsc -b        # kiểm tra kiểu
 - Điện thoại: mũi tên cuộn dời xuống dưới nút đèn (trước đó đè lên nhau); hộp nhạc dọc tính tỉ lệ theo phần ảnh nhìn thấy nên hộp hiện trọn. Đã chụp ở 320x568, 360x640, 390x844, 412x915, 430x932: không tràn ngang.
 
 - Vũ công quay có khối (thay cho lật phẳng): `lib/figurine.ts` dựng lại mỗi khung hình từ hai ảnh (trước, lưng): thân/váy/chân là mặt trụ quay quanh trục đứng (bán kính theo hàng, váy lấy theo bề rộng thật), hai tay là tấm phẳng co theo cos; rìa tối dần; gần 90 độ hoà hai ảnh. Quay liên tục ~6,5s/vòng, chậm ở mặt trước và lưng, lướt nhanh qua hai bên (vì chưa có ảnh nghiêng, hai bên bị méo). Bóng vẽ cùng lượt tính (canvas `.mb-shadow`). Có ảnh nghiêng 90/270 độ thì thêm làm tham số để hai bên đẹp thật.
+
+- Vũ công (sửa lần 3, bản đang dùng): mặt trụ chỉ đẹp trong khoảng 20 độ quanh mặt trước và mặt lưng, quay ngang hơn thì méo (hai ảnh khác tư thế). Nên nhịp là: lắc ±20 độ hai nhịp ở mặt trước, lướt nửa vòng 0,55s bằng tấm phẳng kèm nhoè (k=0 trong `Figurine.render`), lắc ở mặt lưng, lướt về. Dừng nhạc thì dừng đúng chính diện. Muốn quay vòng thật cần ảnh nghiêng 90/270 độ.
