@@ -22,13 +22,10 @@ const HOLD = 0.45
 const END = 0.5
 /** Dừng ngắm hai bé, rồi ánh nến từ một góc phòng loang ra, kéo máy quay lùi ra từ góc ấy sang cảnh ngắm tuyết: đứng yên HOLD3, chuyển SPAN3 (đơn vị: chiều cao màn hình). */
 const HOLD3 = 0.45
-const SPAN3 = 1.3
+const SPAN3 = 1.5
 const Y_CATS = HOLD0 + SPAN2 + HOLD + SPAN
 const Y_SNOW = Y_CATS + HOLD3 + SPAN3
 
-/** Bán kính để đến cuối chuyển cảnh, phần đặc của mặt nạ (đã trừ vùng mờ ở mép) phủ tới tận góc xa nhất, không còn sót cảnh cũ. */
-const R2max = (vw: number, vh: number) => (1.02 * Math.hypot(vw * 0.88, vh) + 40) / 0.58
-const R2c = (r: number, vw: number, vh: number) => ease(r) * R2max(vw, vh)
 type Fx = { p: number; R: number; cx: number; cy: number; on: boolean }
 
 /** Lớp hạt Giáng sinh: tuyết rơi theo gió và tia sao vàng bắn ra từ mép vòng sáng. */
@@ -148,6 +145,7 @@ export default function WorldScroll() {
   const fx2 = useRef<Fx2>({ e: 0, on: false, edge: 0 })
   const prevP = useRef(0)
   const prevQ = useRef(0)
+  const prevR = useRef(0)
   const lenis = useRef<Lenis | null>(null)
   const [seen, setSeen] = useState({ tree: false, cats: false, near: false, box: true, snow: false, turned: false })
 
@@ -166,38 +164,39 @@ export default function WorldScroll() {
       const e = ease(p)
       const r = Math.min(1, Math.max(0, (y - (Y_CATS + HOLD3)) / SPAN3))
       const er = ease(r)
-      const R = e * 1.06 * Math.hypot(vw * 0.5, vh * Math.max(CY, 1 - CY))
       const st = el.style
-      fx.current = r > 0.003 && r < 0.997
-        ? { p: r, R: R2c(r, vw, vh), cx: vw * 0.12, cy: vh, on: true }
-        : { p, R, cx: vw / 2, cy: vh * CY, on: p > 0.003 && p < 0.997 }
-      st.setProperty('--tz', String(calm ? 1 : 1 + 0.34 * e))
-      st.setProperty('--to', String(1 - smooth(0.38, 0.88, p)))
-      st.setProperty('--cz', String(calm ? 1 : 1.18 - 0.18 * e))
-      st.setProperty('--R', `${R}px`)
-      st.setProperty('--D', `${R * 2}px`)
-      st.setProperty('--ring', String(Math.min(1, Math.sin(Math.PI * p) * 2.2) * (p > 0.003 ? 1 : 0)))
-      st.setProperty('--bloom', String(Math.max(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, p)), 2) * 0.75, Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, q)), 2) * 0.55)))
-      st.setProperty('--cv', p > 0.003 ? 'visible' : 'hidden')
-      st.setProperty('--cpe', p > 0.985 && r < 0.012 ? 'auto' : 'none')
-      // chuyển sang cảnh ngắm tuyết: ánh nến loang ra từ góc dưới trái (chỗ ngọn nến bên bàn) như ánh sáng lan dần trong phòng tối;
-      // cảnh mới được kéo lùi ra từ chính góc ấy, cảnh mèo cũ phóng nhẹ về phía góc và tối dần
-      const R2 = er * R2max(vw, vh)
-      st.setProperty('--cx2', '12%'); st.setProperty('--cy2', '100%')
-      st.setProperty('--R2', `${R2.toFixed(1)}px`)
-      st.setProperty('--F2', `${Math.min(R2, 0.42 * R2 + 40).toFixed(1)}px`)
-      st.setProperty('--D2', `${(R2 * 2.1).toFixed(1)}px`)
-      st.setProperty('--sz', String(calm ? 1 : (1.3 - 0.3 * er).toFixed(4)))
-      st.setProperty('--cz2', String(calm ? 1 : (1 + 0.1 * er).toFixed(4)))
-      st.setProperty('--cd', String((er * 0.6).toFixed(3)))
-      st.setProperty('--cring', String((Math.sin(Math.PI * Math.min(1, r * 1.04)) * (r > 0.003 && r < 0.997 ? 1 : 0)).toFixed(3)))
-      st.setProperty('--sv', r > 0.003 ? 'visible' : 'hidden')
-      st.setProperty('--spe', r > 0.985 ? 'auto' : 'none')
-      st.setProperty('--st', String(smooth(0.74, 0.97, r)))
+      // chuyển cảnh kiểu lá thư (cây thông -> hai bé, hai bé -> ngắm tuyết): một lá thư bay tới, phóng lớn che kín màn hình, rồi mở ra để lộ cảnh mới.
+      // lt chạy 0..1 theo thanh cuộn của lần chuyển đang diễn ra (hai lần chuyển không bao giờ chồng nhau).
+      const lt = r > 0.003 ? r : p
+      const a1 = ease(smooth(0, 0.42, lt)), a2 = ease(smooth(0.4, 0.64, lt)), a3 = ease(smooth(0.64, 0.84, lt)), a4 = ease(smooth(0.8, 1, lt))
+      const NEXT = 0.64 // lúc lá thư vừa che kín màn hình: đổi cảnh bên dưới
+      fx.current = { p: 0, R: 0, cx: 0, cy: 0, on: false }
+      st.setProperty('--lv', lt > 0.003 && lt < 0.997 && !calm ? 'visible' : 'hidden')
+      st.setProperty('--lx', `${((1 - a1) * 62).toFixed(2)}vw`)
+      st.setProperty('--ly', `${((1 - a1) * 44 - Math.sin(Math.PI * a1) * 16).toFixed(2)}vh`)
+      st.setProperty('--lr', `${((1 - a1) * 24).toFixed(2)}deg`)
+      st.setProperty('--ls', (0.17 + 0.07 * a1 + 0.82 * a2).toFixed(4))
+      st.setProperty('--lf', `${(-180 * a3).toFixed(2)}deg`)
+      st.setProperty('--lb', `${(a4 * 108).toFixed(2)}%`)
+      st.setProperty('--lsh', (1 - a2).toFixed(3))
+      st.setProperty('--tz', '1')
+      st.setProperty('--to', p < NEXT || calm && p < 0.5 ? '1' : '0')
+      st.setProperty('--cz', '1')
+      st.setProperty('--R', '9999px')
+      st.setProperty('--D', '0px')
+      st.setProperty('--ring', '0')
+      st.setProperty('--bloom', String(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, q)), 2) * 0.55))
+      const catsOn = calm ? p > 0.5 && r < 0.5 : p >= NEXT && r < NEXT
+      const snowOn = calm ? r > 0.5 : r >= NEXT
+      st.setProperty('--cv', catsOn ? 'visible' : 'hidden')
+      st.setProperty('--cpe', catsOn && p > 0.985 && r < 0.012 ? 'auto' : 'none')
+      st.setProperty('--sv', snowOn ? 'visible' : 'hidden')
+      st.setProperty('--spe', snowOn && r > 0.985 ? 'auto' : 'none')
+      st.setProperty('--st', String(smooth(0.8, 1, r)))
       st.setProperty('--tv', q > 0.003 ? 'visible' : 'hidden')
       st.setProperty('--tpe', q > 0.985 && p < 0.012 ? 'auto' : 'none')
-      st.setProperty('--tt', String(smooth(0.78, 0.97, q) * (1 - smooth(0.0, 0.16, p))))
-      st.setProperty('--ct', String(smooth(0.78, 0.97, p) * (1 - smooth(0, 0.3, r))))
+      st.setProperty('--tt', String(smooth(0.78, 0.97, q) * (1 - smooth(0.0, 0.2, p))))
+      st.setProperty('--ct', String(smooth(0.8, 1, p) * (1 - smooth(0, 0.2, r))))
       // mũi tên cuộn: ở cảnh hộp nhạc và ở cảnh cây thông (lúc đứng yên)
       st.setProperty('--cue', String(Math.max(1 - smooth(0, 0.06, q), smooth(0.97, 1, q) * (1 - smooth(0, 0.06, p)), smooth(0.97, 1, p) * (1 - smooth(0, 0.06, r)))))
       // chuyển cảnh hộp nhạc -> cây thông: màn ánh sáng vàng (mặt nạ mềm) kéo từ dưới lên để lộ cây thông
@@ -209,12 +208,14 @@ export default function WorldScroll() {
       st.setProperty('--bt', String(1 - smooth(0, 0.22, q)))
       fx2.current = { e: q, on: q > 0.003 && q < 0.997, edge: Math.min(1, Math.max(0, (-14 + 128 * eq - 7) / 100)) }
       sfx.stageBox(1 - smooth(0.2, 0.85, q))
-      sfx.mix(smooth(0.2, 0.85, p))
+      sfx.mix(smooth(0.5, 0.8, p))
       const pp = prevP.current; prevP.current = p
       if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
+      const rr0 = prevR.current; prevR.current = r
+      if ((rr0 < 0.04 && r >= 0.04) || (rr0 > 0.96 && r <= 0.96)) sfx.chime()
       const pq = prevQ.current; prevQ.current = q
       if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) { sfx.chime(); sfx.sparkle() }
-      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.75, cats: p > 0.003 && r < 0.97, near: p > 0.6, box: q < 0.995, snow: r > 0.003, turned: r > 0.5 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box && o.snow === n.snow && o.turned === n.turned ? o : n })
+      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.66, cats: p >= 0.6 && r < 0.66, near: p > 0.6, box: q < 0.995, snow: r >= 0.6, turned: r > 0.5 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box && o.snow === n.snow && o.turned === n.turned ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
     // cuộn có quán tính (mượt như kéo bằng tay) trên máy tính; điện thoại giữ cuộn gốc của trình duyệt
@@ -285,12 +286,20 @@ export default function WorldScroll() {
   return (
     <>
     <div className="xf" ref={wrap} style={{ height: `${(1 + HOLD0 + SPAN2 + HOLD + SPAN + HOLD3 + SPAN3 + END) * 100}dvh` }}>
-      <div className="xf-sticky">
+      <div className="xf-sticky" data-scene={seen.snow ? 'snow' : undefined}>
         <div className={`xf-layer xf-box${seen.box ? '' : ' idle'}`}><MusicBox active={seen.box} /></div>
         <div className={`xf-layer xf-tree${seen.tree ? '' : ' idle'}`}><Tree paused={!seen.tree} /></div>
         <div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div>
         <div className={`xf-layer xf-snow${seen.snow ? '' : ' idle'}`}><SnowWatch active={seen.snow} /></div>
-        <i className="xf-corner" aria-hidden />
+        {/* lá thư dùng chung cho hai lần chuyển cảnh: bay tới, phóng lớn che kín màn hình, nắp mở lên, phong bì trượt xuống để lộ cảnh mới */}
+        <div className="xf-letter" aria-hidden>
+          <div className="xl-fly">
+            <i className="xl-shadow" />
+            <div className="xl-inside" />
+            <div className="xl-body" />
+            <div className="xl-flapw"><div className="xl-flap" /><b className="xl-seal">❦</b></div>
+          </div>
+        </div>
         <i className="xf-gold" aria-hidden />
         <i className="xf-glow" aria-hidden />
         <i className="xf-candy" aria-hidden />

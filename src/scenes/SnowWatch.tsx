@@ -6,39 +6,8 @@ import { Dust } from './Tree'
 import { LitSpot } from '../components/LitSpot'
 import { useHintPulse } from '../lib/hintPulse'
 import { lights, useLights } from '../lib/lights'
-import { SNOW as L } from './snowLayout'
+import { SNOW as L, LM } from './snowLayout'
 
-const GLASS = L.panes.map(([x, y, w, h]) => `M${x} ${y}H${x + w}V${y + h}H${x}Z`).join('')
-const ROOM = `M0 0H${L.w}V${L.h}H0Z${GLASS}`
-/**
- * Trường sáng chung của phòng khi tắt đèn (dùng cho cả đồ vật lẫn hai người nên không có ranh giới giả):
- * hai ngọn nến và đèn lồng đặt ngay phía trước lưng họ, ở gần máy quay, nên cả mặt hướng về phía máy quay (lưng, vai, chăn, gối, bàn) được chiếu sáng,
- * sáng nhất ở phía dưới và nhạt dần lên phía đầu, ra xa hai bên thì tối. Đó là một vùng sáng hình elip trải rộng
- * (ellipse), cộng thêm quầng sáng gắt hơn sát từng ngọn nến.
- */
-const LIT = { x: 760, y: 900, rx: 880, ry: 560 }
-const bodyHoles = [
-  `radial-gradient(ellipse ${LIT.rx}px ${LIT.ry}px at ${LIT.x}px ${LIT.y}px, rgba(0,0,0,.28) 0, rgba(0,0,0,.52) 45%, rgba(0,0,0,.86) 80%, #000 100%)`,
-  ...L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(0,0,0,.2) 0, rgba(0,0,0,.6) ${200 * k}px, #000 ${520 * k}px)`),
-]
-/** Ánh ấm trải theo cùng vùng elip (không còn là một đốm sát nến), cộng ánh xanh lạnh của tuyết ngoài cửa sổ phủ lên đỉnh đầu và vai. */
-const warmLow = [
-  ...L.flames.map(([x, y, k]) => `radial-gradient(circle at ${x}px ${y}px, rgba(255,165,80,${0.4 * k}) 0, rgba(255,120,45,${0.16 * k}) ${300 * k}px, rgba(255,100,30,0) ${700 * k}px)`),
-  `radial-gradient(ellipse ${LIT.rx}px ${LIT.ry}px at ${LIT.x}px ${LIT.y}px, rgba(255,150,65,.34) 0, rgba(255,125,50,.2) 50%, rgba(255,110,40,0) 100%)`,
-].join(',')
-const warmBg = [
-  warmLow,
-  'linear-gradient(180deg, rgba(150,185,240,.3) 200px, rgba(120,160,225,.1) 430px, rgba(120,160,225,0) 640px)',
-].join(',')
-/** Gộp mặt nạ hình (hai người hoặc ngược lại) với độ tối theo khoảng cách tới nến. */
-const lay = (shape: string[]): React.CSSProperties => {
-  const m = [...shape, ...bodyHoles].join(',')
-  return { WebkitMaskImage: m, maskImage: m, WebkitMaskSize: '100% 100%', maskSize: '100% 100%', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskComposite: 'source-in', maskComposite: 'intersect' }
-}
-/** Ánh nến trên người nhạt dần khi xuống tới chăn, còn ánh nến trên chăn và bàn đậm dần: hai lớp bù nhau nên không có ranh giới ở thắt lưng. */
-const FADE_OUT = 'linear-gradient(180deg, #000 600px, rgba(0,0,0,0) 780px)'
-const FADE_IN = 'linear-gradient(180deg, rgba(0,0,0,0) 600px, #000 780px)'
-const lay2 = (m: string[]): React.CSSProperties => ({ WebkitMaskImage: m.join(','), maskImage: m.join(','), WebkitMaskSize: '100% 100%', maskSize: '100% 100%', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskComposite: 'source-in', maskComposite: 'intersect' })
 const POSE_HOLD = 6500
 const FADE = 1000
 
@@ -266,6 +235,11 @@ export default function SnowWatch({ active }: { active: boolean }) {
   const stage = useRef<HTMLDivElement>(null)
   const lightsOn = useLights()
   const [lampHov, setLampHov] = useState(false)
+  // giải mã sẵn mọi ảnh phụ (mặt nạ, bản đồ tối) để lúc đổi dáng không có khoảnh khắc ảnh chưa sẵn (gây nháy)
+  useEffect(() => {
+    const keep = [...L.poses.map((q) => q.hide), ...LM.dark, ...LM.warm].map((u) => { const im = new Image(); im.decoding = 'async'; im.src = u; im.decode?.().catch(() => {}); return im })
+    return () => { keep.length = 0 }
+  }, [])
   const pulse = useHintPulse(1, active, lampHov)
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [pose, setPose] = useState(0)
@@ -328,13 +302,10 @@ export default function SnowWatch({ active }: { active: boolean }) {
           <img className="sw-img" src={L.poses[0].src} alt="Hai người ngồi sát nhau dưới chăn len, quay lưng nhìn tuyết rơi ngoài cửa sổ lớn" draggable={false} />
           <img className={`sw-img sw-top${pose ? ' on' : ''}`} src={L.poses[1].src} alt="" draggable={false} />
 
-          {/* tắt đèn: cả phòng tối đi (trừ ô kính, ngoài trời vẫn sáng tuyết), chỉ còn ánh các ngọn nến; hai người tối riêng vì đứng trước kính */}
-          <div className="sw-dark" style={{ clipPath: `path(evenodd, '${ROOM}')`, ...lay([`url(${L.poses[maskPose].hide})`]) }} />
-          <div className="sw-dark" style={lay([`url(${L.poses[maskPose].cut})`])} />
-          {/* cây thông và đèn bàn bên trái cũng tắt hẳn (chúng là đèn điện, không phải nến) */}
-          <div className="sw-dark" style={{ background: 'radial-gradient(ellipse 200px 430px at 70px 560px, rgba(9,4,2,.9) 0%, rgba(9,4,2,.65) 55%, rgba(9,4,2,0) 100%)' }} />
-          <div className="sw-warm" style={{ backgroundImage: warmBg, ...lay2([`url(${L.poses[maskPose].cut})`, FADE_OUT]) }} />
-          <div className="sw-warm" style={{ backgroundImage: warmLow, ...lay2([FADE_IN]) }} />
+          {/* tắt đèn: bản đồ tối và ánh ấm đã dựng sẵn thành ảnh (cả phòng tối đi trừ ô kính, hai người tối riêng, ánh nến ấm trải theo một trường sáng chung);
+              chỉ đổi độ trong suốt nên không có mặt nạ CSS phải tính lại mỗi khung hình */}
+          <img className="sw-lm" src={LM.dark[maskPose]} alt="" draggable={false} />
+          <img className="sw-lm" src={LM.warm[maskPose]} alt="" draggable={false} />
 
           {/* tuyết, hơi nước và sao băng ở sau kính: đi sau lưng hai người nhờ mặt nạ theo dáng ngồi hiện tại */}
           <div className="sw-fx" style={maskStyle}>
