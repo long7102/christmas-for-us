@@ -32,11 +32,11 @@ for n in ['1','2']:
     dark=np.zeros((H,W,4),np.uint8); dark[...,0]=9; dark[...,1]=4; dark[...,2]=2; dark[...,3]=np.clip(D*255,0,255)
     Image.fromarray(dark,'RGBA').save(A+f'snow-dark-{n}.webp',quality=80,method=6)
     # ánh ấm
-    cool_a=np.interp(Y,[200,430,640],[.3,.1,0]); cool_c=np.broadcast_to(np.array([150,185,240],np.float32),(H,W,3)).copy()
-    ell_a=np.interp(d_lit,[0,.5,1],[.34,.2,0]); ell_c=np.broadcast_to(np.array([255,150,65],np.float32),(H,W,3)).copy()
+    cool_a=np.interp(Y,[200,430,640],[.2,.07,0]); cool_c=np.broadcast_to(np.array([150,185,240],np.float32),(H,W,3)).copy()
+    ell_a=np.interp(d_lit,[0,.5,1],[.2,.12,0]); ell_c=np.broadcast_to(np.array([255,150,65],np.float32),(H,W,3)).copy()
     cand=[]
     for fx,fy,k in flames:
-        r=np.hypot(X-fx,Y-fy); a=np.interp(r,[0,300*k,700*k],[.4*k,.16*k,0]); cand.append(a)
+        r=np.hypot(X-fx,Y-fy); a=np.interp(r,[0,300*k,700*k],[.26*k,.1*k,0]); cand.append(a)
     warm_c=np.array([255,140,60],np.float32)
     # lớp trên người: cool (dưới) -> ellipse -> nến
     c,a=cool_c,cool_a

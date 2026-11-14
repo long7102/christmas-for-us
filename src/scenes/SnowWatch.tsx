@@ -9,7 +9,7 @@ import { lights, useLights } from '../lib/lights'
 import { SNOW as L, LM } from './snowLayout'
 
 const POSE_HOLD = 6500
-const FADE = 1000
+const FADE = 1600
 
 /** Tuyết rơi sau kính: ba lớp xa gần, trôi theo gió chung của cả trang. Chỉ vẽ trong các ô kính. */
 function SnowFall({ active }: { active: boolean }) {
@@ -22,23 +22,23 @@ function SnowFall({ active }: { active: boolean }) {
     ctx.scale(K, K)
     ctx.beginPath(); L.panes.forEach(([x, y, w, h]) => ctx.rect(x, y, w, h)); ctx.clip()
     if (!active) return
-    const n = isLite() ? 60 : 150
+    const n = isLite() ? 50 : 105
     const fl = Array.from({ length: n }, () => ({ x: Math.random() * L.w, y: Math.random() * L.h, z: Math.random() ** 1.6, ph: Math.random() * 6.28 }))
     let raf = 0, last = performance.now()
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       ctx.clearRect(0, 0, L.w, L.h)
       for (const f of fl) {
-        f.y += (26 + f.z * 96) * dt
+        f.y += (20 + f.z * 66) * dt
         f.x += (weather.sway(t, f.ph) * (10 + f.z * 38) + Math.sin(t / 900 + f.ph) * 6 * f.z) * dt
         if (f.y > 660) { f.y = -8; f.x = Math.random() * L.w }
         if (f.x > L.w + 10) f.x = -10; else if (f.x < -10) f.x = L.w + 10
-        const r = 1 + f.z * 3.6
-        ctx.globalAlpha = 0.45 + f.z * 0.5
+        const r = 0.9 + f.z * 2.5
+        ctx.globalAlpha = 0.38 + f.z * 0.4
         if (f.z > 0.78) {
-          const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r * 1.8)
-          g.addColorStop(0, '#fff'); g.addColorStop(0.5, 'rgba(240,246,255,.7)'); g.addColorStop(1, 'rgba(235,242,255,0)')
-          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, r * 1.8, 0, 6.283); ctx.fill()
+          const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r * 1.5)
+          g.addColorStop(0, 'rgba(255,255,255,.85)'); g.addColorStop(0.5, 'rgba(240,246,255,.45)'); g.addColorStop(1, 'rgba(235,242,255,0)')
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, r * 1.5, 0, 6.283); ctx.fill()
         } else { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(f.x, f.y, r, 0, 6.283); ctx.fill() }
       }
       ctx.globalAlpha = 1
@@ -318,7 +318,7 @@ export default function SnowWatch({ active }: { active: boolean }) {
             onPointerMove={(e) => { if (e.pointerType === 'mouse' || e.buttons || e.pointerType === 'touch') move(e) }}
             onPointerLeave={() => { prev.current = null }} onPointerUp={() => { prev.current = null }} />
 
-          <LitSpot src={L.poses[0].src} w={L.w} h={L.h} poly={L.lamp} on={lampHov || pulse === 0} strength={0.8} />
+          <LitSpot src={L.poses[0].src} w={L.w} h={L.h} poly={L.lamp} on={lampHov || pulse === 0} strength={0.5} />
           {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 260 * k, top: y - 260 * k, width: 520 * k, height: 520 * k, animationDelay: `-${i * 0.7}s` }} />)}
           {active && <Dust w={L.w} h={L.h} />}
 

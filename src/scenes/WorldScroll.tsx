@@ -165,19 +165,19 @@ export default function WorldScroll() {
       const r = Math.min(1, Math.max(0, (y - (Y_CATS + HOLD3)) / SPAN3))
       const er = ease(r)
       const st = el.style
-      // chuyển cảnh kiểu lá thư (cây thông -> hai bé, hai bé -> ngắm tuyết): một lá thư bay tới, phóng lớn che kín màn hình, rồi mở ra để lộ cảnh mới.
+      // chuyển cảnh kiểu lá thư (cây thông -> hai bé, hai bé -> ngắm tuyết): một lá thư bay tới, phóng lớn che kín màn hình, rồi bay vụt qua máy quay (phóng tiếp, mờ dần) để lộ cảnh mới. Không đóng mở thư.
       // lt chạy 0..1 theo thanh cuộn của lần chuyển đang diễn ra (hai lần chuyển không bao giờ chồng nhau).
       const lt = r > 0.003 ? r : p
-      const a1 = ease(smooth(0, 0.42, lt)), a2 = ease(smooth(0.4, 0.64, lt)), a3 = ease(smooth(0.64, 0.84, lt)), a4 = ease(smooth(0.8, 1, lt))
+      const a1 = ease(smooth(0, 0.42, lt)), a2 = ease(smooth(0.4, 0.64, lt)), a5 = ease(smooth(0.64, 1, lt))
       const NEXT = 0.64 // lúc lá thư vừa che kín màn hình: đổi cảnh bên dưới
       fx.current = { p: 0, R: 0, cx: 0, cy: 0, on: false }
       st.setProperty('--lv', lt > 0.003 && lt < 0.997 && !calm ? 'visible' : 'hidden')
-      st.setProperty('--lx', `${((1 - a1) * 62).toFixed(2)}vw`)
-      st.setProperty('--ly', `${((1 - a1) * 44 - Math.sin(Math.PI * a1) * 16).toFixed(2)}vh`)
-      st.setProperty('--lr', `${((1 - a1) * 24).toFixed(2)}deg`)
-      st.setProperty('--ls', (0.17 + 0.07 * a1 + 0.82 * a2).toFixed(4))
-      st.setProperty('--lf', `${(-180 * a3).toFixed(2)}deg`)
-      st.setProperty('--lb', `${(a4 * 108).toFixed(2)}%`)
+      st.setProperty('--lx', `${((1 - a1) * 62 - a5 * 5).toFixed(2)}vw`)
+      st.setProperty('--ly', `${((1 - a1) * 44 - Math.sin(Math.PI * a1) * 16 - a5 * 9).toFixed(2)}vh`)
+      st.setProperty('--lr', `${((1 - a1) * 24 - a5 * 9).toFixed(2)}deg`)
+      st.setProperty('--ls', (0.17 + 0.07 * a1 + 0.82 * a2 + 2.6 * a5).toFixed(4))
+      st.setProperty('--lo', (1 - smooth(0.72, 1, lt)).toFixed(3))
+      st.setProperty('--lso', (1 - smooth(0.62, 0.8, lt)).toFixed(3))
       st.setProperty('--lsh', (1 - a2).toFixed(3))
       st.setProperty('--tz', '1')
       st.setProperty('--to', p < NEXT || calm && p < 0.5 ? '1' : '0')
@@ -291,7 +291,7 @@ export default function WorldScroll() {
         <div className={`xf-layer xf-tree${seen.tree ? '' : ' idle'}`}><Tree paused={!seen.tree} /></div>
         <div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div>
         <div className={`xf-layer xf-snow${seen.snow ? '' : ' idle'}`}><SnowWatch active={seen.snow} /></div>
-        {/* lá thư dùng chung cho hai lần chuyển cảnh: bay tới, phóng lớn che kín màn hình, nắp mở lên, phong bì trượt xuống để lộ cảnh mới */}
+        {/* lá thư dùng chung cho hai lần chuyển cảnh: bay tới, phóng lớn che kín màn hình, rồi bay vụt qua máy quay để lộ cảnh mới */}
         <div className="xf-letter" aria-hidden>
           <div className="xl-fly">
             <i className="xl-shadow" />
