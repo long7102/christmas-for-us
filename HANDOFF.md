@@ -170,3 +170,8 @@ npx tsc -b        # kiểm tra kiểu
 - **Thanh chấm cảnh** (`.xf-dots`): viên thuốc mờ, sợi chỉ vàng nối các nút hình thoi, nút hiện tại to và phát sáng, phần đã đi qua của sợi chỉ sáng hơn (`--prog`).
 - **Cảnh ngắm tuyết, tắt đèn**: hai người tối vừa phải (.8), tóc cô gái được nâng sáng riêng (elip quanh đầu, chỉ những điểm tối) để thấy rõ sợi tóc và chóp đỏ. Đã kiểm bằng mã: tuyết rơi, sao băng, tuyết bám, hơi nước chỉ nằm trong ô kính (không còn bụi hạt trong phòng; đó là `Dust` đã bỏ ở lượt trước).
 - **Chuyển cảnh bông tuyết** (hai bé -> ngắm tuyết, thay cho lá thư ở lần chuyển này): `.xf-flake` (lõi lục giác `.xf-hex` + SVG sáu nhánh), biến `--fs --fr --fo --fv` tính trong `apply()`; lõi phóng to che kín màn hình, cảnh đổi tại `NEXTR = 0.54`, rồi tan dần. Lá thư vẫn dùng cho cây thông -> hai bé. `SPAN3 = 1.25`.
+
+### Tuyết rơi theo mẫu của Long + 9 mẫu bông tuyết
+- `src/lib/snowflakes.ts`: chín mẫu bông tuyết (nhánh mập chẻ ba, lục giác cành mảnh, sao lưới, mũi giáo, lông chim, hoa, mạng nhện, lá răng cưa, nhánh có nút tròn), mỗi mẫu là một nhánh nhân sáu lần + lõi; cùng dữ liệu cho SVG chuyển cảnh và sprite tuyết rơi (`Path2D`).
+- Tuyết rơi cảnh ngắm tuyết (`SnowFall`): ~260 hạt (120 ở chế độ nhẹ), phần lớn là đốm bokeh tròn đủ cỡ (sắc / mềm / nhoè), ~26% là bông tuyết pha lê xoay chậm; dày và sáng ở phía trên, mờ dần xuống dưới; toàn sprite dựng sẵn, vẽ 30 khung/giây.
+- Chuyển cảnh bông tuyết: mỗi lần chuyển một mẫu khác nhau (`flakeI` trong `WorldScroll.tsx`).

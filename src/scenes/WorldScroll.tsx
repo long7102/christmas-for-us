@@ -7,6 +7,7 @@ import Lenis from 'lenis'
 import { weather } from '../lib/weather'
 import { isLite, reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
+import { FLAKES } from '../lib/snowflakes'
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const smooth = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
@@ -146,6 +147,7 @@ export default function WorldScroll() {
   const prevP = useRef(0)
   const prevQ = useRef(0)
   const prevR = useRef(0)
+  const [flakeI, setFlakeI] = useState(1)
   const lenis = useRef<Lenis | null>(null)
   const [seen, setSeen] = useState({ tree: false, cats: false, near: false, box: true, snow: false, turned: false })
 
@@ -221,6 +223,7 @@ export default function WorldScroll() {
       const pp = prevP.current; prevP.current = p
       if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
       const rr0 = prevR.current; prevR.current = r
+      if (rr0 < 0.003 && r >= 0.003) setFlakeI((i) => (i + 1 + Math.floor(Math.random() * (FLAKES.length - 1))) % FLAKES.length) // mỗi lần chuyển cảnh một mẫu bông tuyết khác
       if ((rr0 < 0.04 && r >= 0.04) || (rr0 > 0.96 && r <= 0.96)) sfx.chime()
       const pq = prevQ.current; prevQ.current = q
       if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) { sfx.chime(); sfx.sparkle() }
@@ -304,17 +307,14 @@ export default function WorldScroll() {
         {/* bông tuyết dùng cho chuyển cảnh hai bé -> ngắm tuyết: lõi lục giác đặc phóng lên che kín màn hình, sáu nhánh có cành con */}
         <div className="xf-flake" aria-hidden>
           <i className="xf-hex" />
-          <svg viewBox="-100 -100 200 200">
-            <defs>
-              <g id="fl-arm">
-                <path d="M0 -50V-96M0 -64L-15 -80M0 -64L15 -80M0 -78L-11 -90M0 -78L11 -90" fill="none" stroke="rgba(190,212,240,.35)" strokeWidth="6" strokeLinecap="round" />
-                <path d="M0 -50V-96M0 -64L-15 -80M0 -64L15 -80M0 -78L-11 -90M0 -78L11 -90" fill="none" stroke="#f6faff" strokeWidth="3.2" strokeLinecap="round" />
-                <circle cx="0" cy="-97" r="3.4" fill="#fff" />
+          <svg viewBox="-100 -100 200 200" key={flakeI}>
+            {[0, 60, 120, 180, 240, 300].map((a) => (
+              <g key={a} transform={`rotate(${a})`} fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path d={FLAKES[flakeI].arm} stroke="rgba(190,212,240,.35)" strokeWidth={FLAKES[flakeI].w + 3} fill={FLAKES[flakeI].fill ? 'rgba(190,212,240,.35)' : 'none'} />
+                <path d={FLAKES[flakeI].arm} stroke="#f6faff" strokeWidth={FLAKES[flakeI].w} fill={FLAKES[flakeI].fill ? '#f6faff' : 'none'} />
               </g>
-            </defs>
-            {[0, 60, 120, 180, 240, 300].map((a) => <use key={a} href="#fl-arm" transform={`rotate(${a})`} />)}
-            <polygon points="0,-44 38.1,-22 38.1,22 0,44 -38.1,22 -38.1,-22" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="1.6" />
-            <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" fill="none" stroke="rgba(255,255,255,.55)" strokeWidth="1.2" />
+            ))}
+            {FLAKES[flakeI].core && <path d={FLAKES[flakeI].core} fill="none" stroke="#f6faff" strokeWidth={FLAKES[flakeI].coreW ?? FLAKES[flakeI].w} strokeLinecap="round" strokeLinejoin="round" />}
           </svg>
         </div>
         <div className="xf-letter" aria-hidden>

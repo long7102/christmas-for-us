@@ -5,11 +5,16 @@ import { weather } from '../lib/weather'
 import { LitSpot } from '../components/LitSpot'
 import { lights, useLights } from '../lib/lights'
 import { SNOW as L, LM } from './snowLayout'
+import { makeSprites } from '../lib/snowflakes'
 
 const POSE_HOLD = 6500
 const FADE = 1600
 
-/** Tuyết rơi sau kính: ba lớp xa gần, trôi theo gió chung của cả trang. Chỉ vẽ trong các ô kính. */
+/**
+ * Tuyết rơi sau kính, theo mẫu Long gửi: phần lớn là những đốm tròn mềm (bokeh) đủ cỡ, từ chấm sắc nhỏ tới đốm to nhoè, kèm những bông tuyết pha lê
+ * đủ mẫu (chín mẫu, xem lib/snowflakes.ts) xoay chậm; dày và sáng ở phía trên, thưa và mờ dần xuống dưới. Tất cả là sprite dựng sẵn nên vẽ rất nhẹ.
+ * Trôi theo gió chung của cả trang. Chỉ vẽ trong các ô kính.
+ */
 function SnowFall({ active }: { active: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
@@ -20,26 +25,38 @@ function SnowFall({ active }: { active: boolean }) {
     ctx.scale(K, K)
     ctx.beginPath(); L.panes.forEach(([x, y, w, h]) => ctx.rect(x, y, w, h)); ctx.clip()
     if (!active) return
-    const n = isLite() ? 36 : 70
-    const fl = Array.from({ length: n }, () => ({ x: Math.random() * L.w, y: Math.random() * L.h, z: Math.random() ** 1.6, ph: Math.random() * 6.28 }))
+    // sprite đốm tròn: sắc, mềm, nhoè
+    const orb = (blur: number) => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d')!
+      const g = x.createRadialGradient(32, 32, 0, 32, 32, 30); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(Math.max(0.05, 0.62 - blur * 0.6), `rgba(255,255,255,${1 - blur * 0.55})`); g.addColorStop(1, 'rgba(255,255,255,0)')
+      x.fillStyle = g; x.beginPath(); x.arc(32, 32, 30, 0, 6.283); x.fill(); return c }
+    const orbs = [orb(0), orb(0.5), orb(1)]
+    const crystals = makeSprites()
+    const n = isLite() ? 120 : 260
+    type P = { x: number; y: number; z: number; ph: number; spr: HTMLCanvasElement; size: number; a: number; rot: number; spin: number; crystal: boolean }
+    const mk = (top: boolean): P => {
+      const z = Math.random() ** 1.3, crystal = Math.random() < 0.26
+      const spr = crystal ? crystals[Math.floor(Math.random() * crystals.length)] : orbs[z > 0.78 ? 2 : z > 0.45 ? 1 : 0]
+      const size = crystal ? 20 + z * 36 : z > 0.75 ? 44 + z * 44 : 8 + z * 36
+      return { x: Math.random() * L.w, y: top ? -50 : Math.random() ** 1.15 * 660, z, ph: Math.random() * 6.28, spr, size, a: (crystal ? 0.7 : 0.55) + z * 0.4, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.9, crystal }
+    }
+    const fl = Array.from({ length: n }, () => mk(false))
     let raf = 0, last = performance.now()
     const frame = (t: number) => {
       raf = requestAnimationFrame(frame)
-      if (t - last < 30) return // 30 khung hình/giây là đủ cho tuyết, nhẹ máy hơn
+      if (t - last < 30) return // 30 khung hình/giây là đủ cho tuyết
       const dt = Math.min(0.08, (t - last) / 1000); last = t
       ctx.clearRect(0, 0, L.w, L.h)
-      for (const f of fl) {
-        f.y += (20 + f.z * 66) * dt
-        f.x += (weather.sway(t, f.ph) * (10 + f.z * 38) + Math.sin(t / 900 + f.ph) * 6 * f.z) * dt
-        if (f.y > 660) { f.y = -8; f.x = Math.random() * L.w }
-        if (f.x > L.w + 10) f.x = -10; else if (f.x < -10) f.x = L.w + 10
-        const r = 0.9 + f.z * 2.5
-        ctx.globalAlpha = 0.38 + f.z * 0.4
-        if (f.z > 0.78) {
-          const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r * 1.5)
-          g.addColorStop(0, 'rgba(255,255,255,.85)'); g.addColorStop(0.5, 'rgba(240,246,255,.45)'); g.addColorStop(1, 'rgba(235,242,255,0)')
-          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, r * 1.5, 0, 6.283); ctx.fill()
-        } else { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(f.x, f.y, r, 0, 6.283); ctx.fill() }
+      for (let i = 0; i < fl.length; i++) {
+        let f = fl[i]
+        f.y += (22 + f.z * 80) * dt
+        f.x += (weather.sway(t, f.ph) * (10 + f.z * 40) + Math.sin(t / 900 + f.ph) * 7 * f.z) * dt
+        f.rot += f.spin * dt
+        if (f.y > 676) { f = fl[i] = mk(true) }
+        if (f.x > L.w + 40) f.x = -40; else if (f.x < -40) f.x = L.w + 40
+        const top = Math.max(0, 1 - f.y / 640) // dày và sáng ở phía trên, mờ dần xuống dưới
+        ctx.globalAlpha = Math.min(1, f.a * (0.22 + 1.0 * top ** 0.7))
+        if (f.crystal) { ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ctx.drawImage(f.spr, -f.size / 2, -f.size / 2, f.size, f.size); ctx.restore() }
+        else ctx.drawImage(f.spr, f.x - f.size / 2, f.y - f.size / 2, f.size, f.size)
       }
       ctx.globalAlpha = 1
     }
