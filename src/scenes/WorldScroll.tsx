@@ -22,7 +22,7 @@ const HOLD = 0.45
 const END = 0.5
 /** Dừng ngắm hai bé, rồi ánh nến từ một góc phòng loang ra, kéo máy quay lùi ra từ góc ấy sang cảnh ngắm tuyết: đứng yên HOLD3, chuyển SPAN3 (đơn vị: chiều cao màn hình). */
 const HOLD3 = 0.45
-const SPAN3 = 1.5
+const SPAN3 = 1.25
 const Y_CATS = HOLD0 + SPAN2 + HOLD + SPAN
 const Y_SNOW = Y_CATS + HOLD3 + SPAN3
 
@@ -169,9 +169,18 @@ export default function WorldScroll() {
       // lt chạy 0..1 theo thanh cuộn của lần chuyển đang diễn ra (hai lần chuyển không bao giờ chồng nhau).
       const lt = r > 0.003 ? r : p
       const a1 = ease(smooth(0, 0.42, lt)), a2 = ease(smooth(0.4, 0.64, lt)), a5 = ease(smooth(0.64, 1, lt))
+      const NEXTR = 0.54 // lúc bông tuyết vừa che kín màn hình: đổi cảnh bên dưới (hai bé -> ngắm tuyết)
       const NEXT = 0.64 // lúc lá thư vừa che kín màn hình: đổi cảnh bên dưới
-      fx.current = { p: 0, R: 0, cx: 0, cy: 0, on: false }
-      st.setProperty('--lv', lt > 0.003 && lt < 0.997 && !calm ? 'visible' : 'hidden')
+      // hai bé -> ngắm tuyết: một bông tuyết nhỏ giữa màn hình to dần, xoay nhẹ, che kín màn hình (cảnh bên dưới đổi lúc đó), rồi tan ra để lộ cảnh mới
+      const flakeOn = r > 0.003 && r < 0.997 && !calm
+      const fsc = 0.05 + 11 * ease(smooth(0, 0.5, r)) + 5 * smooth(0.5, 1, r)
+      const apothem = 0.225 * 0.6 * Math.min(vw, vh) * fsc
+      fx.current = flakeOn && r < 0.5 ? { p: r, R: Math.min(apothem * 1.15, Math.hypot(vw, vh) / 2), cx: vw / 2, cy: vh / 2, on: true } : { p: 0, R: 0, cx: 0, cy: 0, on: false }
+      st.setProperty('--fv', flakeOn ? 'visible' : 'hidden')
+      st.setProperty('--fs', fsc.toFixed(3))
+      st.setProperty('--fr', `${(64 * ease(r)).toFixed(2)}deg`)
+      st.setProperty('--fo', (1 - smooth(0.56, 0.9, r)).toFixed(3))
+      st.setProperty('--lv', lt > 0.003 && lt < 0.997 && !calm && r <= 0.003 ? 'visible' : 'hidden')
       st.setProperty('--lx', `${((1 - a1) * 62 - a5 * 5).toFixed(2)}vw`)
       st.setProperty('--ly', `${((1 - a1) * 44 - Math.sin(Math.PI * a1) * 16 - a5 * 9).toFixed(2)}vh`)
       st.setProperty('--lr', `${((1 - a1) * 24 - a5 * 9).toFixed(2)}deg`)
@@ -186,17 +195,17 @@ export default function WorldScroll() {
       st.setProperty('--D', '0px')
       st.setProperty('--ring', '0')
       st.setProperty('--bloom', String(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, q)), 2) * 0.55))
-      const catsOn = calm ? p > 0.5 && r < 0.5 : p >= NEXT && r < NEXT
-      const snowOn = calm ? r > 0.5 : r >= NEXT
+      const catsOn = calm ? p > 0.5 && r < 0.5 : p >= NEXT && r < NEXTR
+      const snowOn = calm ? r > 0.5 : r >= NEXTR
       st.setProperty('--cv', catsOn ? 'visible' : 'hidden')
       st.setProperty('--cpe', catsOn && p > 0.985 && r < 0.012 ? 'auto' : 'none')
       st.setProperty('--sv', snowOn ? 'visible' : 'hidden')
       st.setProperty('--spe', snowOn && r > 0.985 ? 'auto' : 'none')
-      st.setProperty('--st', String(smooth(0.8, 1, r)))
+      st.setProperty('--st', String(smooth(0.72, 0.95, r)))
       st.setProperty('--tv', q > 0.003 ? 'visible' : 'hidden')
       st.setProperty('--tpe', q > 0.985 && p < 0.012 ? 'auto' : 'none')
       st.setProperty('--tt', String(smooth(0.78, 0.97, q) * (1 - smooth(0.0, 0.2, p))))
-      st.setProperty('--ct', String(smooth(0.8, 1, p) * (1 - smooth(0, 0.2, r))))
+      st.setProperty('--ct', String(smooth(0.8, 1, p) * (1 - smooth(0, 0.12, r))))
       // mũi tên cuộn: ở cảnh hộp nhạc và ở cảnh cây thông (lúc đứng yên)
       st.setProperty('--cue', String(Math.max(1 - smooth(0, 0.06, q), smooth(0.97, 1, q) * (1 - smooth(0, 0.06, p)), smooth(0.97, 1, p) * (1 - smooth(0, 0.06, r)))))
       // chuyển cảnh hộp nhạc -> cây thông: màn ánh sáng vàng (mặt nạ mềm) kéo từ dưới lên để lộ cây thông
@@ -215,7 +224,7 @@ export default function WorldScroll() {
       if ((rr0 < 0.04 && r >= 0.04) || (rr0 > 0.96 && r <= 0.96)) sfx.chime()
       const pq = prevQ.current; prevQ.current = q
       if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) { sfx.chime(); sfx.sparkle() }
-      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.66, cats: p >= 0.6 && r < 0.66, near: p > 0.6, box: q < 0.995, snow: r >= 0.6, turned: r > 0.5 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box && o.snow === n.snow && o.turned === n.turned ? o : n })
+      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.66, cats: p >= 0.6 && r < NEXTR + 0.04, near: p > 0.6, box: q < 0.995, snow: r >= NEXTR - 0.04, turned: r > 0.5 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box && o.snow === n.snow && o.turned === n.turned ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
     // cuộn có quán tính (mượt như kéo bằng tay) trên máy tính; điện thoại giữ cuộn gốc của trình duyệt
@@ -292,6 +301,22 @@ export default function WorldScroll() {
         <div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div>
         <div className={`xf-layer xf-snow${seen.snow ? '' : ' idle'}`}><SnowWatch active={seen.snow} /></div>
         {/* lá thư dùng chung cho hai lần chuyển cảnh: bay tới, phóng lớn che kín màn hình, rồi bay vụt qua máy quay để lộ cảnh mới */}
+        {/* bông tuyết dùng cho chuyển cảnh hai bé -> ngắm tuyết: lõi lục giác đặc phóng lên che kín màn hình, sáu nhánh có cành con */}
+        <div className="xf-flake" aria-hidden>
+          <i className="xf-hex" />
+          <svg viewBox="-100 -100 200 200">
+            <defs>
+              <g id="fl-arm">
+                <path d="M0 -50V-96M0 -64L-15 -80M0 -64L15 -80M0 -78L-11 -90M0 -78L11 -90" fill="none" stroke="rgba(190,212,240,.35)" strokeWidth="6" strokeLinecap="round" />
+                <path d="M0 -50V-96M0 -64L-15 -80M0 -64L15 -80M0 -78L-11 -90M0 -78L11 -90" fill="none" stroke="#f6faff" strokeWidth="3.2" strokeLinecap="round" />
+                <circle cx="0" cy="-97" r="3.4" fill="#fff" />
+              </g>
+            </defs>
+            {[0, 60, 120, 180, 240, 300].map((a) => <use key={a} href="#fl-arm" transform={`rotate(${a})`} />)}
+            <polygon points="0,-44 38.1,-22 38.1,22 0,44 -38.1,22 -38.1,-22" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="1.6" />
+            <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" fill="none" stroke="rgba(255,255,255,.55)" strokeWidth="1.2" />
+          </svg>
+        </div>
         <div className="xf-letter" aria-hidden>
           <div className="xl-fly">
             <i className="xl-shadow" />
@@ -306,7 +331,7 @@ export default function WorldScroll() {
         <i className="xf-bloom" aria-hidden />
         <Sparks fx={fx} />
         <Notes fx={fx2} />
-        <nav className="xf-dots" aria-label="Các cảnh">
+        <nav className="xf-dots" aria-label="Các cảnh" style={{ ['--prog' as string]: Math.max(0, stops.findIndex((d) => d.on)) / (stops.length - 1) }}>
           {stops.map((d) => <button key={d.label} className={d.on ? 'on' : ''} aria-label={d.label} aria-current={d.on} onClick={() => goTo(d.at)}><span>{d.label}</span></button>)}
         </nav>
         <a className="scroll-cue" href="#cats" aria-label="Cuộn xuống cảnh kế tiếp" onClick={down}>

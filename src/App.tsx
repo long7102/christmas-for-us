@@ -7,6 +7,7 @@ import { Loader } from './components/Loader'
 import { preloadScenes } from './lib/preload'
 import { startPerfWatch } from './lib/perf'
 import { useRipple } from './lib/ripple'
+import { Cursor } from './components/Cursor'
 import { startTimeOfDay } from './lib/timeOfDay'
 
 
@@ -31,6 +32,7 @@ export default function App() {
   return (
     <>
       <Loader />
+      <Cursor />
       {/* Các cảnh sau cánh cửa làm từng cảnh một: hiện có cây thông + 4 quà và hai chú mèo. */}
       <main className="world" aria-hidden={phase !== 'world'}>{phase === 'world' && <><WorldScroll /><div className="tod-in" /></>}</main>
       {phase === 'gate' && <PasswordGate onPass={() => setPhase('door')} />}
