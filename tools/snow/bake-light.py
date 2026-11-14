@@ -26,8 +26,10 @@ def over(c1,a1,c2,a2):  # c2,a2 phía trên
     return c,a
 for n in ['1','2']:
     sil=cv2.imread(os.path.join(HERE,f'cut-{n}.png'),cv2.IMREAD_UNCHANGED)[...,3].astype(np.float32)/255
+    sil=cv2.erode(sil,np.ones((5,5),np.uint8))  # mặt nạ cắt nở ra vài px quanh người: thu về đúng mép thật, không còn quầng tối quanh đầu
     mask=sil+(1-sil)*notpane
-    D=.88*F*mask
+    # phòng tối .88; hai người nhẹ hơn (.62) vì mặt lưng quay về phía nến và đồ vật gần máy quay, nên còn thấy được sợi tóc và vân áo
+    D=F*(.88*(1-sil)*notpane+.62*sil)
     D=1-(1-D)*(1-patch)
     dark=np.zeros((H,W,4),np.uint8); dark[...,0]=9; dark[...,1]=4; dark[...,2]=2; dark[...,3]=np.clip(D*255,0,255)
     Image.fromarray(dark,'RGBA').save(A+f'snow-dark-{n}.webp',quality=80,method=6)
@@ -42,11 +44,20 @@ for n in ['1','2']:
     c,a=cool_c,cool_a
     c,a=over(c,a,ell_c,ell_a)
     for ca in cand: c,a=over(c,a,np.broadcast_to(warm_c,(H,W,3)).copy(),ca)
+    # viền sáng lạnh: ánh tuyết ngoài cửa sổ chiếu vào mặt trước hai người, nên nhìn từ phía sau chỉ thấy một đường sáng mảnh ôm theo đỉnh đầu, tóc và vai (mạnh ở phía trên, mất dần xuống thân)
+    e2=cv2.erode(sil,np.ones((5,5),np.uint8)); band=cv2.GaussianBlur(np.clip(sil-e2,0,1),(0,0),.8)  # một đường mảnh ngay trong mép thật
+    rim_a=np.clip(band*np.interp(Y,[160,420,660],[.42,.24,0]),0,1)
+    rim_c=np.broadcast_to(np.array([150,190,245],np.float32),(H,W,3)).copy()
+    c,a=over(c,a,rim_c,rim_a)
     fo=np.interp(Y,[560,696],[1,0]); a1=a*sil*fo; c1=c
     # lớp trên chăn+bàn (toàn chiều ngang): ellipse + nến
     c,a=ell_c,ell_a
     for ca in cand: c,a=over(c,a,np.broadcast_to(warm_c,(H,W,3)).copy(),ca)
+    # ánh tuyết ngoài cửa sổ hắt xuống bậu cửa, gối và mặt chăn gần cửa: một dải xanh lạnh nhạt ngay dưới mép kính, rộng bằng khung cửa
+    sp_x=np.interp(X,[285,420,1500,1622],[0,1,1,0]); sp_a=np.interp(Y,[636,690,820],[0,.15,0])*sp_x
+    sp_c=np.broadcast_to(np.array([140,178,232],np.float32),(H,W,3)).copy()
     fi=np.interp(Y,[560,696],[0,1]); a2=a*fi; c2=c
+    c2,a2=over(c2,a2,sp_c,sp_a)
     co,ao=over(c1,a1,c2,a2)
     warm=np.zeros((H,W,4),np.uint8); warm[...,:3]=np.clip(co,0,255); warm[...,3]=np.clip(ao*255,0,255)
     Image.fromarray(warm,'RGBA').save(A+f'snow-warm-{n}.webp',quality=80,method=6)

@@ -4,7 +4,6 @@ import { isLite, reducedMotion } from '../lib/device'
 import { weather } from '../lib/weather'
 import { Dust } from './Tree'
 import { LitSpot } from '../components/LitSpot'
-import { useHintPulse } from '../lib/hintPulse'
 import { lights, useLights } from '../lib/lights'
 import { SNOW as L, LM } from './snowLayout'
 
@@ -50,12 +49,22 @@ function SnowFall({ active }: { active: boolean }) {
   return <canvas ref={ref} className="sw-cv" aria-hidden />
 }
 
-/** Sao băng bay qua bầu trời mỗi khi `fire` tăng lên (do bộ hẹn giờ của cảnh quyết định, thỉnh thoảng và ngẫu nhiên). */
-function Meteors({ active, fire }: { active: boolean; fire: number }) {
+type Kind = 'classic' | 'gold' | 'twin' | 'comet' | 'shower'
+/** Năm kiểu sao băng, chọn ngẫu nhiên theo độ hiếm: sao băng trắng xanh (hay gặp), sao vàng bay chậm rắc tia lấp lánh, hai sao song song, sao chổi lớn (hiếm), và mưa sao nhỏ (vài vệt mảnh liên tiếp). */
+const KINDS: [Kind, number][] = [['classic', 0.38], ['gold', 0.2], ['twin', 0.14], ['comet', 0.1], ['shower', 0.18]]
+/** Xem thử một kiểu: thêm ?meteor=gold (classic, gold, twin, comet, shower) vào địa chỉ. */
+const forced = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('meteor') : null
+const pickKind = (): Kind => {
+  if (forced && KINDS.some(([k]) => k === forced)) return forced as Kind
+  let r = Math.random(); for (const [k, w] of KINDS) { if ((r -= w) < 0) return k } return 'classic'
+}
+
+/** Sao băng bay qua bầu trời mỗi khi `fire.n` tăng lên (do bộ hẹn giờ của cảnh quyết định, thỉnh thoảng và ngẫu nhiên). */
+function Meteors({ active, fire }: { active: boolean; fire: { n: number; kind: Kind } }) {
   const ref = useRef<HTMLCanvasElement>(null)
-  const pending = useRef(0)
-  const lastFire = useRef(fire)
-  if (fire !== lastFire.current) { lastFire.current = fire; pending.current++ }
+  const pending = useRef<Kind[]>([])
+  const lastFire = useRef(fire.n)
+  if (fire.n !== lastFire.current) { lastFire.current = fire.n; pending.current.push(fire.kind) }
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
     if (reducedMotion() || !active) return
@@ -63,34 +72,148 @@ function Meteors({ active, fire }: { active: boolean; fire: number }) {
     cv.width = L.w * K; cv.height = L.h * K
     ctx.scale(K, K)
     ctx.beginPath(); L.panes.forEach(([x, y, w, h]) => ctx.rect(x, y, w, h)); ctx.clip()
-    type M = { x: number; y: number; vx: number; vy: number; life: number; max: number; len: number }
-    const ms: M[] = []
+    type M = { x: number; y: number; vx: number; vy: number; life: number; max: number; len: number; w: number; head: number; rgb: [number, number, number]; spark: number; delay: number }
+    type S = { x: number; y: number; vx: number; vy: number; life: number; max: number; r: number; rgb: [number, number, number] }
+    const ms: M[] = [], sp: S[] = []
     let raf = 0, last = performance.now()
-    const spawn = () => {
-      const a = (Math.PI * (0.78 + Math.random() * 0.1)) // hướng xuống trái
-      const sp = 900 + Math.random() * 500
-      ms.push({ x: 800 + Math.random() * 760, y: 10 + Math.random() * 150, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: 0.8 + Math.random() * 0.5, len: 300 + Math.random() * 200 })
+    const dirOf = () => { // phần lớn bay xuống trái, đôi khi xuống phải
+      const right = Math.random() < 0.28
+      return right ? Math.PI * (0.1 + Math.random() * 0.1) : Math.PI * (0.78 + Math.random() * 0.1)
+    }
+    const add = (o: Partial<M> & { x: number; y: number; a: number; speed: number }) => {
+      ms.push({ x: o.x, y: o.y, vx: Math.cos(o.a) * o.speed, vy: Math.sin(o.a) * o.speed, life: 0, max: o.max ?? 1, len: o.len ?? 300, w: o.w ?? 4, head: o.head ?? 14, rgb: o.rgb ?? [200, 224, 255], spark: o.spark ?? 0, delay: o.delay ?? 0 })
+    }
+    const spawn = (kind: Kind) => {
+      const a = dirOf()
+      const x = a < 1.6 ? 760 + Math.random() * 820 : 520 + Math.random() * 520
+      const y = 12 + Math.random() * 170
+      if (kind === 'classic') add({ x, y, a, speed: 900 + Math.random() * 500, max: 0.8 + Math.random() * 0.5, len: 300 + Math.random() * 200 })
+      else if (kind === 'gold') add({ x, y, a, speed: 520 + Math.random() * 180, max: 1.7 + Math.random() * 0.5, len: 380, w: 5, head: 18, rgb: [255, 214, 140], spark: 1 })
+      else if (kind === 'twin') { const off = 26 + Math.random() * 18; const nx = -Math.sin(a) * off, ny = Math.cos(a) * off
+        add({ x, y, a, speed: 880, max: 0.9, len: 300, w: 3.4 }); add({ x: x + nx, y: y + ny + 14, a, speed: 820, max: 0.95, len: 240, w: 2.6, delay: 0.1 }) }
+      else if (kind === 'comet') add({ x: x - 100, y: y + 10, a, speed: 430 + Math.random() * 90, max: 2.4, len: 560, w: 7, head: 30, rgb: [170, 235, 230], spark: 2 })
+      else for (let i = 0; i < 4 + Math.floor(Math.random() * 3); i++) // mưa sao nhỏ
+        add({ x: x - 160 + Math.random() * 360, y: 8 + Math.random() * 180, a: a + (Math.random() - 0.5) * 0.08, speed: 1000 + Math.random() * 500, max: 0.5 + Math.random() * 0.3, len: 120 + Math.random() * 100, w: 2, head: 8, delay: i * (0.18 + Math.random() * 0.3) })
     }
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
-      while (pending.current > 0) { pending.current--; spawn() }
+      while (pending.current.length) spawn(pending.current.shift()!)
       ctx.clearRect(0, 0, L.w, L.h)
       for (let i = ms.length - 1; i >= 0; i--) {
-        const m = ms[i]; m.life += dt
+        const m = ms[i]
+        if (m.delay > 0) { m.delay -= dt; continue }
+        m.life += dt
         if (m.life > m.max) { ms.splice(i, 1); continue }
         m.x += m.vx * dt; m.y += m.vy * dt
         const k = m.life / m.max, a = Math.sin(Math.PI * Math.min(1, k * 1.15))
-        const nx = -m.vx / Math.hypot(m.vx, m.vy), ny = -m.vy / Math.hypot(m.vx, m.vy)
+        const sp0 = Math.hypot(m.vx, m.vy), nx = -m.vx / sp0, ny = -m.vy / sp0
         const tx = m.x + nx * m.len, ty = m.y + ny * m.len
+        const [R, G, B] = m.rgb
         const g = ctx.createLinearGradient(m.x, m.y, tx, ty)
-        g.addColorStop(0, `rgba(255,255,255,${0.95 * a})`); g.addColorStop(0.35, `rgba(200,224,255,${0.45 * a})`); g.addColorStop(1, 'rgba(180,210,255,0)')
-        ctx.strokeStyle = g; ctx.lineWidth = 4.2; ctx.lineCap = 'round'
+        g.addColorStop(0, `rgba(255,255,255,${0.95 * a})`); g.addColorStop(0.3, `rgba(${R},${G},${B},${0.5 * a})`); g.addColorStop(1, `rgba(${R},${G},${B},0)`)
+        ctx.strokeStyle = g; ctx.lineWidth = m.w; ctx.lineCap = 'round'
         ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tx, ty); ctx.stroke()
-        const h = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, 14)
-        h.addColorStop(0, `rgba(255,255,255,${a})`); h.addColorStop(1, 'rgba(210,230,255,0)')
-        ctx.fillStyle = h; ctx.beginPath(); ctx.arc(m.x, m.y, 14, 0, 6.283); ctx.fill()
+        const h = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.head)
+        h.addColorStop(0, `rgba(255,255,255,${a})`); h.addColorStop(1, `rgba(${R},${G},${B},0)`)
+        ctx.fillStyle = h; ctx.beginPath(); ctx.arc(m.x, m.y, m.head, 0, 6.283); ctx.fill()
+        if (m.spark && !isLite() && sp.length < 140) { // rắc tia lấp lánh dọc đường bay
+          const n = (m.spark === 2 ? 70 : 34) * dt
+          for (let j = 0; j < n + (Math.random() < n % 1 ? 1 : 0); j++) { const f = Math.random() * 0.55
+            sp.push({ x: m.x + nx * m.len * f, y: m.y + ny * m.len * f, vx: (Math.random() - 0.5) * 30, vy: 10 + Math.random() * 30, life: 0, max: 0.5 + Math.random() * 0.7, r: 1.2 + Math.random() * 2.2, rgb: m.rgb }) }
+        }
+      }
+      for (let i = sp.length - 1; i >= 0; i--) {
+        const q = sp[i]; q.life += dt
+        if (q.life > q.max) { sp.splice(i, 1); continue }
+        q.x += q.vx * dt; q.y += q.vy * dt
+        const a = (1 - q.life / q.max) * 0.85, r = q.r * (0.6 + 0.4 * Math.sin(q.life * 14 + i))
+        ctx.fillStyle = `rgba(${q.rgb[0]},${q.rgb[1]},${q.rgb[2]},${a})`
+        ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 6.283); ctx.fill()
       }
       raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+    return () => cancelAnimationFrame(raf)
+  }, [active])
+  return <canvas ref={ref} className="sw-cv" aria-hidden />
+}
+
+/**
+ * Tuyết bám ngoài cửa sổ: một đụn tuyết tích trên bậu cửa phía ngoài (mép trên gồ ghề, dồn lên sát khung gỗ ở hai bên), tuyết dính dọc mép khung,
+ * và những cụm tuyết nhỏ dính trên mặt kính (nhiều ở phía dưới và quanh mép). Vẽ sẵn một lần; tuyết dày dần trong khoảng 45 giây đầu rồi đứng yên (sau đó không tốn tính toán).
+ * Mức dày được nhớ giữa các lần vào cảnh.
+ */
+let snowGrown = 0.3
+function ClingSnow({ active }: { active: boolean }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const cv = ref.current!, ctx = cv.getContext('2d')!
+    const K = 0.5, W = Math.round(L.w * K), H = Math.round(L.h * K)
+    cv.width = W; cv.height = H
+    let sd = 11
+    const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647)
+    const mk = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return c }
+    const drift = mk(), clumps = mk()
+    const d = drift.getContext('2d')!, c = clumps.getContext('2d')!
+    d.scale(K, K); c.scale(K, K)
+    // ---- đụn tuyết trên bậu cửa phía ngoài + tuyết dính mép khung ----
+    d.filter = 'blur(2px)'
+    for (const [px, py, pw, ph] of L.panes) {
+      const yb = py + ph, ph1 = rnd() * 6, ph2 = rnd() * 6, ph3 = rnd() * 6
+      const top = (x: number) => { // độ cao đụn tại x (px khung ảnh)
+        const u = x - px
+        let h = 40 + 22 * Math.sin(u * 0.012 + ph1) + 12 * Math.sin(u * 0.029 + ph2) + 6 * Math.sin(u * 0.071 + ph3)
+        h += 34 * Math.exp(-u / 46) + 34 * Math.exp(-(pw - u) / 46) // dồn lên sát khung gỗ hai bên
+        return Math.max(12, h)
+      }
+      const grad = d.createLinearGradient(0, yb - 90, 0, yb)
+      grad.addColorStop(0, '#fbfdff'); grad.addColorStop(0.5, '#e6eefa'); grad.addColorStop(1, '#a9bddc')
+      d.fillStyle = grad
+      d.beginPath(); d.moveTo(px, yb)
+      for (let x = px; x <= px + pw; x += 3) d.lineTo(x, yb - top(x))
+      d.lineTo(px + pw, yb); d.closePath(); d.fill()
+      // vệt sáng ở mép trên đụn và vài điểm lấp lánh
+      d.strokeStyle = 'rgba(255,255,255,.85)'; d.lineWidth = 2.2; d.beginPath()
+      for (let x = px; x <= px + pw; x += 3) { const y = yb - top(x) + 1; x === px ? d.moveTo(x, y) : d.lineTo(x, y) }
+      d.stroke()
+      // tuyết dính dọc mép khung bên trái và bên phải (dày ở dưới, mỏng dần lên trên)
+      for (const side of [0, 1]) {
+        d.beginPath(); const x0 = side ? px + pw : px
+        d.moveTo(x0, yb)
+        for (let y = yb; y > py + 20; y -= 4) { const hh = (yb - y) / ph; const w = (3 + 17 * (1 - hh) ** 2.2) * (0.55 + 0.45 * Math.sin(y * 0.09 + side * 2 + ph1)); d.lineTo(x0 + (side ? -w : w), y) }
+        d.lineTo(x0, py + 20); d.closePath(); d.fillStyle = 'rgba(236,243,252,.82)'; d.fill()
+      }
+    }
+    d.filter = 'none'
+    // ---- cụm tuyết nhỏ dính trên mặt kính ----
+    for (let i = 0; i < 280; i++) {
+      const pi = Math.floor(rnd() * L.panes.length), [px, py, pw, ph] = L.panes[pi]
+      const edge = rnd() < 0.5 // một nửa dính sát mép khung
+      const x = px + 6 + (edge ? (rnd() < 0.5 ? rnd() * 34 : pw - 6 - rnd() * 34) : rnd() * (pw - 12))
+      const y = py + 10 + (ph - 24) * (1 - Math.pow(rnd(), 1.9))
+      const r = 1.6 + rnd() * rnd() * 8
+      const g = c.createRadialGradient(x - r * 0.25, y - r * 0.3, 0, x, y, r)
+      g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(0.65, 'rgba(236,243,252,.8)'); g.addColorStop(1, 'rgba(210,224,244,0)')
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill()
+      if (r > 3) { c.strokeStyle = 'rgba(120,150,195,.28)'; c.lineWidth = 0.9; c.beginPath(); c.arc(x, y + 0.4, r * 0.88, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke() } // bóng đổ dưới cụm lớn
+    }
+    const draw = (g: number) => {
+      ctx.clearRect(0, 0, W, H)
+      ctx.save(); ctx.beginPath(); L.panes.forEach(([x, y, w, h]) => ctx.rect(x * K, y * K, w * K, h * K)); ctx.clip()
+      const yb = (L.panes[0][1] + L.panes[0][3]) * K
+      ctx.translate(0, yb); ctx.scale(1, 0.25 + 0.75 * g); ctx.translate(0, -yb) // đụn dày lên từ dưới
+      ctx.drawImage(drift, 0, 0)
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.globalAlpha = Math.min(1, 0.25 + 0.75 * g); ctx.drawImage(clumps, 0, 0)
+      ctx.restore(); ctx.globalAlpha = 1
+    }
+    draw(snowGrown)
+    if (!active || reducedMotion() || snowGrown >= 1) { if (reducedMotion()) { snowGrown = 1; draw(1) } return }
+    let raf = 0, last = performance.now()
+    const frame = (t: number) => {
+      const dt = Math.min(0.05, (t - last) / 1000); last = t
+      if (!document.hidden) { snowGrown = Math.min(1, snowGrown + dt / 45); draw(snowGrown) }
+      if (snowGrown < 1) raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
     return () => cancelAnimationFrame(raf)
@@ -240,11 +363,10 @@ export default function SnowWatch({ active }: { active: boolean }) {
     const keep = [...L.poses.map((q) => q.hide), ...LM.dark, ...LM.warm].map((u) => { const im = new Image(); im.decoding = 'async'; im.src = u; im.decode?.().catch(() => {}); return im })
     return () => { keep.length = 0 }
   }, [])
-  const pulse = useHintPulse(1, active, lampHov)
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [pose, setPose] = useState(0)
   const [maskPose, setMaskPose] = useState(0)
-  const [fire, setFire] = useState(0)
+  const [fire, setFire] = useState<{ n: number; kind: Kind }>({ n: 0, kind: 'classic' })
   const wipeRef = useRef<(x: number, y: number, px: number, py: number) => void>(() => {})
   const prev = useRef<[number, number] | null>(null)
 
@@ -271,11 +393,12 @@ export default function SnowWatch({ active }: { active: boolean }) {
     const next = (first: boolean) => at(first ? 5000 + Math.random() * 4000 : 14000 + Math.random() * 18000, go)
     const go = () => {
       if (document.hidden) { next(false); return }
+      const kind = pickKind()
       if (Math.random() < 0.75) {
         setPose(1); at(FADE / 2, () => setMaskPose(1))
-        at(FADE + 150, () => setFire((n) => n + 1))
+        at(FADE + 150, () => setFire((f) => ({ n: f.n + 1, kind })))
         at(POSE_HOLD, () => { setPose(0); at(FADE / 2, () => setMaskPose(0)); at(FADE, () => next(false)) })
-      } else { setFire((n) => n + 1); next(false) }
+      } else { setFire((f) => ({ n: f.n + 1, kind })); next(false) }
     }
     next(true)
     return () => { T.forEach(clearTimeout); setPose(0); setMaskPose(0) }
@@ -309,8 +432,9 @@ export default function SnowWatch({ active }: { active: boolean }) {
 
           {/* tuyết, hơi nước và sao băng ở sau kính: đi sau lưng hai người nhờ mặt nạ theo dáng ngồi hiện tại */}
           <div className="sw-fx" style={maskStyle}>
-            <SnowFall active={active} />
             <Meteors active={active} fire={fire} />
+            <SnowFall active={active} />
+            <ClingSnow active={active} />
             <Fog active={active} wipeRef={wipeRef} />
           </div>
 
@@ -318,7 +442,7 @@ export default function SnowWatch({ active }: { active: boolean }) {
             onPointerMove={(e) => { if (e.pointerType === 'mouse' || e.buttons || e.pointerType === 'touch') move(e) }}
             onPointerLeave={() => { prev.current = null }} onPointerUp={() => { prev.current = null }} />
 
-          <LitSpot src={L.poses[0].src} w={L.w} h={L.h} poly={L.lamp} on={lampHov || pulse === 0} strength={0.5} />
+          <LitSpot src={L.poses[0].src} w={L.w} h={L.h} poly={L.lamp} on={lampHov} strength={0.5} />
           {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 260 * k, top: y - 260 * k, width: 520 * k, height: 520 * k, animationDelay: `-${i * 0.7}s` }} />)}
           {active && <Dust w={L.w} h={L.h} />}
 
