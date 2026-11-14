@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { snow as copy } from '../content/content'
 import { isLite, reducedMotion } from '../lib/device'
 import { weather } from '../lib/weather'
-import { Dust } from './Tree'
 import { LitSpot } from '../components/LitSpot'
 import { lights, useLights } from '../lib/lights'
 import { SNOW as L, LM } from './snowLayout'
@@ -21,11 +20,13 @@ function SnowFall({ active }: { active: boolean }) {
     ctx.scale(K, K)
     ctx.beginPath(); L.panes.forEach(([x, y, w, h]) => ctx.rect(x, y, w, h)); ctx.clip()
     if (!active) return
-    const n = isLite() ? 50 : 105
+    const n = isLite() ? 36 : 70
     const fl = Array.from({ length: n }, () => ({ x: Math.random() * L.w, y: Math.random() * L.h, z: Math.random() ** 1.6, ph: Math.random() * 6.28 }))
     let raf = 0, last = performance.now()
     const frame = (t: number) => {
-      const dt = Math.min(0.05, (t - last) / 1000); last = t
+      raf = requestAnimationFrame(frame)
+      if (t - last < 30) return // 30 khung hình/giây là đủ cho tuyết, nhẹ máy hơn
+      const dt = Math.min(0.08, (t - last) / 1000); last = t
       ctx.clearRect(0, 0, L.w, L.h)
       for (const f of fl) {
         f.y += (20 + f.z * 66) * dt
@@ -41,7 +42,6 @@ function SnowFall({ active }: { active: boolean }) {
         } else { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(f.x, f.y, r, 0, 6.283); ctx.fill() }
       }
       ctx.globalAlpha = 1
-      raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
     return () => cancelAnimationFrame(raf)
@@ -75,7 +75,7 @@ function Meteors({ active, fire }: { active: boolean; fire: { n: number; kind: K
     type M = { x: number; y: number; vx: number; vy: number; life: number; max: number; len: number; w: number; head: number; rgb: [number, number, number]; spark: number; delay: number }
     type S = { x: number; y: number; vx: number; vy: number; life: number; max: number; r: number; rgb: [number, number, number] }
     const ms: M[] = [], sp: S[] = []
-    let raf = 0, last = performance.now()
+    let raf = 0, last = performance.now(), drawn = false
     const dirOf = () => { // phần lớn bay xuống trái, đôi khi xuống phải
       const right = Math.random() < 0.28
       return right ? Math.PI * (0.1 + Math.random() * 0.1) : Math.PI * (0.78 + Math.random() * 0.1)
@@ -98,6 +98,8 @@ function Meteors({ active, fire }: { active: boolean; fire: { n: number; kind: K
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       while (pending.current.length) spawn(pending.current.shift()!)
+      if (!ms.length && !sp.length) { if (drawn) { ctx.clearRect(0, 0, L.w, L.h); drawn = false } raf = requestAnimationFrame(frame); return } // không có sao nào thì không vẽ gì
+      drawn = true
       ctx.clearRect(0, 0, L.w, L.h)
       for (let i = ms.length - 1; i >= 0; i--) {
         const m = ms[i]
@@ -186,7 +188,7 @@ function ClingSnow({ active }: { active: boolean }) {
     }
     d.filter = 'none'
     // ---- cụm tuyết nhỏ dính trên mặt kính ----
-    for (let i = 0; i < 280; i++) {
+    for (let i = 0; i < 170; i++) {
       const pi = Math.floor(rnd() * L.panes.length), [px, py, pw, ph] = L.panes[pi]
       const edge = rnd() < 0.5 // một nửa dính sát mép khung
       const x = px + 6 + (edge ? (rnd() < 0.5 ? rnd() * 34 : pw - 6 - rnd() * 34) : rnd() * (pw - 12))
@@ -209,10 +211,10 @@ function ClingSnow({ active }: { active: boolean }) {
     }
     draw(snowGrown)
     if (!active || reducedMotion() || snowGrown >= 1) { if (reducedMotion()) { snowGrown = 1; draw(1) } return }
-    let raf = 0, last = performance.now()
+    let raf = 0, last = performance.now(), lastDraw = 0
     const frame = (t: number) => {
-      const dt = Math.min(0.05, (t - last) / 1000); last = t
-      if (!document.hidden) { snowGrown = Math.min(1, snowGrown + dt / 45); draw(snowGrown) }
+      const dt = Math.min(0.05, (t - last) / 1000); last = t; void dt
+      if (!document.hidden && t - lastDraw > 100) { lastDraw = t; snowGrown = Math.min(1, snowGrown + 0.1 / 45); draw(snowGrown) } // vẽ lại 10 lần/giây là đủ cho chuyển động chậm này
       if (snowGrown < 1) raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
@@ -258,7 +260,7 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
       g.addColorStop(0, dark ? 'rgba(235,243,252,.16)' : 'rgba(40,60,95,.07)'); g.addColorStop(1, 'rgba(0,0,0,0)')
       tc.fillStyle = g; tc.fillRect(x - r, y - r, r * 2, r * 2)
     }
-    for (let i = 0; i < 2600; i++) { // hạt nước li ti
+    for (let i = 0; i < 1500; i++) { // hạt nước li ti
       const [x, y] = spot(1.5), r = 0.4 + rnd() * 1.1
       tc.fillStyle = `rgba(255,255,255,${0.07 + rnd() * 0.16})`
       tc.beginPath(); tc.arc(x, y, r, 0, 6.283); tc.fill()
@@ -275,7 +277,7 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
       c.fillStyle = `rgba(255,255,255,${0.9 * k})`
       c.beginPath(); c.arc(x - r * 0.34, y - r * 0.38, Math.max(0.5, r * 0.26), 0, 6.283); c.fill()
     }
-    for (let i = 0; i < 240; i++) { const [x, y] = spot(1.7); bead(tc, x, y, 1.1 + rnd() * 2.2, 0.9) } // giọt tròn, nhiều ở phía dưới
+    for (let i = 0; i < 150; i++) { const [x, y] = spot(1.7); bead(tc, x, y, 1.1 + rnd() * 2.2, 0.9) } // giọt tròn, nhiều ở phía dưới
     for (let i = 0; i < 14; i++) { const [x, y] = spot(2.2); bead(tc, x, y, 3.2 + rnd() * 2.4, 1) }   // vài giọt lớn
     const base = tc.getImageData(0, 0, W, H)
     const out = ctx.createImageData(W, H)
@@ -311,13 +313,13 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
       dirty = true
     }
     if (reducedMotion() || !active) { paint(); return }
-    let raf = 0, last = performance.now(), tFade = 0, tick = 0, nextDrip = last + 3500
+    let raf = 0, last = performance.now(), tFade = 0, tick = 0, nextDrip = last + 3500, lastPaint = 0
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
-      if (t > nextDrip && drips.length < 3 && !document.hidden) {
+      if (t > nextDrip && drips.length < 2 && !document.hidden) {
         const [x, y] = spot(0.9)
         drips.push({ x, y: Math.min(y, 330 * K), dx: 0, v: (16 + rnd() * 18) * K, moving: true, t: 0.4 + rnd() * 0.8, len: 0, max: (110 + rnd() * 200) * K, ph: rnd() * 6 })
-        nextDrip = t + 6000 + Math.random() * 8000
+        nextDrip = t + 9000 + Math.random() * 11000
       }
       for (let i = drips.length - 1; i >= 0; i--) {
         const d = drips[i]
@@ -343,7 +345,7 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
         }
         dirty = true
       }
-      if (dirty) { dirty = false; paint() }
+      if (dirty && t - lastPaint > 45) { dirty = false; lastPaint = t; paint() } // tối đa ~22 lần/giây
       raf = requestAnimationFrame(frame)
     }
     paint()
@@ -444,7 +446,6 @@ export default function SnowWatch({ active }: { active: boolean }) {
 
           <LitSpot src={L.poses[0].src} w={L.w} h={L.h} poly={L.lamp} on={lampHov} strength={0.5} />
           {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 260 * k, top: y - 260 * k, width: 520 * k, height: 520 * k, animationDelay: `-${i * 0.7}s` }} />)}
-          {active && <Dust w={L.w} h={L.h} />}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             <polygon className="cat-hs" points={L.lamp.map((q) => q.join(',')).join(' ')} tabIndex={0} role="button" aria-label={lightsOn ? 'Đèn bàn, đang sáng' : 'Đèn bàn, đang tắt'}
