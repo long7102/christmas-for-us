@@ -801,7 +801,4 @@ html.has-cursor, html.has-cursor * { cursor: none !important; }
 .cur-ping { position: fixed; z-index: 99999; width: 10px; height: 10px; margin: -5px; border-radius: 50%; border: 1.5px solid rgba(255,226,160,.9); pointer-events: none; animation: cur-ping .65s ease-out forwards; }
 @keyframes cur-ping { to { transform: scale(5); opacity: 0; } }
 
-/* chuyển cảnh bông tuyết (hai bé -> ngắm tuyết): lõi lục giác (apothem = 22.5% cạnh hộp) phóng to che kín màn hình */
-.xf-flake { position: absolute; left: 50%; top: 50%; width: 60vmin; height: 60vmin; margin: -30vmin 0 0 -30vmin; z-index: 12; pointer-events: none; visibility: var(--fv, hidden); opacity: var(--fo, 1); transform: rotate(var(--fr, 0deg)) scale(var(--fs, .05)); }
-.xf-flake svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.xf-hex { position: absolute; inset: 0; clip-path: polygon(76% 50%, 63% 72.5%, 37% 72.5%, 24% 50%, 37% 27.5%, 63% 27.5%); background: radial-gradient(circle at 50% 50%, #d3e0f1 0%, #b9cbe4 55%, #8fa7ca 100%); }
+.xf-flake { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 12; pointer-events: none; }

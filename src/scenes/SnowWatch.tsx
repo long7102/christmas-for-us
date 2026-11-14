@@ -37,8 +37,9 @@ function SnowFall({ active }: { active: boolean }) {
       const z = Math.random() ** 1.3, crystal = Math.random() < 0.26
       const spr = crystal ? crystals[Math.floor(Math.random() * crystals.length)] : orbs[z > 0.78 ? 2 : z > 0.45 ? 1 : 0]
       const size = crystal ? 20 + z * 36 : z > 0.75 ? 44 + z * 44 : 8 + z * 36
-      return { x: Math.random() * L.w, y: top ? -50 : Math.random() ** 1.15 * 660, z, ph: Math.random() * 6.28, spr, size, a: (crystal ? 0.7 : 0.55) + z * 0.4, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.9, crystal }
+      return { x: Math.random() * L.w, y: top ? -50 : Math.random() ** 1.15 * 660, z, ph: Math.random() * 6.28, spr, size, a: (crystal ? 0.7 : 0.55) + z * 0.4, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.28, crystal }
     }
+    ctx.imageSmoothingQuality = 'high'
     const fl = Array.from({ length: n }, () => mk(false))
     let raf = 0, last = performance.now()
     const frame = (t: number) => {

@@ -8,6 +8,7 @@ import { weather } from '../lib/weather'
 import { isLite, reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
 import { FLAKES } from '../lib/snowflakes'
+import { FlakeFx } from '../components/FlakeFx'
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const smooth = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
@@ -23,7 +24,7 @@ const HOLD = 0.45
 const END = 0.5
 /** Dừng ngắm hai bé, rồi ánh nến từ một góc phòng loang ra, kéo máy quay lùi ra từ góc ấy sang cảnh ngắm tuyết: đứng yên HOLD3, chuyển SPAN3 (đơn vị: chiều cao màn hình). */
 const HOLD3 = 0.45
-const SPAN3 = 1.25
+const SPAN3 = 1.5
 const Y_CATS = HOLD0 + SPAN2 + HOLD + SPAN
 const Y_SNOW = Y_CATS + HOLD3 + SPAN3
 
@@ -147,7 +148,8 @@ export default function WorldScroll() {
   const prevP = useRef(0)
   const prevQ = useRef(0)
   const prevR = useRef(0)
-  const [flakeI, setFlakeI] = useState(1)
+  const flakeI = useRef(1)
+  const flakeDraw = useRef<(r: number, i: number) => void>(() => {})
   const lenis = useRef<Lenis | null>(null)
   const [seen, setSeen] = useState({ tree: false, cats: false, near: false, box: true, snow: false, turned: false })
 
@@ -171,17 +173,12 @@ export default function WorldScroll() {
       // lt chạy 0..1 theo thanh cuộn của lần chuyển đang diễn ra (hai lần chuyển không bao giờ chồng nhau).
       const lt = r > 0.003 ? r : p
       const a1 = ease(smooth(0, 0.42, lt)), a2 = ease(smooth(0.4, 0.64, lt)), a5 = ease(smooth(0.64, 1, lt))
-      const NEXTR = 0.54 // lúc bông tuyết vừa che kín màn hình: đổi cảnh bên dưới (hai bé -> ngắm tuyết)
+      const NEXTR = 0.58 // lúc bông tuyết vừa che kín màn hình: đổi cảnh bên dưới (hai bé -> ngắm tuyết)
       const NEXT = 0.64 // lúc lá thư vừa che kín màn hình: đổi cảnh bên dưới
       // hai bé -> ngắm tuyết: một bông tuyết nhỏ giữa màn hình to dần, xoay nhẹ, che kín màn hình (cảnh bên dưới đổi lúc đó), rồi tan ra để lộ cảnh mới
       const flakeOn = r > 0.003 && r < 0.997 && !calm
-      const fsc = 0.05 + 11 * ease(smooth(0, 0.5, r)) + 5 * smooth(0.5, 1, r)
-      const apothem = 0.225 * 0.6 * Math.min(vw, vh) * fsc
-      fx.current = flakeOn && r < 0.5 ? { p: r, R: Math.min(apothem * 1.15, Math.hypot(vw, vh) / 2), cx: vw / 2, cy: vh / 2, on: true } : { p: 0, R: 0, cx: 0, cy: 0, on: false }
-      st.setProperty('--fv', flakeOn ? 'visible' : 'hidden')
-      st.setProperty('--fs', fsc.toFixed(3))
-      st.setProperty('--fr', `${(64 * ease(r)).toFixed(2)}deg`)
-      st.setProperty('--fo', (1 - smooth(0.56, 0.9, r)).toFixed(3))
+      fx.current = { p: 0, R: 0, cx: 0, cy: 0, on: false }
+      flakeDraw.current(flakeOn ? r : 0, flakeI.current)
       st.setProperty('--lv', lt > 0.003 && lt < 0.997 && !calm && r <= 0.003 ? 'visible' : 'hidden')
       st.setProperty('--lx', `${((1 - a1) * 62 - a5 * 5).toFixed(2)}vw`)
       st.setProperty('--ly', `${((1 - a1) * 44 - Math.sin(Math.PI * a1) * 16 - a5 * 9).toFixed(2)}vh`)
@@ -223,7 +220,7 @@ export default function WorldScroll() {
       const pp = prevP.current; prevP.current = p
       if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
       const rr0 = prevR.current; prevR.current = r
-      if (rr0 < 0.003 && r >= 0.003) setFlakeI((i) => (i + 1 + Math.floor(Math.random() * (FLAKES.length - 1))) % FLAKES.length) // mỗi lần chuyển cảnh một mẫu bông tuyết khác
+      if (rr0 < 0.003 && r >= 0.003) flakeI.current = (flakeI.current + 1 + Math.floor(Math.random() * (FLAKES.length - 1))) % FLAKES.length // mỗi lần chuyển cảnh một mẫu bông tuyết khác
       if ((rr0 < 0.04 && r >= 0.04) || (rr0 > 0.96 && r <= 0.96)) sfx.chime()
       const pq = prevQ.current; prevQ.current = q
       if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) { sfx.chime(); sfx.sparkle() }
@@ -304,19 +301,8 @@ export default function WorldScroll() {
         <div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div>
         <div className={`xf-layer xf-snow${seen.snow ? '' : ' idle'}`}><SnowWatch active={seen.snow} /></div>
         {/* lá thư dùng chung cho hai lần chuyển cảnh: bay tới, phóng lớn che kín màn hình, rồi bay vụt qua máy quay để lộ cảnh mới */}
-        {/* bông tuyết dùng cho chuyển cảnh hai bé -> ngắm tuyết: lõi lục giác đặc phóng lên che kín màn hình, sáu nhánh có cành con */}
-        <div className="xf-flake" aria-hidden>
-          <i className="xf-hex" />
-          <svg viewBox="-100 -100 200 200" key={flakeI}>
-            {[0, 60, 120, 180, 240, 300].map((a) => (
-              <g key={a} transform={`rotate(${a})`} fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <path d={FLAKES[flakeI].arm} stroke="rgba(190,212,240,.35)" strokeWidth={FLAKES[flakeI].w + 3} fill={FLAKES[flakeI].fill ? 'rgba(190,212,240,.35)' : 'none'} />
-                <path d={FLAKES[flakeI].arm} stroke="#f6faff" strokeWidth={FLAKES[flakeI].w} fill={FLAKES[flakeI].fill ? '#f6faff' : 'none'} />
-              </g>
-            ))}
-            {FLAKES[flakeI].core && <path d={FLAKES[flakeI].core} fill="none" stroke="#f6faff" strokeWidth={FLAKES[flakeI].coreW ?? FLAKES[flakeI].w} strokeLinecap="round" strokeLinejoin="round" />}
-          </svg>
-        </div>
+        {/* bông tuyết vector (chuyển cảnh hai bé -> ngắm tuyết): vẽ bằng canvas theo thanh cuộn, xem components/FlakeFx.tsx */}
+        <FlakeFx reg={flakeDraw} />
         <div className="xf-letter" aria-hidden>
           <div className="xl-fly">
             <i className="xl-shadow" />

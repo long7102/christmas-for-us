@@ -175,3 +175,8 @@ npx tsc -b        # kiểm tra kiểu
 - `src/lib/snowflakes.ts`: chín mẫu bông tuyết (nhánh mập chẻ ba, lục giác cành mảnh, sao lưới, mũi giáo, lông chim, hoa, mạng nhện, lá răng cưa, nhánh có nút tròn), mỗi mẫu là một nhánh nhân sáu lần + lõi; cùng dữ liệu cho SVG chuyển cảnh và sprite tuyết rơi (`Path2D`).
 - Tuyết rơi cảnh ngắm tuyết (`SnowFall`): ~260 hạt (120 ở chế độ nhẹ), phần lớn là đốm bokeh tròn đủ cỡ (sắc / mềm / nhoè), ~26% là bông tuyết pha lê xoay chậm; dày và sáng ở phía trên, mờ dần xuống dưới; toàn sprite dựng sẵn, vẽ 30 khung/giây.
 - Chuyển cảnh bông tuyết: mỗi lần chuyển một mẫu khác nhau (`flakeI` trong `WorldScroll.tsx`).
+
+### Bông tuyết vector + chuyển cảnh nằm ngang -> dựng đứng -> bay ra
+- Bông tuyết là **vector phẳng** (nét dày, màu kem `#ecdcae` như bảng mẫu Long gửi), 9 mẫu trong `src/lib/snowflakes.ts` (`drawFlake(ctx, design, scale, color)`).
+- Chuyển cảnh hai bé -> ngắm tuyết vẽ bằng **canvas theo thanh cuộn** (`src/components/FlakeFx.tsx`, hàm vẽ nhận qua ref `flakeDraw` trong `WorldScroll.tsx`): bông tuyết nằm ngang (dẹt như đĩa, `scaleY = cos(tilt)`, tilt 78 -> 0 độ) xoay chậm, dựng đứng đối diện người xem, rồi bay thẳng ra phía trước (tăng cỡ theo hàm mũ), che kín màn hình (lớp kem lấp khe), cảnh đổi tại `NEXTR = 0.58`, rồi tan. Trước đây dùng SVG/CSS phóng to rất lớn nên vỡ nét và nháy (Long báo "glitch đau mắt"); canvas vẽ lại ở đúng cỡ mỗi khung nên không còn. `SPAN3 = 1.5`.
+- Tuyết rơi: bông pha lê dùng cùng mẫu vector, quay chậm hơn nhiều (tránh nhấp nháy răng cưa khi xoay sprite nhỏ), sprite 128px.
