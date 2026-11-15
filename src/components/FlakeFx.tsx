@@ -31,7 +31,7 @@ export function FlakeFx({ reg }: { reg: React.MutableRefObject<(r: number, i: nu
       const alpha = smooth(0, 0.08, r) * (1 - smooth(0.66, 0.94, r))
       const cover = smooth(0.5, 0.62, r) * (1 - smooth(0.66, 0.94, r)) // lấp kín những khe giữa các nhánh khi phóng lớn
       ctx.globalAlpha = alpha
-      ctx.save(); ctx.translate(cx, cy); ctx.scale(1, sy); ctx.rotate(spin); drawFlake(ctx, f, ppu, COLOR); ctx.restore()
+      if (cover < 0.999) { ctx.save(); ctx.translate(cx, cy); ctx.scale(1, sy); ctx.rotate(spin); drawFlake(ctx, f, ppu, COLOR); ctx.restore() } // đã che kín thì khỏi vẽ hình khổng lồ
       if (cover > 0.001) { ctx.globalAlpha = cover; ctx.fillStyle = COLOR; ctx.fillRect(0, 0, W, H) }
       ctx.globalAlpha = 1
     }
