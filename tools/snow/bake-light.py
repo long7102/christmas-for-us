@@ -37,15 +37,17 @@ for n in ['1','2','3']:
     lampm=cv2.GaussianBlur(lampm,(0,0),.7)
     hide=np.zeros((H,W,4),np.uint8); hide[...,3]=np.clip((1-np.maximum(sil,lampm))*255,0,255)
     cv2.imwrite(A+f'snow-hide-{n}.png',hide,[cv2.IMWRITE_PNG_COMPRESSION,9])
-    sil=cv2.erode(sil,np.ones((5,5),np.uint8))  # mặt nạ cắt nở ra vài px quanh người: thu về đúng mép thật, không còn quầng tối quanh đầu
+    # bóng liền mạch, không có đường cắt: hình cắt nở ra vài px (phủ cả sợi tóc lòa xòa quanh đầu) rồi nhoè mạnh để mép tan vào nền
+    sil=cv2.GaussianBlur(cv2.dilate(sil,np.ones((9,9),np.uint8)),(0,0),4.5)
+    sil=np.maximum(sil,lampm)  # chao đèn bàn đứng trước ô kính trái cũng tối như phần còn lại của phòng
     mask=sil+(1-sil)*notpane
     # phòng tối .88; hai người gần như chìm hẳn vào bóng (.975), chỉ còn đường viền lạnh của ánh tuyết ngoài cửa sổ
     # tóc cô gái: những điểm tối trong một vùng elip quanh đầu và tóc (toạ độ khung ảnh gốc) được nâng sáng để còn thấy rõ sợi tóc và chóp đỏ
     base=cv2.imread(A+{'1':'snow-land.webp','2':'snow-land-point.webp','3':'snow-land-pat.webp'}[n])
     v=cv2.resize(cv2.cvtColor(base,cv2.COLOR_BGR2HSV)[...,2],(W,H),interpolation=cv2.INTER_AREA).astype(np.float32)/255
     ell=np.clip(1-np.sqrt(((X-930)/200)**2+((Y-500)/170)**2),0,1); ell=np.clip(ell*2.2,0,1)
-    hl=cv2.GaussianBlur(ell*np.clip((.55-v)*5,0,1)*sil,(0,0),2.2)
-    D=F*(.88*(1-sil)*notpane+(.8*(1-hl)+.45*hl)*sil)
+    hl=cv2.GaussianBlur(ell*np.clip((.55-v)*4,0,1)*sil,(0,0),6)
+    D=F*(.88*(1-sil)*notpane+(.84*(1-hl)+.6*hl)*sil)
     D=1-(1-D)*(1-patch)
     dark=np.zeros((H,W,4),np.uint8); dark[...,0]=9; dark[...,1]=4; dark[...,2]=2; dark[...,3]=np.clip(D*255,0,255)
     Image.fromarray(dark,'RGBA').save(A+f'snow-dark-{n}.webp',quality=80,method=6)
@@ -58,13 +60,12 @@ for n in ['1','2','3']:
     warm_c=np.array([255,140,60],np.float32)
     # lớp trên người: cool (dưới) -> ellipse -> nến
     c,a=cool_c,cool_a*.45  # trên người chỉ còn ánh lạnh rất nhẹ từ cửa sổ
-    c,a=over(c,a,np.broadcast_to(np.array([255,150,70],np.float32),(H,W,3)).copy(),hl*.22)  # ánh nến ấm rất nhẹ trên tóc cô gái
     # viền sáng lạnh: ánh tuyết ngoài cửa sổ chiếu vào mặt trước hai người, nên nhìn từ phía sau chỉ thấy một đường sáng mảnh ôm theo đỉnh đầu, tóc và vai (mạnh ở phía trên, mất dần xuống thân)
     e2=cv2.erode(sil,np.ones((5,5),np.uint8)); band=cv2.GaussianBlur(np.clip(sil-e2,0,1),(0,0),.8)  # một đường mảnh ngay trong mép thật
     rim_a=np.clip(band*np.interp(Y,[160,420,640],[.55,.3,0]),0,1)
     rim_c=np.broadcast_to(np.array([150,190,245],np.float32),(H,W,3)).copy()
-    c,a=over(c,a,rim_c,rim_a)
-    fo=np.interp(Y,[600,700],[1,0]); a1=a*np.maximum(sil*fo,hl); c1=c
+    # (đã bỏ viền sáng quanh người: nó tạo quầng lạ ở mép)
+    fo=np.interp(Y,[600,700],[1,0]); a1=a*sil*fo; c1=c
     # lớp trên chăn+bàn (toàn chiều ngang): ellipse + nến
     c,a=ell_c,ell_a
     for ca in cand: c,a=over(c,a,np.broadcast_to(warm_c,(H,W,3)).copy(),ca)

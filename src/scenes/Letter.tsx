@@ -147,6 +147,8 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
   const [closing, setClosing] = useState(false)
   const onClose = () => { if (closing) return; setClosing(true); sfx.rustle(0.45, 0.4); setTimeout(finish, 340) }
   useEffect(() => { sfx.rustle(0.6, 0.5) }, [])
+  // khoá cuộn trang khi thư đang mở: nếu không, cuộn chạm mép thư sẽ kéo trang phía sau xuống chuyển cảnh và hiện cả hai cùng lúc
+  useEffect(() => { document.documentElement.classList.add('modal-open'); return () => document.documentElement.classList.remove('modal-open') }, [])
   useEffect(() => {
     const id = setInterval(() => tick((n) => n + 1), 1000)
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }

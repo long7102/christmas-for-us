@@ -185,3 +185,8 @@ npx tsc -b        # kiểm tra kiểu
 - `snow-land.webp` (ngồi sát, ảnh nền), `snow-land-point.webp` (anh chỉ tay lên trời), `snow-land-pat.webp` (anh xoa đầu cô gái), khung 1672x941. Ô kính mới: `[254,10,158,598] [457,8,936,602] [1440,8,196,602]`. Hai ngọn nến (đèn lồng, quả cầu tuyết), đèn bàn chao kem bên trái (`SNOW.lamp`). `tools/snow/bake-light.py` đã chỉnh cho 3 dáng; `tools/snow/cut-1..3.png` là hình cắt hai người (grabCut + elip lấp khăn).
 - Lịch ngẫu nhiên (`SnowWatch.tsx`): 50% chỉ tay + sao băng, 28% xoa đầu (không sao băng), còn lại chỉ có sao băng.
 - Chưa có ảnh dọc cho điện thoại; ảnh 4K chưa dùng (đang dùng bản 1672x941 Long gửi).
+
+### Sửa lỗi lượt này
+- **Lỗi nghiêm trọng do chính em gây ra (commit 49db655):** khi viết lại CSS thanh chấm, đoạn thay thế đã xoá nhầm ~100 dòng CSS (hộp nhạc: ẩn vũ công khi chưa mở và trình phát nhạc; bảng âm lượng; màn chờ; chế độ nhẹ `.lite`; tạm dừng hoạt ảnh cảnh không hiện `.idle`; gợn chạm). Đã khôi phục từ lịch sử git. Bài học: khi thay một đoạn CSS bằng script, kiểm `git diff --stat` xem số dòng bị xoá có đúng không.
+- Khoá cuộn trang khi thư đang mở (`html.modal-open`), để cuộn không kéo trang phía sau xuống chuyển cảnh trong lúc thư còn hiện.
+- Cảnh ngắm tuyết: bấm chiếc đèn lồng nhỏ có nến ở góc dưới trái để tắt/bật (`SNOW.lamp`). Bóng khi tắt đèn làm lại liền mạch: hình cắt nở ra và nhoè mạnh (không còn đường cắt cứng), bỏ viền sáng quanh người, chao đèn bàn tối như phòng.
