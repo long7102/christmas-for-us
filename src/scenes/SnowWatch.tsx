@@ -37,7 +37,7 @@ function SnowFall({ active }: { active: boolean }) {
       const z = Math.random() ** 1.3, crystal = Math.random() < 0.26
       const spr = crystal ? crystals[Math.floor(Math.random() * crystals.length)] : orbs[z > 0.78 ? 2 : z > 0.45 ? 1 : 0]
       const size = crystal ? 20 + z * 36 : z > 0.75 ? 44 + z * 44 : 8 + z * 36
-      return { x: Math.random() * L.w, y: top ? -50 : Math.random() ** 1.15 * 660, z, ph: Math.random() * 6.28, spr, size, a: (crystal ? 0.7 : 0.55) + z * 0.4, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.28, crystal }
+      return { x: Math.random() * L.w, y: top ? -50 : Math.random() ** 1.15 * 600, z, ph: Math.random() * 6.28, spr, size, a: (crystal ? 0.7 : 0.55) + z * 0.4, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.28, crystal }
     }
     ctx.imageSmoothingQuality = 'high'
     const fl = Array.from({ length: n }, () => mk(false))
@@ -52,9 +52,9 @@ function SnowFall({ active }: { active: boolean }) {
         f.y += (22 + f.z * 80) * dt
         f.x += (weather.sway(t, f.ph) * (10 + f.z * 40) + Math.sin(t / 900 + f.ph) * 7 * f.z) * dt
         f.rot += f.spin * dt
-        if (f.y > 676) { f = fl[i] = mk(true) }
+        if (f.y > 616) { f = fl[i] = mk(true) }
         if (f.x > L.w + 40) f.x = -40; else if (f.x < -40) f.x = L.w + 40
-        const top = Math.max(0, 1 - f.y / 640) // dày và sáng ở phía trên, mờ dần xuống dưới
+        const top = Math.max(0, 1 - f.y / 590) // dày và sáng ở phía trên, mờ dần xuống dưới
         ctx.globalAlpha = Math.min(1, f.a * (0.22 + 1.0 * top ** 0.7))
         if (f.crystal) { ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ctx.drawImage(f.spr, -f.size / 2, -f.size / 2, f.size, f.size); ctx.restore() }
         else ctx.drawImage(f.spr, f.x - f.size / 2, f.y - f.size / 2, f.size, f.size)
@@ -266,7 +266,7 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
     // lớp hơi nước gốc
     const tx = document.createElement('canvas'); tx.width = W; tx.height = H
     const tc = tx.getContext('2d')!
-    const gr = tc.createLinearGradient(0, 0, 0, 636 * K)
+    const gr = tc.createLinearGradient(0, 0, 0, 608 * K)
     gr.addColorStop(0, 'rgba(206,222,242,.26)'); gr.addColorStop(1, 'rgba(222,233,247,.58)')
     tc.fillStyle = gr
     L.panes.forEach(([x, y, w, h]) => tc.fillRect(x * K, y * K, w * K, h * K))
@@ -351,7 +351,7 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
           for (let k = 0; k <= 3; k++) stamp(d.x + (nx - d.x) * (k / 3), d.y + (ny - d.y) * (k / 3), r, 190, true)
           d.len += ny - d.y; d.x = nx; d.y = ny
         }
-        if (d.len > d.max || d.y > 630 * K) { drips.splice(i, 1) }
+        if (d.len > d.max || d.y > 600 * K) { drips.splice(i, 1) }
         dirty = true
       }
       tFade += dt
@@ -413,11 +413,14 @@ export default function SnowWatch({ active }: { active: boolean }) {
     const next = (first: boolean) => at(first ? 5000 + Math.random() * 4000 : 14000 + Math.random() * 18000, go)
     const go = () => {
       if (document.hidden) { next(false); return }
-      const kind = pickKind()
-      if (Math.random() < 0.75) {
+      const kind = pickKind(), r = Math.random()
+      if (r < 0.5) { // anh chỉ tay lên trời đúng lúc sao băng bay qua
         setPose(1); at(FADE / 2, () => setMaskPose(1))
         at(FADE + 150, () => setFire((f) => ({ n: f.n + 1, kind })))
         at(POSE_HOLD, () => { setPose(0); at(FADE / 2, () => setMaskPose(0)); at(FADE, () => next(false)) })
+      } else if (r < 0.78) { // anh xoa đầu cô gái, không có sao băng
+        setPose(2); at(FADE / 2, () => setMaskPose(2))
+        at(POSE_HOLD - 1000, () => { setPose(0); at(FADE / 2, () => setMaskPose(0)); at(FADE, () => next(false)) })
       } else { setFire((f) => ({ n: f.n + 1, kind })); next(false) }
     }
     next(true)
@@ -443,7 +446,8 @@ export default function SnowWatch({ active }: { active: boolean }) {
       <div className="sec-frame" ref={host}>
         <div className="tr-stage" ref={stage} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img className="sw-img" src={L.poses[0].src} alt="Hai người ngồi sát nhau dưới chăn len, quay lưng nhìn tuyết rơi ngoài cửa sổ lớn" draggable={false} />
-          <img className={`sw-img sw-top${pose ? ' on' : ''}`} src={L.poses[1].src} alt="" draggable={false} />
+          <img className={`sw-img sw-top${pose === 1 ? ' on' : ''}`} src={L.poses[1].src} alt="" draggable={false} />
+          <img className={`sw-img sw-top${pose === 2 ? ' on' : ''}`} src={L.poses[2].src} alt="" draggable={false} />
 
           {/* tắt đèn: bản đồ tối và ánh ấm đã dựng sẵn thành ảnh (cả phòng tối đi trừ ô kính, hai người tối riêng, ánh nến ấm trải theo một trường sáng chung);
               chỉ đổi độ trong suốt nên không có mặt nạ CSS phải tính lại mỗi khung hình */}

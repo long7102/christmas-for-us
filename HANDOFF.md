@@ -180,3 +180,8 @@ npx tsc -b        # kiểm tra kiểu
 - Bông tuyết là **vector phẳng** (nét dày, màu kem `#ecdcae` như bảng mẫu Long gửi), 9 mẫu trong `src/lib/snowflakes.ts` (`drawFlake(ctx, design, scale, color)`).
 - Chuyển cảnh hai bé -> ngắm tuyết vẽ bằng **canvas theo thanh cuộn** (`src/components/FlakeFx.tsx`, hàm vẽ nhận qua ref `flakeDraw` trong `WorldScroll.tsx`): bông tuyết nằm ngang (dẹt như đĩa, `scaleY = cos(tilt)`, tilt 78 -> 0 độ) xoay chậm, dựng đứng đối diện người xem, rồi bay thẳng ra phía trước (tăng cỡ theo hàm mũ), che kín màn hình (lớp kem lấp khe), cảnh đổi tại `NEXTR = 0.58`, rồi tan. Trước đây dùng SVG/CSS phóng to rất lớn nên vỡ nét và nháy (Long báo "glitch đau mắt"); canvas vẽ lại ở đúng cỡ mỗi khung nên không còn. `SPAN3 = 1.5`.
 - Tuyết rơi: bông pha lê dùng cùng mẫu vector, quay chậm hơn nhiều (tránh nhấp nháy răng cưa khi xoay sprite nhỏ), sprite 128px.
+
+### Bộ ảnh mới của cảnh ngắm tuyết (Long gửi lại: khăn len ô-liu không đuôi, áo phao, cây thông + người tuyết + đèn bàn)
+- `snow-land.webp` (ngồi sát, ảnh nền), `snow-land-point.webp` (anh chỉ tay lên trời), `snow-land-pat.webp` (anh xoa đầu cô gái), khung 1672x941. Ô kính mới: `[254,10,158,598] [457,8,936,602] [1440,8,196,602]`. Hai ngọn nến (đèn lồng, quả cầu tuyết), đèn bàn chao kem bên trái (`SNOW.lamp`). `tools/snow/bake-light.py` đã chỉnh cho 3 dáng; `tools/snow/cut-1..3.png` là hình cắt hai người (grabCut + elip lấp khăn).
+- Lịch ngẫu nhiên (`SnowWatch.tsx`): 50% chỉ tay + sao băng, 28% xoa đầu (không sao băng), còn lại chỉ có sao băng.
+- Chưa có ảnh dọc cho điện thoại; ảnh 4K chưa dùng (đang dùng bản 1672x941 Long gửi).
