@@ -895,10 +895,13 @@ html.has-cursor, html.has-cursor * { cursor: none !important; }
 .cur-ping { position: fixed; z-index: 99999; width: 10px; height: 10px; margin: -5px; border-radius: 50%; border: 1.5px solid rgba(255,226,160,.9); pointer-events: none; animation: cur-ping .65s ease-out forwards; }
 @keyframes cur-ping { to { transform: scale(5); opacity: 0; } }
 
-.xf-flake { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 12; pointer-events: none; }
 
 html.modal-open, html.modal-open body { overflow: hidden !important; overscroll-behavior: none; }
 .tr-modal { overscroll-behavior: contain; }
 
 .sw-dim { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity 1.1s ease; }
 .lights-off .sw-dim { opacity: 1; }
+
+/* chuyển cảnh hai bé -> ngắm tuyết: màn ánh sáng vàng kéo từ trên xuống (cảnh ngắm tuyết hiện ra phía trên mép màn), mép màn rắc tuyết rơi */
+.xf-snow { -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(var(--sy, -14%) - 14%), transparent var(--sy, -14%)); mask-image: linear-gradient(to bottom, #000 0, #000 calc(var(--sy, -14%) - 14%), transparent var(--sy, -14%)); }
+.xf-gold.xf-gold-top { bottom: auto; top: calc(var(--sy, -14%) - 7%); transform: translateY(-50%); opacity: var(--sring, 0); }

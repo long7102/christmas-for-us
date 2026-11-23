@@ -7,8 +7,7 @@ import Lenis from 'lenis'
 import { weather } from '../lib/weather'
 import { isLite, reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
-import { FLAKES } from '../lib/snowflakes'
-import { FlakeFx } from '../components/FlakeFx'
+import { LOADER_FLAKE, drawFlake } from '../lib/snowflakes'
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const smooth = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
@@ -100,33 +99,32 @@ function Notes({ fx }: { fx: React.MutableRefObject<Fx2> }) {
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
     const calm = reducedMotion() || isLite()
-    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; g: number; ph: number }
+    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; g: number; ph: number; gi: number }
     const ps: P[] = []
     let raf = 0, last = performance.now(), W = 0, H = 0
     const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight }
     size(); addEventListener('resize', size)
-    const glyphs = ['♪', '♫', '✦', '♬', '✧']
+    const glyphs = ['♪', '♫', '♬', '♪', '♫']  // mỗi hạt giữ MỘT ký hiệu cho cả đời (trước đây đổi theo chỉ số mảng nên nhấp nháy)
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       const f = fx.current
       ctx.clearRect(0, 0, W, H)
       if (f.on && !calm) {
         const inten = Math.sin(Math.PI * Math.min(1, Math.max(0, f.e)))
-        const n = inten * 46 * dt
+        const n = inten * 30 * dt
         for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) {
           const y = H * (1 - f.edge) + (Math.random() - 0.5) * 24
-          ps.push({ x: Math.random() * W, y, vx: (Math.random() - 0.5) * 24, vy: -(26 + Math.random() * 70), life: 0, max: 1.4 + Math.random() * 1.6, s: 9 + Math.random() * 15, g: Math.random() < 0.55 ? 1 : 0, ph: Math.random() * 6.28 })
+          ps.push({ x: Math.random() * W, y, vx: (Math.random() - 0.5) * 24, vy: -(26 + Math.random() * 70), life: 0, max: 1.4 + Math.random() * 1.6, s: 9 + Math.random() * 15, g: Math.random() < 0.55 ? 1 : 0, ph: Math.random() * 6.28, gi: Math.floor(Math.random() * 5) })
         }
       }
       for (let i = ps.length - 1; i >= 0; i--) {
         const p = ps[i]; p.life += dt
         if (p.life > p.max) { ps.splice(i, 1); continue }
-        p.x += (p.vx + Math.sin(t / 700 + p.ph) * 14) * dt; p.y += p.vy * dt
-        const k = 1 - p.life / p.max
-        ctx.globalAlpha = Math.min(1, k * 2) * 0.9
-        ctx.shadowColor = 'rgba(255,200,100,.9)'; ctx.shadowBlur = 8
-        if (p.g) { ctx.fillStyle = '#ffe9b0'; ctx.font = `${p.s}px serif`; ctx.fillText(glyphs[(i + (p.ph | 0)) % 5], p.x, p.y) }
-        else { ctx.fillStyle = '#fff3c8'; ctx.beginPath(); ctx.arc(p.x, p.y, p.s * 0.12 * (0.7 + 0.5 * Math.sin(t / 110 + p.ph)), 0, 6.283); ctx.fill() }
+        p.x += (p.vx + Math.sin(t / 1400 + p.ph) * 8) * dt; p.y += p.vy * dt
+        const u = p.life / p.max, a = Math.min(1, u * 5) * Math.min(1, (1 - u) * 2.5) * 0.9 // hiện dần rồi tan dần, mượt
+        ctx.globalAlpha = a
+        if (p.g) { ctx.shadowColor = 'rgba(255,200,100,.7)'; ctx.shadowBlur = 5; ctx.fillStyle = '#ffe9b0'; ctx.font = `${p.s}px serif`; ctx.fillText(glyphs[p.gi], p.x, p.y) }
+        else { ctx.shadowBlur = 0; ctx.fillStyle = '#fff3c8'; ctx.beginPath(); ctx.arc(p.x, p.y, p.s * 0.1, 0, 6.283); ctx.fill() }
       }
       ctx.globalAlpha = 1; ctx.shadowBlur = 0
       raf = requestAnimationFrame(frame)
@@ -135,6 +133,49 @@ function Notes({ fx }: { fx: React.MutableRefObject<Fx2> }) {
     return () => { cancelAnimationFrame(raf); removeEventListener('resize', size) }
   }, [fx])
   return <canvas ref={ref} className="xf-fx xf-notes" aria-hidden />
+}
+
+/** Bông tuyết rơi xuống từ mép màn ánh sáng khi chuyển từ hai chú mèo sang cảnh ngắm tuyết (như nốt nhạc bay lên ở chuyển cảnh hộp nhạc, nhưng là tuyết rơi). */
+function FlakeRain({ fx }: { fx: React.MutableRefObject<Fx2> }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const cv = ref.current!, ctx = cv.getContext('2d')!
+    const calm = reducedMotion() || isLite()
+    // sprite dựng sẵn: bông tuyết mảnh (mẫu màn chờ) hai cỡ
+    const mk = (px: number) => { const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d')!; x.translate(px / 2, px / 2); drawFlake(x, LOADER_FLAKE, (px / 2 / 100) * 0.92, '#fff4d2', 0.75); return c }
+    const spr = [mk(48), mk(96)]
+    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; sp: number; ph: number; rot: number; spin: number }
+    const ps: P[] = []
+    let raf = 0, last = performance.now(), W = 0, H = 0
+    const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight }
+    size(); addEventListener('resize', size)
+    const frame = (t: number) => {
+      raf = requestAnimationFrame(frame)
+      const dt = Math.min(0.05, (t - last) / 1000); last = t
+      const f = fx.current
+      ctx.clearRect(0, 0, W, H)
+      if (f.on && !calm) {
+        const inten = Math.sin(Math.PI * Math.min(1, Math.max(0, f.e)))
+        const n = inten * 34 * dt
+        for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) {
+          const y = H * f.edge + (Math.random() - 0.5) * 24, big = Math.random() < 0.55
+          ps.push({ x: Math.random() * W, y, vx: (Math.random() - 0.5) * 20, vy: 28 + Math.random() * 62, life: 0, max: 1.8 + Math.random() * 1.8, s: big ? 20 + Math.random() * 20 : 7 + Math.random() * 9, sp: big ? 1 : 0, ph: Math.random() * 6.28, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.7 })
+        }
+      }
+      for (let i = ps.length - 1; i >= 0; i--) {
+        const p = ps[i]; p.life += dt
+        if (p.life > p.max || p.y > H + 40) { ps.splice(i, 1); continue }
+        p.x += (p.vx + Math.sin(t / 1300 + p.ph) * 12) * dt; p.y += p.vy * dt; p.rot += p.spin * dt
+        const u = p.life / p.max
+        ctx.globalAlpha = Math.min(1, u * 5) * Math.min(1, (1 - u) * 2.5) * 0.92
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.drawImage(spr[p.sp], -p.s / 2, -p.s / 2, p.s, p.s); ctx.restore()
+      }
+      ctx.globalAlpha = 1
+    }
+    raf = requestAnimationFrame(frame)
+    return () => { cancelAnimationFrame(raf); removeEventListener('resize', size) }
+  }, [fx])
+  return <canvas ref={ref} className="xf-fx xf-rain" aria-hidden />
 }
 
 /**
@@ -148,8 +189,7 @@ export default function WorldScroll() {
   const prevP = useRef(0)
   const prevQ = useRef(0)
   const prevR = useRef(0)
-  const flakeI = useRef(1)
-  const flakeDraw = useRef<(r: number, i: number) => void>(() => {})
+  const fx3 = useRef<Fx2>({ e: 0, on: false, edge: 0 })
   const lenis = useRef<Lenis | null>(null)
   const [seen, setSeen] = useState({ tree: false, cats: false, near: false, box: true, snow: false, turned: false })
 
@@ -173,12 +213,13 @@ export default function WorldScroll() {
       // lt chạy 0..1 theo thanh cuộn của lần chuyển đang diễn ra (hai lần chuyển không bao giờ chồng nhau).
       const lt = r > 0.003 ? r : p
       const a1 = ease(smooth(0, 0.42, lt)), a2 = ease(smooth(0.4, 0.64, lt)), a5 = ease(smooth(0.64, 1, lt))
-      const NEXTR = 0.58 // lúc bông tuyết vừa che kín màn hình: đổi cảnh bên dưới (hai bé -> ngắm tuyết)
       const NEXT = 0.64 // lúc lá thư vừa che kín màn hình: đổi cảnh bên dưới
-      // hai bé -> ngắm tuyết: một bông tuyết nhỏ giữa màn hình to dần, xoay nhẹ, che kín màn hình (cảnh bên dưới đổi lúc đó), rồi tan ra để lộ cảnh mới
-      const flakeOn = r > 0.003 && r < 0.997 && !calm
+      // hai bé -> ngắm tuyết: màn ánh sáng vàng kéo từ TRÊN xuống để lộ cảnh ngắm tuyết, mép màn rắc bông tuyết rơi xuống (giống chuyển cảnh hộp nhạc nhưng ngược chiều)
+      const sy = -14 + 128 * er
       fx.current = { p: 0, R: 0, cx: 0, cy: 0, on: false }
-      flakeDraw.current(flakeOn ? r : 0, flakeI.current)
+      fx3.current = { e: r, on: r > 0.003 && r < 0.997, edge: Math.min(1, Math.max(0, (sy + 7) / 100)) }
+      st.setProperty('--sy', `${sy.toFixed(2)}%`)
+      st.setProperty('--sring', String(Math.min(1, Math.sin(Math.PI * r) * 2.4) * (r > 0.003 && r < 0.997 ? 1 : 0)))
       st.setProperty('--lv', lt > 0.003 && lt < 0.997 && !calm && r <= 0.003 ? 'visible' : 'hidden')
       st.setProperty('--lx', `${((1 - a1) * 62 - a5 * 5).toFixed(2)}vw`)
       st.setProperty('--ly', `${((1 - a1) * 44 - Math.sin(Math.PI * a1) * 16 - a5 * 9).toFixed(2)}vh`)
@@ -194,8 +235,8 @@ export default function WorldScroll() {
       st.setProperty('--D', '0px')
       st.setProperty('--ring', '0')
       st.setProperty('--bloom', String(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, q)), 2) * 0.55))
-      const catsOn = calm ? p > 0.5 && r < 0.5 : p >= NEXT && r < NEXTR
-      const snowOn = calm ? r > 0.5 : r >= NEXTR
+      const catsOn = calm ? p > 0.5 && r < 0.5 : p >= NEXT && r < 0.995
+      const snowOn = calm ? r > 0.5 : r > 0.003
       st.setProperty('--cv', catsOn ? 'visible' : 'hidden')
       st.setProperty('--cpe', catsOn && p > 0.985 && r < 0.012 ? 'auto' : 'none')
       st.setProperty('--sv', snowOn ? 'visible' : 'hidden')
@@ -220,11 +261,10 @@ export default function WorldScroll() {
       const pp = prevP.current; prevP.current = p
       if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
       const rr0 = prevR.current; prevR.current = r
-      if (rr0 < 0.003 && r >= 0.003) flakeI.current = (flakeI.current + 1 + Math.floor(Math.random() * (FLAKES.length - 1))) % FLAKES.length // mỗi lần chuyển cảnh một mẫu bông tuyết khác
       if ((rr0 < 0.04 && r >= 0.04) || (rr0 > 0.96 && r <= 0.96)) sfx.chime()
       const pq = prevQ.current; prevQ.current = q
       if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) { sfx.chime(); sfx.sparkle() }
-      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.66, cats: p >= 0.6 && r < NEXTR + 0.04, near: p > 0.6, box: q < 0.995, snow: r >= NEXTR - 0.04, turned: r > 0.5 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box && o.snow === n.snow && o.turned === n.turned ? o : n })
+      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.66, cats: p >= 0.6 && r < 0.97, near: p > 0.6, box: q < 0.995, snow: r > 0.003, turned: r > 0.5 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box && o.snow === n.snow && o.turned === n.turned ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
     // cuộn có quán tính (mượt như kéo bằng tay) trên máy tính; điện thoại giữ cuộn gốc của trình duyệt
@@ -301,8 +341,6 @@ export default function WorldScroll() {
         <div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div>
         <div className={`xf-layer xf-snow${seen.snow ? '' : ' idle'}`}><SnowWatch active={seen.snow} /></div>
         {/* lá thư dùng chung cho hai lần chuyển cảnh: bay tới, phóng lớn che kín màn hình, rồi bay vụt qua máy quay để lộ cảnh mới */}
-        {/* bông tuyết vector (chuyển cảnh hai bé -> ngắm tuyết): vẽ bằng canvas theo thanh cuộn, xem components/FlakeFx.tsx */}
-        <FlakeFx reg={flakeDraw} />
         <div className="xf-letter" aria-hidden>
           <div className="xl-fly">
             <i className="xl-shadow" />
@@ -312,11 +350,13 @@ export default function WorldScroll() {
           </div>
         </div>
         <i className="xf-gold" aria-hidden />
+        <i className="xf-gold xf-gold-top" aria-hidden />
         <i className="xf-glow" aria-hidden />
         <i className="xf-candy" aria-hidden />
         <i className="xf-bloom" aria-hidden />
         <Sparks fx={fx} />
         <Notes fx={fx2} />
+        <FlakeRain fx={fx3} />
         <nav className="xf-dots" aria-label="Các cảnh" style={{ ['--prog' as string]: Math.max(0, stops.findIndex((d) => d.on)) / (stops.length - 1) }}>
           {stops.map((d) => <button key={d.label} className={d.on ? 'on' : ''} aria-label={d.label} aria-current={d.on} onClick={() => goTo(d.at)}><span>{d.label}</span></button>)}
         </nav>

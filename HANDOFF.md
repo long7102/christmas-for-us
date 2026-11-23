@@ -202,3 +202,7 @@ npx tsc -b        # kiểm tra kiểu
 - **Tắt đèn cảnh cuối:** `Dim` (canvas) phủ tối .78 và khoét vũng sáng quanh từng ngọn nến (`SNOW.flames`, bán kính 470*k, giảm dần), cộng quầng sáng cam `.sw-flame` lớn hơn; nhờ vậy thấy ánh sáng toả ra từ đèn lồng và quả cầu tuyết rọi lên bàn, sách, người tuyết.
 - Bông tuyết chuyển cảnh nay DÙNG ĐÚNG MẪU CỦA MÀN HÌNH CHỜ (`LOADER_FLAKE` trong `lib/snowflakes.ts`: nét mảnh, vàng kem `#f3d596`, quầng vàng), che kín bằng màu nền màn chờ `#150d08`. Các mẫu cũ (`FLAKES`) chỉ còn dùng cho tuyết rơi.
 - Công tắc đèn cảnh cuối lại là chiếc đèn bàn to chao kem; vũng sáng nến rộng hơn (600*k) và ánh cam đậm hơn.
+
+### Chuyển cảnh hai bé -> ngắm tuyết làm lại (lần 5) + nốt nhạc ổn định
+- Giờ giống chuyển cảnh hộp nhạc nhưng ngược chiều: **màn ánh sáng vàng kéo từ TRÊN xuống**, cảnh ngắm tuyết hiện ra phía trên mép màn (mask `--sy` trên `.xf-snow`, dải sáng `.xf-gold-top`, `--sring`), mép màn rắc **bông tuyết rơi xuống** (`FlakeRain` trong `WorldScroll.tsx`, dùng mẫu `LOADER_FLAKE`, sprite dựng sẵn). Đã bỏ `FlakeFx` (bông tuyết canvas phóng to) và các mẫu 9 bông tuyết cho chuyển cảnh.
+- Nốt nhạc (`Notes`, chuyển cảnh hộp nhạc -> cây thông) hết lập loè: trước đây ký hiệu đổi theo chỉ số mảng (đổi liên tục khi hạt bị xoá) và chấm sáng nhấp nháy bằng sin; nay mỗi hạt giữ một ký hiệu cố định, hiện/tan mượt, ít hạt hơn (30/giây thay vì 46).
