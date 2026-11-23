@@ -4,7 +4,7 @@ import { isLite, reducedMotion } from '../lib/device'
 import { weather } from '../lib/weather'
 import { LitSpot } from '../components/LitSpot'
 import { lights, useLights } from '../lib/lights'
-import { SNOW as L, LM } from './snowLayout'
+import { SNOW as L } from './snowLayout'
 import { makeSprites } from '../lib/snowflakes'
 
 const POSE_HOLD = 6500
@@ -267,7 +267,7 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
     const tx = document.createElement('canvas'); tx.width = W; tx.height = H
     const tc = tx.getContext('2d')!
     const gr = tc.createLinearGradient(0, 0, 0, 608 * K)
-    gr.addColorStop(0, 'rgba(206,222,242,.26)'); gr.addColorStop(1, 'rgba(222,233,247,.58)')
+    gr.addColorStop(0, 'rgba(206,222,242,.07)'); gr.addColorStop(0.55, 'rgba(210,225,244,.15)'); gr.addColorStop(1, 'rgba(222,233,247,.58)') // trên cao rất mỏng (chỗ đầu người), đậm dần xuống dưới
     tc.fillStyle = gr
     L.panes.forEach(([x, y, w, h]) => tc.fillRect(x * K, y * K, w * K, h * K))
     tc.globalCompositeOperation = 'source-atop'
@@ -383,7 +383,7 @@ export default function SnowWatch({ active }: { active: boolean }) {
   const [lampHov, setLampHov] = useState(false)
   // giải mã sẵn mọi ảnh phụ (mặt nạ, bản đồ tối) để lúc đổi dáng không có khoảnh khắc ảnh chưa sẵn (gây nháy)
   useEffect(() => {
-    const keep = [...L.poses.map((q) => q.hide), ...L.poses.map((q) => q.tight), ...LM.dark, ...LM.warm].map((u) => { const im = new Image(); im.decoding = 'async'; im.src = u; im.decode?.().catch(() => {}); return im })
+    const keep = [...L.poses.map((q) => q.hide), ...L.poses.map((q) => q.tight)].map((u) => { const im = new Image(); im.decoding = 'async'; im.src = u; im.decode?.().catch(() => {}); return im })
     return () => { keep.length = 0 }
   }, [])
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
@@ -461,11 +461,6 @@ export default function SnowWatch({ active }: { active: boolean }) {
           <img className={`sw-img sw-top${pose === 1 ? ' on' : ''}`} src={L.poses[1].src} alt="" draggable={false} />
           <img className={`sw-img sw-top${pose === 2 ? ' on' : ''}`} src={L.poses[2].src} alt="" draggable={false} />
 
-          {/* tắt đèn: bản đồ tối và ánh ấm đã dựng sẵn thành ảnh (cả phòng tối đi trừ ô kính, hai người tối riêng, ánh nến ấm trải theo một trường sáng chung);
-              chỉ đổi độ trong suốt nên không có mặt nạ CSS phải tính lại mỗi khung hình */}
-          <img className="sw-lm" src={LM.dark[maskPose]} alt="" draggable={false} />
-          <img className="sw-lm" src={LM.warm[maskPose]} alt="" draggable={false} />
-
           {/* tuyết, hơi nước và sao băng ở sau kính: đi sau lưng hai người nhờ mặt nạ theo dáng ngồi hiện tại */}
           <div className="sw-fx" style={maskStyle}>
             <Meteors active={active} fire={fire} />
@@ -481,6 +476,8 @@ export default function SnowWatch({ active }: { active: boolean }) {
             onPointerLeave={() => { prev.current = null }} onPointerUp={() => { prev.current = null }} />
 
           <LitSpot src={L.poses[0].src} w={L.w} h={L.h} poly={L.lamp} on={lampHov} strength={0.5} />
+          {/* tắt đèn: chỉ phủ một lớp tối đều lên cả cảnh; ngọn nến nằm trên lớp tối nên vẫn sáng */}
+          <div className="sw-dim" />
           {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 260 * k, top: y - 260 * k, width: 520 * k, height: 520 * k, animationDelay: `-${i * 0.7}s` }} />)}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>

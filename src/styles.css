@@ -879,8 +879,6 @@ canvas.mb-dancer, canvas.mb-shadow { position: absolute; }
 
 
 /* bản đồ ánh sáng dựng sẵn khi tắt đèn (xem snowLayout.ts) */
-.sw-lm { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; opacity: 0; transition: opacity 1.1s ease; }
-.lights-off .sw-lm { opacity: 1; }
 /* cảnh cuối có nhiều lớp động: bỏ hai lớp hoà trộn soft-light phủ toàn màn hình (hạt phim, vệt sáng theo chuột) để không nháy trên máy yếu */
 .xf-sticky[data-scene="snow"]::before, .xf-sticky[data-scene="snow"]::after { display: none; }
 
@@ -901,3 +899,6 @@ html.has-cursor, html.has-cursor * { cursor: none !important; }
 
 html.modal-open, html.modal-open body { overflow: hidden !important; overscroll-behavior: none; }
 .tr-modal { overscroll-behavior: contain; }
+
+.sw-dim { position: absolute; inset: 0; pointer-events: none; background: rgba(8,4,3,.6); opacity: 0; transition: opacity 1.1s ease; }
+.lights-off .sw-dim { opacity: 1; }

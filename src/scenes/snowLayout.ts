@@ -7,12 +7,6 @@ import hide2 from '../assets/snow-hide-2.png'
 import tight2 from '../assets/snow-hide-tight-2.png'
 import hide3 from '../assets/snow-hide-3.png'
 import tight3 from '../assets/snow-hide-tight-3.png'
-import dark1 from '../assets/snow-dark-1.webp'
-import dark2 from '../assets/snow-dark-2.webp'
-import dark3 from '../assets/snow-dark-3.webp'
-import warm1 from '../assets/snow-warm-1.webp'
-import warm2 from '../assets/snow-warm-2.webp'
-import warm3 from '../assets/snow-warm-3.webp'
 
 /**
  * Cảnh ngắm tuyết. Toạ độ theo ảnh gốc 1672x941. Các ảnh dáng ngồi cùng một khung nên chuyển mờ là khớp.
@@ -20,8 +14,6 @@ import warm3 from '../assets/snow-warm-3.webp'
  * `hide`: mặt nạ che hai người (tuyết ở phía sau kính nên phải đi sau lưng họ).
  */
 export type Pose = { src: string; hide: string; tight: string }
-/** Bản đồ ánh sáng khi tắt đèn, dựng sẵn cho từng dáng ngồi (khung 836x470, kéo giãn ra khung ảnh): lớp tối (cả phòng + hai người, theo một trường sáng chung quanh các ngọn nến) và lớp ánh ấm. */
-export const LM = { dark: [dark1, dark2, dark3], warm: [warm1, warm2, warm3] }
 export const SNOW = {
   w: 1672, h: 941,
   panes: [[254, 10, 158, 598], [457, 8, 936, 602], [1440, 8, 196, 602]] as [number, number, number, number][],
