@@ -374,7 +374,10 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
 }
 
 export default function SnowWatch({ active }: { active: boolean }) {
+  const sec = useRef<HTMLElement>(null)
+  const txt = useRef<HTMLDivElement>(null)
   const host = useRef<HTMLDivElement>(null)
+  const [tall, setTall] = useState(() => innerWidth / innerHeight < 1.05)
   const stage = useRef<HTMLDivElement>(null)
   const lightsOn = useLights()
   const [lampHov, setLampHov] = useState(false)
@@ -391,17 +394,25 @@ export default function SnowWatch({ active }: { active: boolean }) {
   const prev = useRef<[number, number] | null>(null)
 
   useEffect(() => {
-    const el = host.current!
+    const el = host.current!, root = sec.current!
     const fit = () => {
       const vw = el.clientWidth, vh = el.clientHeight, F = L.focus
-      const s = Math.max(vw / L.w, vh / L.h)
-      const cx = (F.x1 + F.x2) / 2, cy = (F.y1 + F.y2) / 2
-      const x = Math.min(0, Math.max(vw - L.w * s, vw / 2 - cx * s))
-      const y = Math.min(0, Math.max(vh - L.h * s, vh / 2 - cy * s))
+      const isTall = root.clientWidth / root.clientHeight < 1.05
+      setTall((o) => (o === isTall ? o : isTall))
+      let s = Math.max(vw / L.w, vh / L.h), x: number, y: number
+      if (isTall) { // điện thoại dọc: cả khung cảnh nằm phía trên, chữ nằm ở dải tối phía dưới (như các cảnh khác)
+        const band = txt.current?.offsetHeight ?? 0
+        const vis = Math.max(260, vh - band)
+        s = Math.max(vis / L.h, vw / L.w)
+        x = Math.min(0, Math.max(vw - L.w * s, vw / 2 - ((F.x1 + F.x2) / 2) * s)); y = 0
+      } else {
+        const cx = (F.x1 + F.x2) / 2, cy = (F.y1 + F.y2) / 2
+        x = Math.min(0, Math.max(vw - L.w * s, vw / 2 - cx * s)); y = Math.min(0, Math.max(vh - L.h * s, vh / 2 - cy * s))
+      }
       setG((o) => (o.s === s && o.x === x && o.y === y ? o : { s, x, y }))
     }
     fit()
-    const ro = new ResizeObserver(fit); ro.observe(el)
+    const ro = new ResizeObserver(fit); ro.observe(el); if (txt.current) ro.observe(txt.current)
     return () => ro.disconnect()
   }, [])
 
@@ -442,7 +453,7 @@ export default function SnowWatch({ active }: { active: boolean }) {
   const gb = L.panes.reduce((m, [x, y, w, h]) => ({ x1: Math.min(m.x1, x), y1: Math.min(m.y1, y), x2: Math.max(m.x2, x + w), y2: Math.max(m.y2, y + h) }), { x1: 1e9, y1: 1e9, x2: 0, y2: 0 })
 
   return (
-    <section id="snow" className={`tree-scene snow-scene${lightsOn ? '' : ' lights-off'}`}>
+    <section id="snow" ref={sec} className={`tree-scene snow-scene${tall ? ' tall' : ' wide'}${lightsOn ? '' : ' lights-off'}`}>
       <div className="sec-frame" ref={host}>
         <div className="tr-stage" ref={stage} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img className="sw-img" src={L.poses[0].src} alt="Hai người ngồi sát nhau dưới chăn len, quay lưng nhìn tuyết rơi ngoài cửa sổ lớn" draggable={false} />
@@ -481,7 +492,7 @@ export default function SnowWatch({ active }: { active: boolean }) {
         <svg viewBox="0 0 24 24" width="22" height="22" fill={lightsOn ? 'currentColor' : 'none'} fillOpacity=".25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" />{lightsOn && <path d="M12 1v0M4 6L3 5M20 6l1-1M2 12H1M23 12h-1" strokeWidth="1.4" />}</svg>
       </button>
 
-      <div className="sec-text">
+      <div className="sec-text" ref={txt}>
         <h2 className="sec-title">{copy.title}</h2>
         <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>
         <p className="sec-tag">{copy.tagline}</p>

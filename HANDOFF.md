@@ -191,3 +191,7 @@ npx tsc -b        # kiểm tra kiểu
 - Khoá cuộn trang khi thư đang mở (`html.modal-open`), để cuộn không kéo trang phía sau xuống chuyển cảnh trong lúc thư còn hiện.
 - Cảnh ngắm tuyết: bấm chiếc đèn lồng nhỏ có nến ở góc dưới trái để tắt/bật (`SNOW.lamp`). Bóng khi tắt đèn làm lại liền mạch: hình cắt nở ra và nhoè mạnh (không còn đường cắt cứng), bỏ viền sáng quanh người, chao đèn bàn tối như phòng.
 - Bóng cảnh ngồi cạnh nhau (làm lại lần 2): **bỏ hẳn hình cắt người** khỏi bản đồ tối (hình cắt luôn để lại viền ở mép tóc và vai; Long chê "nhìn ngu"). Chỉ còn bóng của phòng: ô kính sáng, mờ dần về phía bậu cửa (470 -> 585) để không có đường ngang cắt qua áo; người ngồi trước kính vốn đã tối do ngược sáng. Hình cắt vẫn dùng cho mặt nạ che tuyết (`snow-hide-*`), không dùng cho ánh sáng.
+
+### Bố cục điện thoại dọc cho cảnh ngắm tuyết + script kiểm toàn trang
+- Cảnh ngắm tuyết ở màn dọc (`tall`): cảnh nằm phía trên vừa cả chiều cao, chữ nằm ở dải tối phía dưới (như các cảnh khác), không còn chữ đè lên chăn. Vẫn dùng ảnh ngang (chưa có ảnh dọc): chỉ thấy hai người và phần giữa cửa sổ.
+- `tools/smoke/shots.cjs`: chụp 4 cảnh chính ở 1440x900 và 390x844 và báo lỗi console. Chạy sau mỗi thay đổi lớn (xem hướng dẫn ở đầu tệp). Lần chạy gần nhất: không lỗi console ở cả hai cỡ.
