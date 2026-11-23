@@ -905,3 +905,29 @@ html.modal-open, html.modal-open body { overflow: hidden !important; overscroll-
 /* chuyển cảnh hai bé -> ngắm tuyết: màn ánh sáng vàng kéo từ trên xuống (cảnh ngắm tuyết hiện ra phía trên mép màn), mép màn rắc tuyết rơi */
 .xf-snow { -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(var(--sy, -14%) - 14%), transparent var(--sy, -14%)); mask-image: linear-gradient(to bottom, #000 0, #000 calc(var(--sy, -14%) - 14%), transparent var(--sy, -14%)); }
 .xf-gold.xf-gold-top { bottom: auto; top: calc(var(--sy, -14%) - 7%); transform: translateY(-50%); opacity: var(--sring, 0); }
+
+/* ===== Ấm hơn + chuyển động dịu (không nháy, chỉ đổi opacity/translate) ===== */
+/* chữ của mỗi cảnh hiện dần từng dòng khi cảnh xuất hiện (.idle tạm dừng hoạt ảnh nên chỉ chạy khi cảnh đang hiện) */
+@media (prefers-reduced-motion: no-preference) {
+  .sec-text > * { animation: sec-in 1.5s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(.3s + var(--k, 0) * .15s); }
+  .sec-text > :nth-child(2) { --k: 1; } .sec-text > :nth-child(3) { --k: 2; } .sec-text > :nth-child(4) { --k: 3; } .sec-text > :nth-child(5) { --k: 4; } .sec-text > :nth-child(n+6) { --k: 5; }
+  .sec-orn i { animation: sec-line 1.8s cubic-bezier(.2, .7, .2, 1) both; animation-delay: .55s; }
+}
+@keyframes sec-in { from { opacity: 0; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
+@keyframes sec-line { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
+.sec-desc { text-shadow: 0 1px 6px rgba(0, 0, 0, .75), 0 0 14px rgba(20, 10, 4, .6); }
+
+/* vầng sáng ấm như hơi lửa toả lên từ phía dưới, "thở" rất chậm (chỉ đổi độ đậm, chu kỳ 9 giây) */
+.tree-scene::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; transition: opacity 1.2s ease;
+  background: radial-gradient(ellipse 85% 55% at 50% 104%, rgba(255, 150, 60, .2), rgba(255, 150, 60, 0) 72%), radial-gradient(ellipse 55% 45% at 90% 6%, rgba(255, 204, 128, .09), rgba(255, 204, 128, 0) 72%);
+  animation: warm-breathe 9s ease-in-out infinite; }
+@keyframes warm-breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+.tree-scene.lights-off::after, .snow-scene::after { opacity: 0; animation: none; }
+.lite .tree-scene::after { animation: none; opacity: .8; }
+@media (prefers-reduced-motion: reduce) { .tree-scene::after { animation: none; opacity: .8; } }
+
+/* cảnh hai bé: chữ nằm góc dưới trái nên đưa nút cuộn xuống giữa để khỏi đè lên chữ */
+@media (min-aspect-ratio: 7/10) {
+  .scroll-cue { transition: left .7s ease; }
+  .xf-sticky:has(.xf-cats:not(.idle)) .scroll-cue { left: calc(50% - 20px); }
+}

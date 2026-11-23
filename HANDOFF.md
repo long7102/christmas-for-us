@@ -215,3 +215,10 @@ npx tsc -b        # kiểm tra kiểu
 ### Tối ưu tải (lần 1)
 - Phông chữ nay đóng gói hoàn toàn (`@fontsource`: Cormorant Garamond 400/500/600/700 + nghiêng, Dancing Script 500/600, Patrick Hand 400, khai báo trong `src/main.tsx`). Đã GỠ thẻ Google Fonts khỏi `index.html`: trang không còn request nào ra ngoài (kiểm bằng Playwright: 0 request ngoài, 0 lỗi console, 4 cảnh x 2 cỡ màn hình). Lý do: CSS ngoài chặn hiển thị, và phụ thuộc mạng của Hạ.
 - Số đo build (chưa tối ưu thêm): JS 554 kB (179 kB nén), ảnh cảnh ~340 kB/tấm (webp), tổng `dist` ~12 MB trong đó hai bài nhạc 4,2 MB (chỉ tải khi chọn bài).
+
+### Ấm hơn + chuyển động dịu (lần 1, cuối `src/styles.css`)
+- Chữ mỗi cảnh (`.sec-text > *`) hiện dần từng dòng, đường kẻ `.sec-orn` vẽ ra từ giữa; dùng `translate`/`opacity` (không đụng `transform` của con) và chỉ chạy khi cảnh đang hiện (`.idle` tạm dừng hoạt ảnh). Tắt khi `prefers-reduced-motion`.
+- Vầng sáng ấm `.tree-scene::after`: hai gradient (hơi lửa từ dưới lên, ánh vàng nhẹ góc trên phải) "thở" 9 giây, chỉ đổi opacity. Tắt khi tắt đèn (`.lights-off`), ở cảnh ngắm tuyết (`.snow-scene`), chế độ nhẹ (`.lite`, đứng yên .8) và giảm chuyển động. Hiệu ứng khá nhẹ, muốn rõ hơn thì tăng alpha .2 / .09.
+- Sửa lỗi: ở màn ngang, nút cuộn góc dưới trái đè lên chữ cảnh hai bé; nay khi cảnh mèo đang hiện nút trượt xuống giữa (`:has(.xf-cats:not(.idle))`).
+- Chữ mô tả `.sec-desc` thêm bóng chữ để rõ trên vân chăn/gối.
+- Chưa đụng vào ảnh nào (ảnh AI Long duyệt). Chưa kiểm trên máy thật.
