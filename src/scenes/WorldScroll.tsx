@@ -7,7 +7,7 @@ import Lenis from 'lenis'
 import { weather } from '../lib/weather'
 import { isLite, reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
-import { LOADER_FLAKE, drawFlake } from '../lib/snowflakes'
+import { FLAKES, LOADER_FLAKE, drawFlake } from '../lib/snowflakes'
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const smooth = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
@@ -141,9 +141,11 @@ function FlakeRain({ fx }: { fx: React.MutableRefObject<Fx2> }) {
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
     const calm = reducedMotion() || isLite()
-    // sprite dựng sẵn: bông tuyết mảnh (mẫu màn chờ) hai cỡ
-    const mk = (px: number) => { const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d')!; x.translate(px / 2, px / 2); drawFlake(x, LOADER_FLAKE, (px / 2 / 100) * 0.92, '#fff4d2', 0.75); return c }
-    const spr = [mk(48), mk(96)]
+    // sprite dựng sẵn: mười mẫu bông tuyết nét mảnh (mẫu màn chờ + chín mẫu của tuyết ngoài trời) màu kem vàng, cộng vài đốm tròn mềm như bokeh
+    const design = [LOADER_FLAKE, ...FLAKES]
+    const crystals = design.map((d, i) => { const px = 96, c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d')!; x.translate(px / 2, px / 2); drawFlake(x, d, (px / 2 / 100) * 0.92, i % 3 === 0 ? '#fff4d2' : i % 3 === 1 ? '#ffe9b8' : '#fffaf0', i === 0 ? 0.75 : 0.5); return c })
+    const orb = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d')!; const g = x.createRadialGradient(32, 32, 0, 32, 32, 30); g.addColorStop(0, 'rgba(255,244,214,.95)'); g.addColorStop(0.5, 'rgba(255,230,170,.45)'); g.addColorStop(1, 'rgba(255,220,150,0)'); x.fillStyle = g; x.beginPath(); x.arc(32, 32, 30, 0, 6.283); x.fill(); return c })()
+    const spr = [...crystals, orb]
     type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; sp: number; ph: number; rot: number; spin: number }
     const ps: P[] = []
     let raf = 0, last = performance.now(), W = 0, H = 0
@@ -156,10 +158,10 @@ function FlakeRain({ fx }: { fx: React.MutableRefObject<Fx2> }) {
       ctx.clearRect(0, 0, W, H)
       if (f.on && !calm) {
         const inten = Math.sin(Math.PI * Math.min(1, Math.max(0, f.e)))
-        const n = inten * 34 * dt
+        const n = inten * 42 * dt
         for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) {
-          const y = H * f.edge + (Math.random() - 0.5) * 24, big = Math.random() < 0.55
-          ps.push({ x: Math.random() * W, y, vx: (Math.random() - 0.5) * 20, vy: 28 + Math.random() * 62, life: 0, max: 1.8 + Math.random() * 1.8, s: big ? 20 + Math.random() * 20 : 7 + Math.random() * 9, sp: big ? 1 : 0, ph: Math.random() * 6.28, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.7 })
+          const y = H * f.edge + (Math.random() - 0.5) * 24, isOrb = Math.random() < 0.28, z = Math.random()
+          ps.push({ x: Math.random() * W, y, vx: (Math.random() - 0.5) * 20, vy: 26 + z * 70, life: 0, max: 1.8 + Math.random() * 1.8, s: isOrb ? 10 + z * 30 : 18 + z * 34, sp: isOrb ? crystals.length : Math.floor(Math.random() * crystals.length), ph: Math.random() * 6.28, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.7 })
         }
       }
       for (let i = ps.length - 1; i >= 0; i--) {
