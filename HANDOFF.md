@@ -207,3 +207,11 @@ npx tsc -b        # kiểm tra kiểu
 - Giờ giống chuyển cảnh hộp nhạc nhưng ngược chiều: **màn ánh sáng vàng kéo từ TRÊN xuống**, cảnh ngắm tuyết hiện ra phía trên mép màn (mask `--sy` trên `.xf-snow`, dải sáng `.xf-gold-top`, `--sring`), mép màn rắc **bông tuyết rơi xuống** (`FlakeRain` trong `WorldScroll.tsx`, dùng mẫu `LOADER_FLAKE`, sprite dựng sẵn). Đã bỏ `FlakeFx` (bông tuyết canvas phóng to) và các mẫu 9 bông tuyết cho chuyển cảnh.
 - Nốt nhạc (`Notes`, chuyển cảnh hộp nhạc -> cây thông) hết lập loè: trước đây ký hiệu đổi theo chỉ số mảng (đổi liên tục khi hạt bị xoá) và chấm sáng nhấp nháy bằng sin; nay mỗi hạt giữ một ký hiệu cố định, hiện/tan mượt, ít hạt hơn (30/giây thay vì 46).
 - `FlakeRain`: bông tuyết rơi ở chuyển cảnh mèo -> ngắm tuyết nay đa dạng như tuyết ngoài trời: 10 mẫu nét mảnh (mẫu màn chờ + 9 mẫu `FLAKES`), 3 tông kem, kèm ~28% đốm tròn mềm (bokeh), đủ cỡ theo độ gần xa.
+
+## Quyết định mới (phiên này)
+- **Nhánh chính: `claude/exciting-albattani-341nvi`** (chứa toàn bộ lịch sử của `claude/confident-brown-h91ito` tới 24f5a60, cộng các thay đổi mới). Làm việc và triển khai từ nhánh này. Nhánh `confident-brown` và `youthful-mendel` chỉ để tham khảo, không đẩy thêm. Nhánh mặc định trên GitHub và "Production Branch" trong cài đặt Vercel vẫn là nhánh cũ: công cụ MCP không đổi được, Long đổi tay trong Settings (hoặc cứ triển khai bằng `create_deployment` với `ref` = nhánh này, target production).
+- **BỎ cảnh bàn trà.** Không làm nữa, đừng soạn prompt ảnh bàn trà. Hướng đi: chỉ tối ưu các cảnh đang có (cổng, làng, cửa, hộp nhạc, cây thông, hai chú mèo, ngắm tuyết).
+
+### Tối ưu tải (lần 1)
+- Phông chữ nay đóng gói hoàn toàn (`@fontsource`: Cormorant Garamond 400/500/600/700 + nghiêng, Dancing Script 500/600, Patrick Hand 400, khai báo trong `src/main.tsx`). Đã GỠ thẻ Google Fonts khỏi `index.html`: trang không còn request nào ra ngoài (kiểm bằng Playwright: 0 request ngoài, 0 lỗi console, 4 cảnh x 2 cỡ màn hình). Lý do: CSS ngoài chặn hiển thị, và phụ thuộc mạng của Hạ.
+- Số đo build (chưa tối ưu thêm): JS 554 kB (179 kB nén), ảnh cảnh ~340 kB/tấm (webp), tổng `dist` ~12 MB trong đó hai bài nhạc 4,2 MB (chỉ tải khi chọn bài).
