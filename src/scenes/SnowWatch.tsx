@@ -383,7 +383,7 @@ export default function SnowWatch({ active }: { active: boolean }) {
   const [lampHov, setLampHov] = useState(false)
   // giải mã sẵn mọi ảnh phụ (mặt nạ, bản đồ tối) để lúc đổi dáng không có khoảnh khắc ảnh chưa sẵn (gây nháy)
   useEffect(() => {
-    const keep = [...L.poses.map((q) => q.hide), ...LM.dark, ...LM.warm].map((u) => { const im = new Image(); im.decoding = 'async'; im.src = u; im.decode?.().catch(() => {}); return im })
+    const keep = [...L.poses.map((q) => q.hide), ...L.poses.map((q) => q.tight), ...LM.dark, ...LM.warm].map((u) => { const im = new Image(); im.decoding = 'async'; im.src = u; im.decode?.().catch(() => {}); return im })
     return () => { keep.length = 0 }
   }, [])
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
@@ -450,6 +450,7 @@ export default function SnowWatch({ active }: { active: boolean }) {
 
   const mask = L.poses[maskPose]
   const maskStyle = { WebkitMaskImage: `url(${mask.hide})`, maskImage: `url(${mask.hide})` }
+  const tightStyle = { WebkitMaskImage: `url(${mask.tight})`, maskImage: `url(${mask.tight})` }
   const gb = L.panes.reduce((m, [x, y, w, h]) => ({ x1: Math.min(m.x1, x), y1: Math.min(m.y1, y), x2: Math.max(m.x2, x + w), y2: Math.max(m.y2, y + h) }), { x1: 1e9, y1: 1e9, x2: 0, y2: 0 })
 
   return (
@@ -470,6 +471,8 @@ export default function SnowWatch({ active }: { active: boolean }) {
             <Meteors active={active} fire={fire} />
             <SnowFall active={active} />
             <ClingSnow active={active} />
+          </div>
+          <div className="sw-fx" style={tightStyle}>
             <Fog active={active} wipeRef={wipeRef} />
           </div>
 

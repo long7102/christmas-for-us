@@ -2,8 +2,11 @@ import base from '../assets/snow-land.webp'
 import point from '../assets/snow-land-point.webp'
 import pat from '../assets/snow-land-pat.webp'
 import hide1 from '../assets/snow-hide-1.png'
+import tight1 from '../assets/snow-hide-tight-1.png'
 import hide2 from '../assets/snow-hide-2.png'
+import tight2 from '../assets/snow-hide-tight-2.png'
 import hide3 from '../assets/snow-hide-3.png'
+import tight3 from '../assets/snow-hide-tight-3.png'
 import dark1 from '../assets/snow-dark-1.webp'
 import dark2 from '../assets/snow-dark-2.webp'
 import dark3 from '../assets/snow-dark-3.webp'
@@ -16,7 +19,7 @@ import warm3 from '../assets/snow-warm-3.webp'
  * `panes`: những ô kính trong, tuyết và hơi nước chỉ nằm trong các ô này (không đè lên khung gỗ).
  * `hide`: mặt nạ che hai người (tuyết ở phía sau kính nên phải đi sau lưng họ).
  */
-export type Pose = { src: string; hide: string }
+export type Pose = { src: string; hide: string; tight: string }
 /** Bản đồ ánh sáng khi tắt đèn, dựng sẵn cho từng dáng ngồi (khung 836x470, kéo giãn ra khung ảnh): lớp tối (cả phòng + hai người, theo một trường sáng chung quanh các ngọn nến) và lớp ánh ấm. */
 export const LM = { dark: [dark1, dark2, dark3], warm: [warm1, warm2, warm3] }
 export const SNOW = {
@@ -29,8 +32,8 @@ export const SNOW = {
   /** Chiếc đèn lồng nhỏ có nến ở góc dưới trái: bấm vào để tắt hoặc bật đèn. */
   lamp: [[40, 650], [110, 650], [140, 700], [140, 865], [8, 865], [8, 700]] as [number, number][],
   poses: [
-    { src: base, hide: hide1 },
-    { src: point, hide: hide2 },
-    { src: pat, hide: hide3 },
+    { src: base, hide: hide1, tight: tight1 },
+    { src: point, hide: hide2, tight: tight2 },
+    { src: pat, hide: hide3, tight: tight3 },
   ] as Pose[],
 }

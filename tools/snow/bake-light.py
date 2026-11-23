@@ -35,8 +35,13 @@ for n in ['1','2','3']:
     # chao đèn bàn đứng trước ô kính bên trái: cũng che tuyết phía sau nó
     lampm=np.zeros((H,W),np.float32); cv2.fillPoly(lampm,[np.array([[190,365],[320,365],[350,527],[145,527]])//2],1.0)
     lampm=cv2.GaussianBlur(lampm,(0,0),.7)
-    hide=np.zeros((H,W,4),np.uint8); hide[...,3]=np.clip((1-np.maximum(sil,lampm))*255,0,255)
-    cv2.imwrite(A+f'snow-hide-{n}.png',hide,[cv2.IMWRITE_PNG_COMPRESSION,9])
+    # che nở ra ~8px và nhoè nhẹ: tuyết/sương không bao giờ đè lên sợi tóc lòa xòa ở mép (trước đây chỗ phủ chỗ không, nhìn như tóc bị cắt)
+    sil_h=cv2.GaussianBlur(cv2.dilate(sil,np.ones((9,9),np.uint8)),(0,0),2.2)
+    hide=np.zeros((H,W,4),np.uint8); hide[...,3]=np.clip((1-np.maximum(sil_h,lampm))*255,0,255)
+    cv2.imwrite(A+f'snow-hide-{n}.png',hide,[cv2.IMWRITE_PNG_COMPRESSION,9])   # rộng: dùng cho tuyết rơi, sao băng, tuyết bám (không bao giờ đè lên sợi tóc)
+    sil_t=cv2.GaussianBlur(sil,(0,0),1.6)
+    tight=np.zeros((H,W,4),np.uint8); tight[...,3]=np.clip((1-np.maximum(sil_t,lampm))*255,0,255)
+    cv2.imwrite(A+f'snow-hide-tight-{n}.png',tight,[cv2.IMWRITE_PNG_COMPRESSION,9])  # sát mép, mép nhoè: dùng cho lớp sương trên kính (sương không được tạo quầng quanh người)
     # Bóng KHÔNG dùng hình cắt người (hình cắt luôn để lại viền ở mép). Ô kính sáng ngoài trời; người ngồi trước kính vốn đã tối (ngược sáng),
     # nên chỉ cần tối phần còn lại của phòng. Ô kính mờ dần về phía bậu cửa (470 -> 585) để không có đường ngang cắt qua áo ở chỗ giáp bậu cửa.
     ramp=np.interp(Y,[470,585],[1,0]).astype(np.float32)

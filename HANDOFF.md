@@ -195,3 +195,4 @@ npx tsc -b        # kiểm tra kiểu
 ### Bố cục điện thoại dọc cho cảnh ngắm tuyết + script kiểm toàn trang
 - Cảnh ngắm tuyết ở màn dọc (`tall`): cảnh nằm phía trên vừa cả chiều cao, chữ nằm ở dải tối phía dưới (như các cảnh khác), không còn chữ đè lên chăn. Vẫn dùng ảnh ngang (chưa có ảnh dọc): chỉ thấy hai người và phần giữa cửa sổ.
 - `tools/smoke/shots.cjs`: chụp 4 cảnh chính ở 1440x900 và 390x844 và báo lỗi console. Chạy sau mỗi thay đổi lớn (xem hướng dẫn ở đầu tệp). Lần chạy gần nhất: không lỗi console ở cả hai cỡ.
+- Tóc lòa xòa ở đỉnh đầu (Long báo "chỗ được chỗ không"): hai mặt nạ che khác nhau. `snow-hide-*.png` (rộng ~8px, nhoè) cho tuyết rơi, sao băng, tuyết bám để chúng không đè lên sợi tóc; `snow-hide-tight-*.png` (sát mép, nhoè nhẹ) riêng cho lớp sương kính để sương không để lại quầng sẫm quanh đầu. Cả hai do `tools/snow/bake-light.py` sinh ra.
