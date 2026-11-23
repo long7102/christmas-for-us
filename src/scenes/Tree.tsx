@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { gifts, getMemory, lampStories, tree as treeCopy } from '../content/content'
-import { reducedMotion } from '../lib/device'
+import { reducedMotion, isLite } from '../lib/device'
 import { sfx } from '../lib/audio'
 import { lights, useLights } from '../lib/lights'
+import SoundControl from '../components/SoundControl'
+import { useHintPulse } from '../lib/hintPulse'
+import { weather } from '../lib/weather'
+import { LitSpot, Stardust } from '../components/LitSpot'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
 import { LAND, PORT, polyBox, type Layout, type P, type R } from './treeLayout'
 
 /** Tuyết rơi ngoài cửa sổ: nhiều lớp xa gần, gió thổi chéo, bông to mờ ở gần, lớp tuyết đọng trên bậu cửa. */
-function WindowSnow({ r }: { r: R }) {
+export function WindowSnow({ r }: { r: R }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
@@ -19,7 +23,7 @@ function WindowSnow({ r }: { r: R }) {
     let raf = 0, last = performance.now(), gust = 0
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
-      gust = 14 + Math.sin(t / 2600) * 9 + Math.sin(t / 900) * 3
+      gust = weather.gust(t)
       ctx.clearRect(0, 0, W, H)
       for (const f of fl) {
         const sp = 10 + 26 * f.z
@@ -66,7 +70,7 @@ function Flames({ r, flare }: { r: R; flare: boolean }) {
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       const boost = fl.current ? 2.2 : 1
-      acc += dt * (reducedMotion() ? 40 : 110) * boost
+      acc += dt * (reducedMotion() || isLite() ? 40 : 110) * boost
       while (acc > 1) { acc -= 1
         const edge = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
         ps.push({ x: cx + edge * 2 * spread, y: baseY + Math.random() * 4, vx: (Math.random() - 0.5) * 14, vy: -(r.h * (1.0 + Math.random() * 0.9)) * boost, life: 0, max: 0.55 + Math.random() * 0.55, s: r.w * (0.1 + Math.random() * 0.09) })
@@ -127,7 +131,7 @@ function Embers({ r, kick }: { r: R; kick: number }) {
     let raf = 0, last = performance.now(), nextPop = 600, acc = 0
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
-      acc += dt * (reducedMotion() ? 2 : 6)
+      acc += dt * (reducedMotion() || isLite() ? 2 : 6)
       while (acc > 1) { acc -= 1; es.push(spawn(false)) }
       nextPop -= dt * 1000
       if (nextPop < 0) { nextPop = 900 + Math.random() * 2600; const n = 4 + Math.floor(Math.random() * 6); for (let i = 0; i < n; i++) es.push(spawn(true)) }
@@ -159,14 +163,14 @@ export function Dust({ w, h }: { w: number; h: number }) {
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
     const K = 0.5, W = (cv.width = w * K), H = (cv.height = h * K)
-    const n = reducedMotion() ? 18 : 55
+    const n = reducedMotion() || isLite() ? 14 : 55
     const ms = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 0.8 + Math.random() * 1.6, sp: 2 + Math.random() * 6, ph: Math.random() * 6.28, tw: 0.4 + Math.random() * 0.9 }))
     let raf = 0, last = performance.now()
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       ctx.clearRect(0, 0, W, H)
       for (const m of ms) {
-        m.x += (Math.sin(t / 2300 + m.ph) * 4 + m.sp * 0.6) * dt; m.y += (Math.cos(t / 1900 + m.ph) * 3 - m.sp * 0.45) * dt
+        m.x += (weather.sway(t, m.ph) * 7 + m.sp * 0.6) * dt; m.y += (Math.cos(t / 1900 + m.ph) * 3 - m.sp * 0.45) * dt
         if (m.x > W + 5) m.x = -5; if (m.y < -5) m.y = H + 5; if (m.y > H + 5) m.y = -5
         const a = 0.15 + 0.4 * (0.5 + 0.5 * Math.sin(t / 1200 * m.tw + m.ph))
         ctx.fillStyle = `rgba(255,222,160,${a})`
@@ -183,6 +187,45 @@ export function Dust({ w, h }: { w: number; h: number }) {
 }
 
 /** Ánh đèn lồng / nến chập chờn. */
+/** Khi nắp hộp quà bật ra: ruy băng nhiều màu, mảnh giấy và tia sáng vàng bắn lên rồi rơi nhẹ xuống, kèm ánh toả từ lòng hộp. */
+function GiftBurst({ x, y, w }: { x: number; y: number; w: number }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  const W = Math.round(w + 260), H = 360
+  useEffect(() => {
+    const cv = ref.current!, ctx = cv.getContext('2d')!
+    cv.width = W; cv.height = H
+    const lite = reducedMotion() || isLite()
+    const cols = ['#d9373a', '#f4c14e', '#2f8a52', '#f7ecd0', '#e8845a', '#7fb7e6']
+    type P = { x: number; y: number; vx: number; vy: number; a: number; va: number; w: number; h: number; c: string; life: number; max: number; spark: boolean }
+    const ps: P[] = Array.from({ length: lite ? 22 : 70 }, (_, i) => {
+      const spark = i % 3 === 0, ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.5, sp = 160 + Math.random() * 260
+      return { x: W / 2 + (Math.random() - 0.5) * w * 0.6, y: H - 60, vx: Math.cos(ang) * sp * 0.7, vy: Math.sin(ang) * sp, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 10, w: spark ? 3 : 5 + Math.random() * 6, h: spark ? 3 : 10 + Math.random() * 12, c: spark ? '#ffe9a8' : cols[i % cols.length], life: 0, max: 1.6 + Math.random() * 1.2, spark }
+    })
+    let raf = 0, last = performance.now()
+    const frame = (t: number) => {
+      const dt = Math.min(0.05, (t - last) / 1000); last = t
+      ctx.clearRect(0, 0, W, H)
+      let alive = 0
+      for (const p of ps) {
+        p.life += dt; if (p.life > p.max) continue
+        alive++
+        p.vy += 420 * dt; p.vx *= 1 - 0.8 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt
+        const k = 1 - p.life / p.max
+        ctx.globalAlpha = Math.min(1, k * 2.2)
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c
+        if (p.spark) { ctx.shadowColor = 'rgba(255,214,120,.9)'; ctx.shadowBlur = 8; ctx.beginPath(); ctx.arc(0, 0, p.w * (0.6 + 0.6 * Math.sin(t / 60 + p.a)), 0, 6.283); ctx.fill() }
+        else ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.a * 1.3)) + 2)
+        ctx.restore()
+      }
+      ctx.globalAlpha = 1
+      if (alive) raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+    return () => cancelAnimationFrame(raf)
+  }, [W, w])
+  return <canvas ref={ref} className="tr-burst" style={{ left: x - 130, top: y - H + 40, width: W, height: H }} />
+}
+
 export function Lamps({ lamps, flare }: { lamps: Layout['lamps']; flare: Set<number> }) {
   return (
     <>
@@ -234,18 +277,19 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [modal, setModal] = useState<Modal>(null)
   const [hov, setHov] = useState<number | null>(null)
+  const [lit, setLit] = useState<P | null>(null)
   const [opened, setOpened] = useState<Record<number, boolean>>(() => store.get('giftsOpened', {}))
   const [opening, setOpening] = useState<number | null>(null)
   const [, tick] = useState(0)
   const lightsOn = useLights()
-  const [snd, setSnd] = useState(() => sfx.running && !sfx.muted)
   useEffect(() => {
     sfx.fire(true)
-    const sync = () => { sfx.fire(true); setSnd(sfx.running && !sfx.muted) }
+    const sync = () => { sfx.fire(true) }
     const off = sfx.subscribe(sync)
     return () => { off(); sfx.fire(false) }
   }, [])
   const [kick, setKick] = useState(0)
+  const pulse = useHintPulse(spots.length, !paused, modal !== null || opening !== null || hov !== null)
   const [starKey, setStarKey] = useState(0)
   const [flash, setFlash] = useState(false)
   const [lampOn, setLampOn] = useState<Set<number>>(new Set())
@@ -312,7 +356,9 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
     later(() => setModal({ kind: 'memory', id: 'lamp', i }))
   }
 
+  useEffect(() => { if (!tip) setLit(null) }, [tip])
   const showTip = (id: string, poly: P, i?: number) => {
+    if (!id.startsWith('gift')) setLit(poly)
     if (id === 'lamp') { const m = lampStories[(i ?? 0) % lampStories.length]; setTip({ title: m.title, text: m.tip, b: polyBox(poly) }); return }
     if (id.startsWith('gift')) {
       const gf = gifts[i!]
@@ -343,6 +389,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
         <div className={`tr-stage${flash ? ' flash' : ''}`} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img src={L.src} alt="Cây thông Giáng sinh và bốn món quà" draggable={false} />
           {!paused && <WindowSnow r={L.win} />}
+          <div className="tr-frost" style={{ left: L.win.x, top: L.win.y, width: L.win.w, height: L.win.h }} />
           <Fire r={L.fire} flare={fireOn} />
           {!paused && <Flames r={L.fire} flare={fireOn} />}
           {!paused && <Embers r={L.fire} kick={kick} />}
@@ -363,6 +410,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
                 <div className="tr-patch" style={{ left: d.x1 - 6, top: d.top - 4, width: w, height: h, backgroundImage: `url(${L.src})`, backgroundSize: `${L.w}px ${L.h}px`, backgroundPosition: `${-(d.x1 - 6)}px ${-(d.top - 4 - h)}px` }} />
                 <div className="tr-inside" style={{ left: d.x1, top: d.y1, width: d.x2 - d.x1, height: d.y2 - d.y1 }} />
                 <div className="tr-beam" style={{ left: d.x1 + 6, top: d.y1 - 150, width: d.x2 - d.x1 - 12, height: 160 }} />
+                {opening === i && <GiftBurst x={d.x1} y={d.y1} w={d.x2 - d.x1} />}
               </div>
             )
           })}
@@ -375,6 +423,10 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
               <div className="tr-lit" style={{ clipPath: poly(opened[i] ? bodyPoly(i) : p), backgroundImage: `url(${L.src})` }} />
             </div>
           ))}
+
+          {/* rê chuột vào vật (hoặc lúc gợi ý nhẹ): vật sáng lên khẽ kèm bụi sao, không viền */}
+          <LitSpot src={L.src} w={L.w} h={L.h} poly={lit ?? (pulse !== null ? spots[pulse]?.poly ?? [[0, 0]] : [[0, 0]])} on={lit !== null || (pulse !== null && hov === null)} />
+          {hov !== null && <Stardust poly={opened[hov] ? bodyPoly(hov) : L.polys[hov]} on />}
 
           {/* nắp hộp: bay lên rồi nằm dưới đất */}
           {L.lids.map((d, i) => {
@@ -400,7 +452,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
           <Twinkles t={L.tree} />
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             {spots.map((q) => (
-              <polygon key={q.id} className="tr-hs" points={q.poly.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button"
+              <polygon key={q.id} className={`tr-hs${pulse !== null && spots[pulse]?.id === q.id ? ' pulse' : ''}`} points={q.poly.map((c) => c.join(',')).join(' ')} tabIndex={0} role="button"
                 aria-label={q.id} onMouseEnter={() => showTip(q.id, q.poly)} onMouseLeave={() => setTip(null)} onFocus={() => showTip(q.id, q.poly)} onBlur={() => setTip(null)}
                 onClick={() => { setTip(null); poke(q.id) }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(q.id) } }} />
             ))}
@@ -423,9 +475,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
         </div>
       </div>
 
-      <button className="tr-sound" aria-label={snd ? 'Tắt âm thanh' : 'Bật âm thanh'} onClick={() => { if (!sfx.running) { sfx.setMuted(false); sfx.unlock() } else sfx.setMuted(!sfx.muted); setSnd(sfx.running && !sfx.muted) }}>
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 9v6h4l5 4V5L8 9z" />{snd ? <><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" /></> : <path d="M17 9l5 6M22 9l-5 6" />}</svg>
-      </button>
+      <SoundControl where="tr" />
       <button className="tr-lights" aria-label={lightsOn ? 'Tắt đèn' : 'Bật đèn'} title={lightsOn ? 'Tắt đèn, chỉ còn ánh lửa' : 'Bật đèn lại'} onClick={() => lights.toggle()}>
         <svg viewBox="0 0 24 24" width="22" height="22" fill={lightsOn ? 'currentColor' : 'none'} fillOpacity=".25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" />{lightsOn && <path d="M12 1v0M4 6L3 5M20 6l1-1M2 12H1M23 12h-1" strokeWidth="1.4" />}</svg>
       </button>
@@ -434,7 +484,6 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
         <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>
         <p className="sec-tag">{treeCopy.tagline}</p>
         <p className="sec-desc">{treeCopy.body}</p>
-        <p className="sec-hint"><span aria-hidden>✦</span>{treeCopy.hint}</p>
       </div>
 
       {tip && (() => {

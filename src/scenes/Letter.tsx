@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LONG_EMAIL, gifts, getMemory, lampStories, treeText } from '../content/content'
 import { store } from '../lib/storage'
-import { BellIcon, BowIcon, FireIcon, LampIcon, OrnamentIcon, StarIcon, StockingIcon, WreathIcon } from './Icons'
+import { CurtainIcon, GarlandIcon, RugIcon, ShelfIcon, ToolsIcon, TreeIcon, WindowIcon, BasketIcon, BellIcon, BooksIcon, PaintingIcon, BowIcon, PineIcon, FireIcon, LampIcon, OrnamentIcon, StarIcon, StockingIcon, WreathIcon } from './Icons'
 import { sfx } from '../lib/audio'
 import { countdown, isUnlocked } from '../lib/unlock'
 
@@ -52,7 +52,7 @@ function Postmark({ text }: { text: string }) {
   )
 }
 
-const PAPER: Record<string, string> = { window: 'star', curtainL: 'g1', curtainR: 'g4', painting: 'wreath', painting2: 'stock1', shelf: 'stock1', basket: 'stock0', tools: 'fire', garland: 'wreath', chair: 'g2', rug: 'g1', tree: 'stock2' }
+const PAPER: Record<string, string> = { books: 'stock1', pine: 'wreath', window: 'star', curtainL: 'g1', curtainR: 'g4', painting: 'wreath', painting2: 'stock1', shelf: 'stock1', basket: 'stock0', tools: 'fire', garland: 'wreath', chair: 'g2', rug: 'g1', tree: 'stock2' }
 const paperFor = (id: string) => (id.startsWith('bow') ? 'g4' : id.startsWith('bell') ? 'lamp' : PAPER[id] ?? id)
 
 function iconFor(id: string) {
@@ -61,6 +61,19 @@ function iconFor(id: string) {
   if (id === 'stock2') return <StockingIcon main="#2c5a3c" dark="#122e1c" light="#44805a" patch="#e0d2ae" variant="tag" />
   if (id === 'wreath') return <WreathIcon />
   if (id === 'star') return <StarIcon />
+  if (id === 'books') return <BooksIcon />
+  if (id === 'basket') return <BasketIcon />
+  if (id === 'shelf') return <ShelfIcon />
+  if (id === 'tools') return <ToolsIcon />
+  if (id === 'garland') return <GarlandIcon />
+  if (id === 'rug') return <RugIcon />
+  if (id === 'tree') return <TreeIcon />
+  if (id === 'window') return <WindowIcon />
+  if (id === 'curtainL') return <CurtainIcon />
+  if (id === 'curtainR') return <CurtainIcon flip />
+  if (id === 'painting') return <PaintingIcon />
+  if (id === 'painting2') return <PaintingIcon snow />
+  if (id === 'pine') return <PineIcon />
   if (id === 'lamp') return <LampIcon />
   if (id === 'fire') return <FireIcon />
   if (id.startsWith('bow')) return <BowIcon />
@@ -134,6 +147,8 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
   const [closing, setClosing] = useState(false)
   const onClose = () => { if (closing) return; setClosing(true); sfx.rustle(0.45, 0.4); setTimeout(finish, 340) }
   useEffect(() => { sfx.rustle(0.6, 0.5) }, [])
+  // khoá cuộn trang khi thư đang mở: nếu không, cuộn chạm mép thư sẽ kéo trang phía sau xuống chuyển cảnh và hiện cả hai cùng lúc
+  useEffect(() => { document.documentElement.classList.add('modal-open'); return () => document.documentElement.classList.remove('modal-open') }, [])
   useEffect(() => {
     const id = setInterval(() => tick((n) => n + 1), 1000)
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -153,7 +168,7 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
   const body = g ? g.body.map((t, i) => <p className="hand" key={i}>{t}</p>) : null
 
   return (
-    <div className={`tr-modal${closing ? ' closing' : ''}`} onClick={onClose}>
+    <div className={`tr-modal${closing ? ' closing' : ''}`} data-lenis-prevent onClick={onClose}>
       <div className={`lt-sheet ${m ? 'memory' : 'gift'} ${wide ? 'wide' : ''}`} data-paper={g ? `g${g.id}` : modal.kind === 'memory' ? paperFor(modal.id) : ''} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
         <div className="lt-paper" />
         <div className="lt-deco" />

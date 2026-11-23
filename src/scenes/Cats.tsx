@@ -4,12 +4,14 @@ import { reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
 import { lights, useLights } from '../lib/lights'
 import { CAT_LAND, CAT_PORT, type Cat, type CatLayout, type Pose } from './catsLayout'
-import { Dust } from './Tree'
+import { Dust, WindowSnow } from './Tree'
+import { useHintPulse } from '../lib/hintPulse'
+import { LitSpot, Stardust } from '../components/LitSpot'
 import { polyBox, type R } from './treeLayout'
 
 type Who = 'bong' | 'mochi'
 const FADE_OUT = 1100
-const FAKE_MS = 3400
+const FAKE_MS = 6500
 
 const rect = (r: R) => ({ left: r.x, top: r.y, width: r.w, height: r.h })
 
@@ -74,6 +76,7 @@ export default function Cats({ active = true }: { active?: boolean }) {
   const [g, setG] = useState({ s: 1, x: 0, y: 0 })
   const [tip, setTip] = useState<{ title: string; text: string; b: { x: number; y: number; w: number; h: number } } | null>(null)
   const [hov, setHov] = useState<Who | null>(null)
+  const [lampHov, setLampHov] = useState(false)
   const [busy, setBusy] = useState<Who | 'lamp' | null>(null)
   const lampT = useRef({ k: 1, tau: 0.3 })
   const lampBusy = useRef(false)
@@ -85,6 +88,7 @@ export default function Cats({ active = true }: { active?: boolean }) {
   const next = useRef<Record<Who, number>>({ bong: 0, mochi: 0 })
 
   useFlicker(stage, active, lampT)
+  const pulse = useHintPulse(2, active, !!busy || hov !== null)
 
   // tiếng gừ gừ nhẹ: mức to nhỏ do sfx.mix (chạy theo thanh cuộn) điều khiển
   useEffect(() => {
@@ -164,12 +168,12 @@ export default function Cats({ active = true }: { active?: boolean }) {
     lampT.current = { k: 1.28, tau: 0.16 }
     timers.current.push(window.setTimeout(() => { lampT.current = { k: 1, tau: 0.5 } }, 700))
   }, [lampOn])
-  const enterLamp = () => setTip({ title: copy.lamp.title, text: lampOn ? copy.lamp.tipOn : copy.lamp.tipOff, b: polyBox(L.lampPoly) })
+  const enterLamp = () => { setLampHov(true); setTip({ title: copy.lamp.title, text: lampOn ? copy.lamp.tipOn : copy.lamp.tipOff, b: polyBox(L.lampPoly) }) }
   const enter = (c: (typeof cats)[number]) => {
     if (busy) return
     setHov(c.id); setTip({ title: c.info.title, text: c.info.tip, b: polyBox(c.cat.poly) })
   }
-  const leave = () => { setHov(null); setTip(null) }
+  const leave = () => { setHov(null); setLampHov(false); setTip(null) }
 
   // chữ nằm ở góc dưới trái (dưới ngọn đèn lồng, bên trái hai bé); điện thoại thì ở dải tối phía dưới
   const left = 22
@@ -194,6 +198,8 @@ export default function Cats({ active = true }: { active?: boolean }) {
       <div className="sec-frame" ref={host}>
         <div className="tr-stage" ref={stage} style={{ width: L.w, height: L.h, transform: `translate(${g.x}px, ${g.y}px) scale(${g.s})` }}>
           <img src={L.src} alt="Bông và Mochi ngủ cạnh nhau trên ghế sofa" draggable={false} />
+          {active && <WindowSnow r={L.win} />}
+          <div className="tr-frost" style={rect(L.win)} />
           <div className="cat-room" />
 
           {/* mỗi bé thở nhẹ khi ngủ; bé nào đang đổi dáng thì lớp này ẩn đi */}
@@ -207,14 +213,22 @@ export default function Cats({ active = true }: { active?: boolean }) {
           })}
 
           {cats.map((c) => c.cat.poses.map((p, i) => <Over key={`${c.id}${i}`} L={L} pose={p} on={show === `${c.id}-${i}`} />))}
-          {cats.map((c) => <Glow key={c.id} L={L} cat={c.cat} on={hov === c.id && !busy} />)}
+          {cats.map((c, i) => <Glow key={c.id} L={L} cat={c.cat} on={(hov === c.id || pulse === i) && !busy} />)}
+          {cats.map((c, i) => <Stardust key={c.id} poly={c.cat.poly} on={(hov === c.id || pulse === i) && !busy} />)}
 
+          <LitSpot src={L.src} w={L.w} h={L.h} poly={L.lampPoly} on={lampHov} strength={0.7} />
           {/* đèn lồng chập chờn */}
           <i className="cat-lamp halo" style={{ left: L.lamp[0] - L.lamp[2] * 3.4, top: L.lamp[1] - L.lamp[2] * 3.4, width: L.lamp[2] * 6.8, height: L.lamp[2] * 6.8 }} />
           <i className="cat-lamp" style={{ left: L.lamp[0] - L.lamp[2], top: L.lamp[1] - L.lamp[2], width: L.lamp[2] * 2, height: L.lamp[2] * 2 }} />
           <i className="cat-lamp core" style={{ left: L.lamp[0] - L.lamp[2] * 0.32, top: L.lamp[1] - L.lamp[2] * 0.32, width: L.lamp[2] * 0.64, height: L.lamp[2] * 0.64 }} />
           <div className="cat-dim" />
           <div className="cat-dark" />
+          {/* dây đèn sau lưng: tối đèn lớn thì từng bóng nhỏ sáng lên, toả ánh ấm lên cành thông và tường đá */}
+          <div className="cat-bulbs" aria-hidden>
+            {L.bulbs.map(([x, y], i) => (
+              <i key={i} style={{ left: x, top: y, animationDelay: `-${((i * 37) % 29) / 10}s`, animationDuration: `${2.6 + (i % 5) * 0.55}s` }} />
+            ))}
+          </div>
           {active && <Dust w={L.w} h={L.h} />}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
@@ -236,7 +250,6 @@ export default function Cats({ active = true }: { active?: boolean }) {
         <div className="sec-orn" aria-hidden><i /><b>❦</b><i /></div>
         <p className="sec-tag">{copy.tagline}</p>
         {copy.body.map((t, i) => <p key={i} className="sec-desc">{t}</p>)}
-        <p className="sec-hint"><span aria-hidden>✦</span>{copy.hint}</p>
       </div>
 
       {tip && !busy && (() => {

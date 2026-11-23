@@ -16,3 +16,6 @@ export function usePortrait() {
   }, [])
   return v
 }
+
+/** Chế độ nhẹ cho máy yếu: giảm hạt, bỏ lớp hiệu ứng nặng (bật tự động khi tốc độ khung hình thấp, hoặc ?lite=1). */
+export const isLite = () => typeof document !== 'undefined' && document.documentElement.classList.contains('lite')

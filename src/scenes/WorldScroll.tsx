@@ -1,14 +1,31 @@
 import { useEffect, useRef, useState } from 'react'
 import Tree from './Tree'
 import Cats from './Cats'
-import { reducedMotion } from '../lib/device'
+import MusicBox from './MusicBox'
+import SnowWatch from './SnowWatch'
+import Lenis from 'lenis'
+import { weather } from '../lib/weather'
+import { isLite, reducedMotion } from '../lib/device'
 import { sfx } from '../lib/audio'
+import { FLAKES, LOADER_FLAKE, drawFlake } from '../lib/snowflakes'
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const smooth = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
 /** Quãng cuộn (tính theo chiều cao màn hình) để đi hết một lần chuyển cảnh: dài hơn thì chậm và mượt hơn. */
 const SPAN = 1.7
 const CY = 0.58
+/** Chuyển cảnh đầu (hộp nhạc -> cây thông): màn ánh sáng vàng kéo từ dưới lên, kéo theo nốt nhạc và tia sáng. */
+const SPAN2 = 1.5
+/** Đứng yên ở cảnh hộp nhạc lúc mới vào (tính theo chiều cao màn hình). */
+const HOLD0 = 0.45
+/** Dừng ngắm cây thông trước khi sang cảnh mèo (tính theo chiều cao màn hình) và đoạn nghỉ cuối ở cảnh mèo. */
+const HOLD = 0.45
+const END = 0.5
+/** Dừng ngắm hai bé, rồi ánh nến từ một góc phòng loang ra, kéo máy quay lùi ra từ góc ấy sang cảnh ngắm tuyết: đứng yên HOLD3, chuyển SPAN3 (đơn vị: chiều cao màn hình). */
+const HOLD3 = 0.45
+const SPAN3 = 1.5
+const Y_CATS = HOLD0 + SPAN2 + HOLD + SPAN
+const Y_SNOW = Y_CATS + HOLD3 + SPAN3
 
 type Fx = { p: number; R: number; cx: number; cy: number; on: boolean }
 
@@ -17,7 +34,7 @@ function Sparks({ fx }: { fx: React.MutableRefObject<Fx> }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext('2d')!
-    const calm = reducedMotion()
+    const calm = reducedMotion() || isLite()
     type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; star: boolean; ph: number }
     const ps: P[] = []
     let raf = 0, last = performance.now(), W = 0, H = 0
@@ -37,7 +54,7 @@ function Sparks({ fx }: { fx: React.MutableRefObject<Fx> }) {
       // tuyết rơi xiên khắp màn hình
       if (ps.length < 230 && !calm) {
         const n = inten * 70 * dt
-        for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) ps.push({ x: Math.random() * (W + 200) - 100, y: -10, vx: 30 + Math.random() * 50, vy: 60 + Math.random() * 110, life: 0, max: 99, s: 1.2 + Math.random() * 3, star: false, ph: Math.random() * 6.28 })
+        for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) ps.push({ x: Math.random() * (W + 200) - 100, y: -10, vx: weather.gust(t) * (1.6 + Math.random() * 1.8), vy: 60 + Math.random() * 110, life: 0, max: 99, s: 1.2 + Math.random() * 3, star: false, ph: Math.random() * 6.28 })
       }
       // tia sao và bông tuyết bắn ra từ mép vòng sáng
       if (f.R > 8 && ps.length < 260) {
@@ -73,6 +90,96 @@ function Sparks({ fx }: { fx: React.MutableRefObject<Fx> }) {
   return <canvas ref={ref} className="xf-fx" aria-hidden />
 }
 
+
+type Fx2 = { e: number; on: boolean; edge: number }
+
+/** Nốt nhạc và tia sáng nhỏ bay lên dọc mép màn ánh sáng khi chuyển sang cảnh hộp nhạc. */
+function Notes({ fx }: { fx: React.MutableRefObject<Fx2> }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const cv = ref.current!, ctx = cv.getContext('2d')!
+    const calm = reducedMotion() || isLite()
+    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; g: number; ph: number; gi: number }
+    const ps: P[] = []
+    let raf = 0, last = performance.now(), W = 0, H = 0
+    const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight }
+    size(); addEventListener('resize', size)
+    const glyphs = ['♪', '♫', '♬', '♪', '♫']  // mỗi hạt giữ MỘT ký hiệu cho cả đời (trước đây đổi theo chỉ số mảng nên nhấp nháy)
+    const frame = (t: number) => {
+      const dt = Math.min(0.05, (t - last) / 1000); last = t
+      const f = fx.current
+      ctx.clearRect(0, 0, W, H)
+      if (f.on && !calm) {
+        const inten = Math.sin(Math.PI * Math.min(1, Math.max(0, f.e)))
+        const n = inten * 30 * dt
+        for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) {
+          const y = H * (1 - f.edge) + (Math.random() - 0.5) * 24
+          ps.push({ x: Math.random() * W, y, vx: (Math.random() - 0.5) * 24, vy: -(26 + Math.random() * 70), life: 0, max: 1.4 + Math.random() * 1.6, s: 9 + Math.random() * 15, g: Math.random() < 0.55 ? 1 : 0, ph: Math.random() * 6.28, gi: Math.floor(Math.random() * 5) })
+        }
+      }
+      for (let i = ps.length - 1; i >= 0; i--) {
+        const p = ps[i]; p.life += dt
+        if (p.life > p.max) { ps.splice(i, 1); continue }
+        p.x += (p.vx + Math.sin(t / 1400 + p.ph) * 8) * dt; p.y += p.vy * dt
+        const u = p.life / p.max, a = Math.min(1, u * 5) * Math.min(1, (1 - u) * 2.5) * 0.9 // hiện dần rồi tan dần, mượt
+        ctx.globalAlpha = a
+        if (p.g) { ctx.shadowColor = 'rgba(255,200,100,.7)'; ctx.shadowBlur = 5; ctx.fillStyle = '#ffe9b0'; ctx.font = `${p.s}px serif`; ctx.fillText(glyphs[p.gi], p.x, p.y) }
+        else { ctx.shadowBlur = 0; ctx.fillStyle = '#fff3c8'; ctx.beginPath(); ctx.arc(p.x, p.y, p.s * 0.1, 0, 6.283); ctx.fill() }
+      }
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0
+      raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+    return () => { cancelAnimationFrame(raf); removeEventListener('resize', size) }
+  }, [fx])
+  return <canvas ref={ref} className="xf-fx xf-notes" aria-hidden />
+}
+
+/** Bông tuyết rơi xuống từ mép màn ánh sáng khi chuyển từ hai chú mèo sang cảnh ngắm tuyết (như nốt nhạc bay lên ở chuyển cảnh hộp nhạc, nhưng là tuyết rơi). */
+function FlakeRain({ fx }: { fx: React.MutableRefObject<Fx2> }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const cv = ref.current!, ctx = cv.getContext('2d')!
+    const calm = reducedMotion() || isLite()
+    // sprite dựng sẵn: mười mẫu bông tuyết nét mảnh (mẫu màn chờ + chín mẫu của tuyết ngoài trời) màu kem vàng, cộng vài đốm tròn mềm như bokeh
+    const design = [LOADER_FLAKE, ...FLAKES]
+    const crystals = design.map((d, i) => { const px = 96, c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d')!; x.translate(px / 2, px / 2); drawFlake(x, d, (px / 2 / 100) * 0.92, i % 3 === 0 ? '#fff4d2' : i % 3 === 1 ? '#ffe9b8' : '#fffaf0', i === 0 ? 0.75 : 0.5); return c })
+    const orb = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d')!; const g = x.createRadialGradient(32, 32, 0, 32, 32, 30); g.addColorStop(0, 'rgba(255,244,214,.95)'); g.addColorStop(0.5, 'rgba(255,230,170,.45)'); g.addColorStop(1, 'rgba(255,220,150,0)'); x.fillStyle = g; x.beginPath(); x.arc(32, 32, 30, 0, 6.283); x.fill(); return c })()
+    const spr = [...crystals, orb]
+    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; sp: number; ph: number; rot: number; spin: number }
+    const ps: P[] = []
+    let raf = 0, last = performance.now(), W = 0, H = 0
+    const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight }
+    size(); addEventListener('resize', size)
+    const frame = (t: number) => {
+      raf = requestAnimationFrame(frame)
+      const dt = Math.min(0.05, (t - last) / 1000); last = t
+      const f = fx.current
+      ctx.clearRect(0, 0, W, H)
+      if (f.on && !calm) {
+        const inten = Math.sin(Math.PI * Math.min(1, Math.max(0, f.e)))
+        const n = inten * 42 * dt
+        for (let k = 0; k < n + (Math.random() < n % 1 ? 1 : 0); k++) {
+          const y = H * f.edge + (Math.random() - 0.5) * 24, isOrb = Math.random() < 0.28, z = Math.random()
+          ps.push({ x: Math.random() * W, y, vx: (Math.random() - 0.5) * 20, vy: 26 + z * 70, life: 0, max: 1.8 + Math.random() * 1.8, s: isOrb ? 10 + z * 30 : 18 + z * 34, sp: isOrb ? crystals.length : Math.floor(Math.random() * crystals.length), ph: Math.random() * 6.28, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.7 })
+        }
+      }
+      for (let i = ps.length - 1; i >= 0; i--) {
+        const p = ps[i]; p.life += dt
+        if (p.life > p.max || p.y > H + 40) { ps.splice(i, 1); continue }
+        p.x += (p.vx + Math.sin(t / 1300 + p.ph) * 12) * dt; p.y += p.vy * dt; p.rot += p.spin * dt
+        const u = p.life / p.max
+        ctx.globalAlpha = Math.min(1, u * 5) * Math.min(1, (1 - u) * 2.5) * 0.92
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.drawImage(spr[p.sp], -p.s / 2, -p.s / 2, p.s, p.s); ctx.restore()
+      }
+      ctx.globalAlpha = 1
+    }
+    raf = requestAnimationFrame(frame)
+    return () => { cancelAnimationFrame(raf); removeEventListener('resize', size) }
+  }, [fx])
+  return <canvas ref={ref} className="xf-fx xf-rain" aria-hidden />
+}
+
 /**
  * Chuyển cảnh cây thông -> hai chú mèo, chạy theo thanh cuộn: cây thông phóng dần vào rồi tan thành ánh sáng,
  * một vòng kẹo Giáng sinh viền vàng loang ra từ giữa màn hình, kéo theo tuyết và những ngôi sao nhỏ, để lộ phòng của hai bé.
@@ -80,8 +187,13 @@ function Sparks({ fx }: { fx: React.MutableRefObject<Fx> }) {
 export default function WorldScroll() {
   const wrap = useRef<HTMLDivElement>(null)
   const fx = useRef<Fx>({ p: 0, R: 0, cx: 0, cy: 0, on: false })
+  const fx2 = useRef<Fx2>({ e: 0, on: false, edge: 0 })
   const prevP = useRef(0)
-  const [seen, setSeen] = useState({ tree: true, cats: false, near: false })
+  const prevQ = useRef(0)
+  const prevR = useRef(0)
+  const fx3 = useRef<Fx2>({ e: 0, on: false, edge: 0 })
+  const lenis = useRef<Lenis | null>(null)
+  const [seen, setSeen] = useState({ tree: false, cats: false, near: false, box: true, snow: false, turned: false })
 
   useEffect(() => {
     const el = wrap.current!
@@ -90,54 +202,171 @@ export default function WorldScroll() {
     const apply = () => {
       raf = 0
       const vh = innerHeight, vw = innerWidth
-      const p = Math.min(1, Math.max(0, -el.getBoundingClientRect().top / (vh * SPAN)))
+      const y = -el.getBoundingClientRect().top / vh // đã cuộn bao nhiêu màn hình
+      // thứ tự: cảnh hộp nhạc (đứng yên HOLD0) -> màn ánh sáng vàng (q) -> cây thông (đứng yên HOLD) -> vòng kẹo (p) -> hai chú mèo
+      const q = Math.min(1, Math.max(0, (y - HOLD0) / SPAN2))
+      const p = Math.min(1, Math.max(0, (y - (HOLD0 + SPAN2 + HOLD)) / SPAN))
+      const eq = ease(q)
       const e = ease(p)
-      const R = e * 1.06 * Math.hypot(vw * 0.5, vh * Math.max(CY, 1 - CY))
+      const r = Math.min(1, Math.max(0, (y - (Y_CATS + HOLD3)) / SPAN3))
+      const er = ease(r)
       const st = el.style
-      fx.current = { p, R, cx: vw / 2, cy: vh * CY, on: p > 0.003 && p < 0.997 }
-      st.setProperty('--tz', String(calm ? 1 : 1 + 0.34 * e))
-      st.setProperty('--to', String(1 - smooth(0.38, 0.88, p)))
-      st.setProperty('--cz', String(calm ? 1 : 1.18 - 0.18 * e))
-      st.setProperty('--R', `${R}px`)
-      st.setProperty('--D', `${R * 2}px`)
-      st.setProperty('--ring', String(Math.min(1, Math.sin(Math.PI * p) * 2.2) * (p > 0.003 ? 1 : 0)))
-      st.setProperty('--bloom', String(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, p)), 2) * 0.75))
-      st.setProperty('--cv', p > 0.003 ? 'visible' : 'hidden')
-      st.setProperty('--cpe', p > 0.985 ? 'auto' : 'none')
-      st.setProperty('--tpe', p < 0.012 ? 'auto' : 'none')
-      st.setProperty('--tt', String(1 - smooth(0.0, 0.16, p)))
-      st.setProperty('--ct', String(smooth(0.78, 0.97, p)))
-      st.setProperty('--cue', String(1 - smooth(0, 0.06, p)))
-      sfx.mix(smooth(0.2, 0.85, p))
+      // chuyển cảnh kiểu lá thư (cây thông -> hai bé, hai bé -> ngắm tuyết): một lá thư bay tới, phóng lớn che kín màn hình, rồi bay vụt qua máy quay (phóng tiếp, mờ dần) để lộ cảnh mới. Không đóng mở thư.
+      // lt chạy 0..1 theo thanh cuộn của lần chuyển đang diễn ra (hai lần chuyển không bao giờ chồng nhau).
+      const lt = r > 0.003 ? r : p
+      const a1 = ease(smooth(0, 0.42, lt)), a2 = ease(smooth(0.4, 0.64, lt)), a5 = ease(smooth(0.64, 1, lt))
+      const NEXT = 0.64 // lúc lá thư vừa che kín màn hình: đổi cảnh bên dưới
+      // hai bé -> ngắm tuyết: màn ánh sáng vàng kéo từ TRÊN xuống để lộ cảnh ngắm tuyết, mép màn rắc bông tuyết rơi xuống (giống chuyển cảnh hộp nhạc nhưng ngược chiều)
+      const sy = -14 + 128 * er
+      fx.current = { p: 0, R: 0, cx: 0, cy: 0, on: false }
+      fx3.current = { e: r, on: r > 0.003 && r < 0.997, edge: Math.min(1, Math.max(0, (sy + 7) / 100)) }
+      st.setProperty('--sy', `${sy.toFixed(2)}%`)
+      st.setProperty('--sring', String(Math.min(1, Math.sin(Math.PI * r) * 2.4) * (r > 0.003 && r < 0.997 ? 1 : 0)))
+      st.setProperty('--lv', lt > 0.003 && lt < 0.997 && !calm && r <= 0.003 ? 'visible' : 'hidden')
+      st.setProperty('--lx', `${((1 - a1) * 62 - a5 * 5).toFixed(2)}vw`)
+      st.setProperty('--ly', `${((1 - a1) * 44 - Math.sin(Math.PI * a1) * 16 - a5 * 9).toFixed(2)}vh`)
+      st.setProperty('--lr', `${((1 - a1) * 24 - a5 * 9).toFixed(2)}deg`)
+      st.setProperty('--ls', (0.17 + 0.07 * a1 + 0.82 * a2 + 2.6 * a5).toFixed(4))
+      st.setProperty('--lo', (1 - smooth(0.72, 1, lt)).toFixed(3))
+      st.setProperty('--lso', (1 - smooth(0.62, 0.8, lt)).toFixed(3))
+      st.setProperty('--lsh', (1 - a2).toFixed(3))
+      st.setProperty('--tz', '1')
+      st.setProperty('--to', p < NEXT || calm && p < 0.5 ? '1' : '0')
+      st.setProperty('--cz', '1')
+      st.setProperty('--R', '9999px')
+      st.setProperty('--D', '0px')
+      st.setProperty('--ring', '0')
+      st.setProperty('--bloom', String(Math.pow(Math.sin(Math.PI * smooth(0.1, 0.95, q)), 2) * 0.55))
+      const catsOn = calm ? p > 0.5 && r < 0.5 : p >= NEXT && r < 0.995
+      const snowOn = calm ? r > 0.5 : r > 0.003
+      st.setProperty('--cv', catsOn ? 'visible' : 'hidden')
+      st.setProperty('--cpe', catsOn && p > 0.985 && r < 0.012 ? 'auto' : 'none')
+      st.setProperty('--sv', snowOn ? 'visible' : 'hidden')
+      st.setProperty('--spe', snowOn && r > 0.985 ? 'auto' : 'none')
+      st.setProperty('--st', String(smooth(0.72, 0.95, r)))
+      st.setProperty('--tv', q > 0.003 ? 'visible' : 'hidden')
+      st.setProperty('--tpe', q > 0.985 && p < 0.012 ? 'auto' : 'none')
+      st.setProperty('--tt', String(smooth(0.78, 0.97, q) * (1 - smooth(0.0, 0.2, p))))
+      st.setProperty('--ct', String(smooth(0.8, 1, p) * (1 - smooth(0, 0.12, r))))
+      // mũi tên cuộn: ở cảnh hộp nhạc và ở cảnh cây thông (lúc đứng yên)
+      st.setProperty('--cue', String(Math.max(1 - smooth(0, 0.06, q), smooth(0.97, 1, q) * (1 - smooth(0, 0.06, p)), smooth(0.97, 1, p) * (1 - smooth(0, 0.06, r)))))
+      // chuyển cảnh hộp nhạc -> cây thông: màn ánh sáng vàng (mặt nạ mềm) kéo từ dưới lên để lộ cây thông
+      st.setProperty('--by', `${(-14 + 128 * eq).toFixed(2)}%`)
+      st.setProperty('--bz', String(calm ? 1 : 1.1 - 0.1 * eq))
+      st.setProperty('--bs', String(calm ? 1 : 1 + 0.07 * eq))
+      st.setProperty('--bring', String(Math.min(1, Math.sin(Math.PI * q) * 2.4) * (q > 0.003 && q < 0.997 ? 1 : 0)))
+      st.setProperty('--bpe', q < 0.02 ? 'auto' : 'none')
+      st.setProperty('--bt', String(1 - smooth(0, 0.22, q)))
+      fx2.current = { e: q, on: q > 0.003 && q < 0.997, edge: Math.min(1, Math.max(0, (-14 + 128 * eq - 7) / 100)) }
+      sfx.stageBox(1 - smooth(0.2, 0.85, q))
+      sfx.mix(smooth(0.5, 0.8, p))
       const pp = prevP.current; prevP.current = p
       if ((pp < 0.04 && p >= 0.04) || (pp > 0.96 && p <= 0.96)) sfx.chime()
-      setSeen((o) => { const n = { tree: p < 0.75, cats: p > 0.003, near: p > 0.6 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near ? o : n })
+      const rr0 = prevR.current; prevR.current = r
+      if ((rr0 < 0.04 && r >= 0.04) || (rr0 > 0.96 && r <= 0.96)) sfx.chime()
+      const pq = prevQ.current; prevQ.current = q
+      if ((pq < 0.04 && q >= 0.04) || (pq > 0.96 && q <= 0.96)) { sfx.chime(); sfx.sparkle() }
+      setSeen((o) => { const n = { tree: q > 0.003 && p < 0.66, cats: p >= 0.6 && r < 0.97, near: p > 0.6, box: q < 0.995, snow: r > 0.003, turned: r > 0.5 }; return o.tree === n.tree && o.cats === n.cats && o.near === n.near && o.box === n.box && o.snow === n.snow && o.turned === n.turned ? o : n })
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(apply) }
+    // cuộn có quán tính (mượt như kéo bằng tay) trên máy tính; điện thoại giữ cuộn gốc của trình duyệt
+    let lraf = 0
+    if (!calm && matchMedia('(pointer: fine)').matches) {
+      const l = new Lenis({ lerp: 0.085, wheelMultiplier: 0.85, smoothWheel: true })
+      lenis.current = l
+      const loop = (t: number) => { l.raf(t); lraf = requestAnimationFrame(loop) }
+      lraf = requestAnimationFrame(loop)
+    }
+    // vệt sáng ấm theo con trỏ (chuột thật, tắt ở chế độ nhẹ): như cầm một ngọn nến soi quanh phòng
+    const stick = el.querySelector('.xf-sticky') as HTMLElement | null
+    let mr = 0, mx = 0, my = 0
+    const mv = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return
+      mx = e.clientX; my = e.clientY
+      if (!mr) mr = requestAnimationFrame(() => { mr = 0; stick?.style.setProperty('--mx', `${mx}px`); stick?.style.setProperty('--my', `${my}px`); stick?.style.setProperty('--mo', '1') })
+    }
+    const ml = () => stick?.style.setProperty('--mo', '0')
+    if (!calm && matchMedia('(pointer: fine)').matches) { addEventListener('pointermove', mv, { passive: true }); document.documentElement.addEventListener('pointerleave', ml) }
+    // điện thoại: sau khi ngừng vuốt, nếu đang lửng giữa hai cảnh thì tự trượt tới cảnh gần nhất cho gọn
+    let snapT = 0
+    const stopsAt = [0, HOLD0 + SPAN2 + 0.02, Y_CATS + 0.02, Y_SNOW + 0.02]
+    const snap = () => {
+      if (!matchMedia('(pointer: coarse)').matches) return
+      const top = el.getBoundingClientRect().top, y = -top / innerHeight
+      if (y < -0.05 || y > stopsAt[3] + 0.02) return
+      let best = 0
+      stopsAt.forEach((v, i) => { if (Math.abs(v - y) < Math.abs(stopsAt[best] - y)) best = i })
+      if (Math.abs(stopsAt[best] - y) < 0.04 || Math.abs(stopsAt[best] - y) > 1.05) return
+      scrollTo({ top: scrollY + (stopsAt[best] - y) * innerHeight, behavior: 'smooth' })
+    }
+    const onSnap = () => { clearTimeout(snapT); snapT = window.setTimeout(snap, 220) }
+    addEventListener('scroll', onSnap, { passive: true })
     apply()
     addEventListener('scroll', on, { passive: true }); addEventListener('resize', on)
-    return () => { removeEventListener('scroll', on); removeEventListener('resize', on); cancelAnimationFrame(raf) }
+    return () => { removeEventListener('scroll', on); removeEventListener('scroll', onSnap); clearTimeout(snapT); removeEventListener('resize', on); cancelAnimationFrame(raf); cancelAnimationFrame(lraf); removeEventListener('pointermove', mv); document.documentElement.removeEventListener('pointerleave', ml); cancelAnimationFrame(mr); lenis.current?.destroy(); lenis.current = null }
   }, [])
 
+  const goTo = (screens: number, instant = false) => {
+    const top = (wrap.current?.getBoundingClientRect().top ?? 0) + scrollY + innerHeight * screens
+    if (instant) { if (lenis.current) lenis.current.scrollTo(top, { immediate: true }); else scrollTo(0, top) }
+    else if (lenis.current) lenis.current.scrollTo(top, { duration: 2.2, easing: (t) => 1 - Math.pow(1 - t, 3) })
+    else scrollTo({ top, behavior: 'smooth' })
+  }
   const down = (e: React.MouseEvent) => {
     e.preventDefault()
-    const top = (wrap.current?.getBoundingClientRect().top ?? 0) + scrollY
-    scrollTo({ top: top + innerHeight * (SPAN + 0.02), behavior: 'smooth' })
+    const y = -(wrap.current?.getBoundingClientRect().top ?? 0) / innerHeight
+    goTo(y > Y_CATS - 0.1 ? Y_SNOW + 0.02 : prevQ.current > 0.9 ? Y_CATS + 0.02 : HOLD0 + SPAN2 + 0.02)
   }
+  /** Ba chấm bên phải: đi thẳng tới từng cảnh. */
+  const stops: { label: string; at: number; on: boolean }[] = [
+    { label: 'Hộp nhạc', at: 0, on: seen.box && !seen.tree },
+    { label: 'Cây thông', at: HOLD0 + SPAN2 + 0.02, on: seen.tree && !seen.cats },
+    { label: 'Bông và Mochi', at: Y_CATS + 0.02, on: seen.cats && !seen.turned },
+    { label: 'Ngắm tuyết', at: Y_SNOW + 0.02, on: seen.turned },
+  ]
+
+  // bản xem thử: App gửi sự kiện nhảy thẳng tới một cảnh (0 hộp nhạc, 1 cây thông, 2 hai bé)
+  const jump = useRef<(i: number, instant: boolean) => void>(() => {})
+  jump.current = (i, instant) => goTo(stops[Math.min(3, Math.max(0, i))].at, instant)
+  useEffect(() => {
+    const h = (e: Event) => { const d = (e as CustomEvent<{ i: number; instant?: boolean }>).detail; jump.current(d.i, !!d.instant) }
+    addEventListener('olcw:goto', h)
+    return () => removeEventListener('olcw:goto', h)
+  }, [])
 
   return (
-    <div className="xf" ref={wrap}>
-      <div className="xf-sticky">
-        <div className="xf-layer xf-tree"><Tree paused={!seen.tree} /></div>
-        <div className="xf-layer xf-cats"><Cats active={seen.cats} /></div>
+    <>
+    <div className="xf" ref={wrap} style={{ height: `${(1 + HOLD0 + SPAN2 + HOLD + SPAN + HOLD3 + SPAN3 + END) * 100}dvh` }}>
+      <div className="xf-sticky" data-scene={seen.snow ? 'snow' : undefined}>
+        <div className={`xf-layer xf-box${seen.box ? '' : ' idle'}`}><MusicBox active={seen.box} /></div>
+        <div className={`xf-layer xf-tree${seen.tree ? '' : ' idle'}`}><Tree paused={!seen.tree} /></div>
+        <div className={`xf-layer xf-cats${seen.cats ? '' : ' idle'}`}><Cats active={seen.cats} /></div>
+        <div className={`xf-layer xf-snow${seen.snow ? '' : ' idle'}`}><SnowWatch active={seen.snow} /></div>
+        {/* lá thư dùng chung cho hai lần chuyển cảnh: bay tới, phóng lớn che kín màn hình, rồi bay vụt qua máy quay để lộ cảnh mới */}
+        <div className="xf-letter" aria-hidden>
+          <div className="xl-fly">
+            <i className="xl-shadow" />
+            <div className="xl-inside" />
+            <div className="xl-body" />
+            <div className="xl-flapw"><div className="xl-flap" /><b className="xl-seal">❦</b></div>
+          </div>
+        </div>
+        <i className="xf-gold" aria-hidden />
+        <i className="xf-gold xf-gold-top" aria-hidden />
         <i className="xf-glow" aria-hidden />
         <i className="xf-candy" aria-hidden />
         <i className="xf-bloom" aria-hidden />
         <Sparks fx={fx} />
+        <Notes fx={fx2} />
+        <FlakeRain fx={fx3} />
+        <nav className="xf-dots" aria-label="Các cảnh" style={{ ['--prog' as string]: Math.max(0, stops.findIndex((d) => d.on)) / (stops.length - 1) }}>
+          {stops.map((d) => <button key={d.label} className={d.on ? 'on' : ''} aria-label={d.label} aria-current={d.on} onClick={() => goTo(d.at)}><span>{d.label}</span></button>)}
+        </nav>
         <a className="scroll-cue" href="#cats" aria-label="Cuộn xuống cảnh kế tiếp" onClick={down}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
         </a>
       </div>
     </div>
+    </>
   )
 }

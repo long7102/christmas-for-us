@@ -73,6 +73,17 @@ export const memories: Record<string, { title: string; tip: string; meaning: str
     meaning: ['Theo truyền thuyết, ba nhà thông thái đã đi theo một ngôi sao sáng suốt nhiều đêm để tìm đến nơi đứa trẻ Giáng sinh ra đời. Từ đó, ngôi sao được đặt trên đỉnh cây: cao nhất và sáng nhất.', 'Dù đêm có dài đến đâu, ai đang lạc đường cũng có một điểm sáng để hướng về.'],
     story: 'Chuyện của hai đứa về ngôi sao sẽ được viết ở đây.',
   },
+  books: {
+    title: 'Chồng sách cũ', tip: 'Mấy cuốn sách bìa da, gáy mạ vàng đã sờn. Bấm để đọc.',
+    meaning: ['Ở Iceland có một thói quen rất dễ thương mang tên Jólabókaflóð, nghĩa là "cơn lũ sách đêm Giáng sinh": tối 24, mỗi người tặng nhau một cuốn sách, rồi cả nhà nằm đọc đến khuya với một cốc sô-cô-la nóng.', 'Sách bìa da cũ không cần gì nhiều, chỉ cần một ngọn đèn vàng và một người ngồi cạnh. Mỗi cuốn sờn gáy là một cuốn từng được mở ra rất nhiều lần.'],
+    // [nháp] Long kể: có thói quen tặng sách cho người yêu, như cách chia sẻ kiến thức và tình yêu. Chờ Long sửa lời.
+    story: 'Anh có thói quen tặng sách cho người anh yêu, như một cách chia sẻ kiến thức và chia sẻ tình yêu. Cuốn nào anh tặng, cũng là một điều anh muốn em biết.',
+  },
+  pine: {
+    title: 'Cành thông và quả đỏ', tip: 'Quả thông khô, quả mọng đỏ, mùi của mùa đông. Bấm để đọc.',
+    meaning: ['Cành thông xanh quanh năm nên từ rất xa xưa người ta mang vào nhà giữa mùa đông, như một lời hứa rằng sự sống vẫn còn đó. Quả thông khô cũng vậy: nó giữ những hạt giống bên trong, chờ đến mùa ấm áp sẽ mở ra.', 'Một chùm quả mọng đỏ đặt giữa màu xanh sẫm khiến cả mùa đông bỗng có màu. Chỉ một cành nhỏ thôi, cũng đủ để cả căn phòng thơm mùi rừng.'],
+    story: 'Chuyện của hai đứa về cành thông sẽ được viết ở đây.',
+  },
   fire: {
     title: 'Bếp lửa', tip: 'Bếp lửa là nơi mình sưởi ấm cho nhau.',
     meaning: ['Từ xưa, bếp lửa là trái tim của ngôi nhà: mọi người quây quần quanh nó vào những đêm đông. Cái ấm của lửa không chỉ là hơi nóng, mà là việc ngồi gần nhau, kể chuyện cho nhau nghe, hay chỉ lặng im mà vẫn thấy yên lòng.', 'Sưởi ấm nhau nghĩa là cùng nhau giữ cho căn nhà không bao giờ lạnh.'],
@@ -173,3 +184,40 @@ export const treeText = {
 }
 
 export const ui = { enter: 'Vào', skip: 'Bỏ qua ›' }
+
+/** Chữ cảnh hộp nhạc. [nháp] lời Long, chờ Long sửa; chưa có chuyện riêng nào của hai người. */
+export const musicbox = {
+  title: 'Hộp nhạc',
+  tagline: 'Mở nắp ra, là có một điệu nhạc dành cho em.',
+  body: [
+    'Có những điều không cần nói thành lời. Chỉ cần một chiếc hộp nhỏ, một cái mở nắp khẽ, là cả căn phòng chậm lại để nghe.',
+    'Anh để dành những bài hát ở trong này. Em mở ra, chọn một bài, và cô vũ công nhỏ sẽ múa theo.',
+  ],
+  hintClosed: 'Em bấm vào chiếc hộp để mở nắp nhé.',
+  hintOpen: 'Chọn một bài ở danh sách, hoặc bấm vào hộp để đóng lại.',
+  playlistTitle: 'Danh sách nhạc',
+  nowPlaying: 'Đang phát',
+  soon: 'Sắp có',
+  /**
+   * Danh sách bài. `id` trùng tên tệp trong src/assets/music/<id>.mp3 (hoặc .m4a, .ogg): có tệp là phát được, chưa có thì hiện "Sắp có".
+   * Sugar Plum Fairy dùng tệp nhạc nền sẵn có. Last Christmas và Feliz Navidad có bản quyền nên Long cần tự gửi tệp.
+   */
+  tracks: [
+    { id: 'sugarplum-fairy', title: 'Sugar Plum Fairy', artist: 'Tchaikovsky · Kẹo hạt dẻ' },
+    { id: 'last-christmas', title: 'Last Christmas', artist: 'Wham!' },
+    { id: 'nutcracker', title: 'The Nutcracker', artist: 'Tchaikovsky · Kẹp hạt dẻ' },
+    { id: 'feliz-navidad', title: 'Feliz Navidad', artist: 'José Feliciano' },
+  ],
+  dancer: { title: 'Cô vũ công', tip: 'Cô nàng múa theo nhạc. Bấm để dừng hoặc phát nhạc.' },
+  box: { closed: { title: 'Chiếc hộp nhạc', tip: 'Gỗ óc chó cũ, bộ lược đồng bên trong. Bấm để mở nắp.' }, open: { title: 'Chiếc hộp nhạc', tip: 'Bấm để đóng nắp lại.' } },
+  lamp: { title: 'Ngọn đèn lồng', tipOn: 'Bấm để thổi tắt đèn.', tipOff: 'Bấm để thắp đèn lại.' },
+}
+
+/** Chữ cảnh ngắm tuyết. [nháp] lời Long, chờ Long sửa lại; chưa có chuyện riêng của hai đứa. */
+export const snow = {
+  title: 'Ngắm tuyết',
+  tagline: 'Ngoài kia tuyết rơi, trong này có hai đứa.',
+  body: [
+    'Kính phủ một lớp hơi nước mờ. Em lau một ô nhỏ rồi nhìn lên, biết đâu sẽ thấy một vì sao băng bay qua, và hai đứa mình cùng chỉ tay lên trời.',
+  ],
+}

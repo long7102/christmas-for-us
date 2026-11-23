@@ -73,3 +73,137 @@ npx tsc -b        # kiểm tra kiểu
 ### Công tắc đèn chung (lần 5)
 - `src/lib/lights.ts`: công tắc đèn dùng chung hai cảnh, nằm trong bộ nhớ (cuộn qua lại vẫn giữ, tải lại thì sáng lại). Cảnh mèo: bấm đèn lồng. Cảnh cây thông: nút bóng đèn dưới nút loa (góc trên phải). Tắt đèn ở cây thông: bỏ đèn lấp lánh và đèn lồng, phủ tối (`.tr-dark`, chừa vùng bếp lửa), còn ánh lửa, tuyết và cửa sổ.
 - Khi cảnh mèo hiện ra trong lúc đèn đang tắt, phòng tối ngay (`useFlicker` lấy `k` ban đầu từ `lampT`).
+
+### Cập nhật lần 5: tắt đèn, chuông, cảnh hộp nhạc
+- Tắt đèn: đèn nhỏ trên cây (`Twinkles`) và đèn lồng (`Lamps`) nằm TRÊN lớp `.tr-dark` nên vẫn sáng, có vầng sáng loang ra quanh nó. Cảnh mèo: dây đèn sau lưng (`catsBulbs.ts`, toạ độ bóng tách bằng OpenCV top-hat, bản ngang + dọc) sáng lên theo `--dark` (`.cat-bulbs`). Chuông `sfx.chime` viết lại to và rõ hơn (6 nốt, hoạ âm kim loại, có bộ nén).
+- Cảnh 5 hộp nhạc: `MusicBox.tsx` + `musicLayout.ts`. Ảnh Long gửi (chỉ có bản ngang 1672x941) được tách: `musicbox-land.webp` = ảnh nền ĐÃ BỎ vũ công (vá vân gỗ), `musicbox-ballerina.webp` = vũ công cắt rời (grabCut). Vũ công xoay giả 3D bằng scaleX = cos(góc), mặt sau tối hơn; bóng của cô đổ lên lòng nắp (cắt theo elip lòng nắp), lệch sang phải vì lửa ở bên trái, xoay theo cô và lay theo ánh lửa; có bóng tiếp xúc dưới chân. Bấm vũ công hoặc hộp: vặn khoá (`sfx.ratchet`), quay ~26s rồi giảm tốc dừng đúng lúc quay mặt trước. Nốt nhạc tạm `sfx.pluck` (NOTES trong MusicBox.tsx), CHỜ nhạc thật Long gửi (có thể gắn Sugar Plum Fairy thật). Đèn lồng trong ảnh bấm được: dùng chung công tắc đèn; tắt thì chỉ còn lửa, bóng đèn cây thông mờ phía sau và đèn lồng sáng.
+- Chuyển cảnh mèo -> hộp nhạc (`WorldScroll.tsx`): màn ánh sáng vàng mặt nạ mềm kéo từ dưới lên (`--by`, `.xf-box`), dải sáng ở mép, nốt nhạc và tia sáng bay lên (`Notes`), `sfx.sparkle()` khi bắt đầu, `sfx.stageBox()` hoà âm (tắt lửa/gừ gừ, nhạc nền to lên). Hằng số SPAN2, HOLD, END; chiều cao `.xf` tính trong mã.
+- Chữ hộp nhạc trong content.ts mục `musicbox` là nháp của em. Vùng bấm sách và cành thông là đa giác vẽ tay (chưa grabCut).
+- Chưa có: bản dọc riêng của ảnh hộp nhạc (đang dùng cùng ảnh ngang, cắt theo hộp), nhạc thật, tiếng đã nghe thử.
+
+### Thứ tự cảnh mới (Long yêu cầu: hộp nhạc đứng TRÊN cây thông)
+- Sau cánh cửa: hộp nhạc (cảnh đầu, đứng yên HOLD0) -> màn ánh sáng vàng kéo từ dưới lên (SPAN2, mặt nạ ở `.xf-tree`) -> cây thông (đứng yên HOLD) -> vòng kẹo (SPAN) -> hai chú mèo. Mọi hằng số và công thức q/p ở `WorldScroll.tsx`; mục "Chuyển cảnh mèo -> hộp nhạc" ở trên nay là hộp nhạc -> cây thông. Hộp nhạc có nút loa + bóng đèn riêng (vì cây thông ẩn lúc đầu).
+- Xoay giả vũ công đã bỏ (trông dẹt): tạm chỉ lắc nhẹ. Chờ Long gửi chuỗi ảnh vũ công quay 8 góc (45..315) + ảnh hộp đóng + hộp hé mở 35 và 70 độ, cùng khung 1672x941 với ảnh gốc. Hộp nhạc sẽ kiểu playlist (đóng/mở, danh sách bài), không phải nhạc thật.
+
+### Hộp nhạc có đóng, hé, mở và danh sách nhạc (lần 6)
+- Long gửi ba ảnh cùng khung: đóng, hé mở, mở hẳn (có vũ công). `musicLayout.ts`: `imgs.closed/ajar/open`. Ảnh `musicbox-open.webp` là ảnh mở hẳn đã BỎ vũ công (vá vân gỗ), vũ công cắt rời `musicbox-ballerina.webp`. Chuyển mờ chồng ảnh theo `lid` (0 đóng, 1 hé, 2 mở). Bấm hộp: `sfx.ratchet`, hé 0,75s rồi mở hẳn và `sfx.playMusic()`; bấm lại thì đóng.
+- Danh sách nhạc (`.mb-playlist`, nội dung `musicbox.tracks` trong content.ts): bài 1 là Sugar Plum Fairy (nhạc nền có sẵn, điều khiển bằng `sfx.playMusic/pauseMusic/toggleMusic/seekMusic/musicClock`), hai bài sau là chỗ trống `soon: true` chờ Long. Muốn thêm bài thật: cần nhiều nguồn nhạc; hiện sfx chỉ có một `music`, phải mở rộng thành danh sách.
+- Vũ công không xoay nữa (xoay giả trông dẹt): lắc nhẹ + bóng đổ khi nhạc chạy. Nếu Long gửi chuỗi ảnh xoay các góc thì thay bằng đổi khung ảnh theo góc.
+- Bấm vũ công khi nắp mở = phát/dừng nhạc. Sách và cành thông giữ nguyên (viền grabCut, giấy cổ).
+
+### Lần 7: mượt hơn, nhẹ hơn, bảng âm lượng, Last Christmas
+- Nhạc: `src/assets/music/<id>.mp3` tự được nhận (id trong `musicbox.tracks`). Đã có `last-christmas.mp3` (nén 88 kbps) và `sugarplum-fairy.mp3` (nén 96 kbps); `nutcracker`, `feliz-navidad` chờ Long. Nhạc chỉ tải khi chọn bài (lúc build thường, tệp tách riêng); bản Artifact thì nhúng cả vào HTML nên phải giữ tổng dưới 16MB.
+- Âm thanh: `sfx` có ba nhóm âm lượng (`vol.music/amb/fx`, nhớ trong localStorage) qua hai GainNode `amb` và `fx` nối vào `master`; thêm tiếng ở mức nào cũng phải nối vào `this.fx` (hiệu ứng) hoặc `this.amb` (nền), không nối thẳng `master`. `components/SoundControl.tsx` là nút loa chung kèm bảng chỉnh (cửa, hộp nhạc, cây thông). Đổi bài mờ dần (`fade`).
+- Tải: `components/Loader.tsx` (màn chờ bông tuyết), `lib/preload.ts` (tải sẵn ảnh cảnh sau, theo thứ tự hộp nhạc, cây thông, mèo), `lib/perf.ts` (đo fps 4 giây đầu, thấp thì thêm class `lite` trên `<html>` và nhớ; `?lite=1` bật, `?lite=0` tắt; trong môi trường vẽ phần mềm của em nó luôn bật). CSS `.lite` bỏ hạt phim, bụi, lớp sáng loang; `isLite()` giảm hạt trong Tree/WorldScroll.
+- Cảnh không hiện thì `.idle` dừng mọi hoạt ảnh CSS (class đặt ở `WorldScroll`).
+- Gợn chạm vàng + rung nhẹ trên điện thoại: `lib/ripple.ts`. Vùng chạm lớn hơn trên máy cảm ứng, `robots.txt` chặn hết, thẻ noindex/noarchive/no-referrer.
+- Chuyển cảnh: cả hai lần đều có bloom vàng, nốt nhạc và sao bay lên; `--bloom` dùng chung.
+- Kiểm thử: kịch bản Playwright ở /tmp (không nằm trong repo) chạy cổng mật khẩu, cửa, thế giới, hộp nhạc, bảng âm lượng trên máy tính, iPhone 13 và Pixel 7 (giả lập bằng Chromium), và khoá quà theo ngày bằng ?date= (chỉ chạy ở chế độ dev).
+
+### Lần 8
+- Cảnh cửa: bỏ hết chữ và nút "MỞ CÁNH CỬA". `Door.tsx` có `.door-hit` (nút trong suốt trùm lên cánh cửa, bấm là mở) và hoạt ảnh gợi ý bàn tay nhấn kèm gợn sáng vàng ở chỗ tay nắm; chỉ hiện khi máy quay đã tới sát cửa. Nội dung `content.door.line1/line2/button` không còn dùng.
+- Hình minh hoạ mới trong `Icons.tsx`: `BasketIcon` (giỏ củi), `PaintingIcon` (bức tranh, `snow` cho tranh thứ hai), gắn trong `iconFor` ở `Letter.tsx`. Các vật còn dùng hình chung: shelf, tools, garland, chair, rug, tree, window, curtainL/R.
+
+### Bản xem thử nối ba phần
+- Bản Artifact build bằng `VITE_PREVIEW=1 npx vite build --assetsInlineLimit 100000000`: có thanh "Xem nhanh" (`components/PreviewBar.tsx`) nhảy thẳng tới Cổng, Cánh cửa, Hộp nhạc, Cây thông, Hai bé, và mở thẳng bằng `#hop-nhac`, `#cay-thong`, `#meo`. Bản chính thức (không đặt biến) KHÔNG có thanh này nên mật khẩu và cánh cửa vẫn như cũ. Nhảy cảnh trong thế giới dùng sự kiện `olcw:goto` (WorldScroll).
+
+### Lần 9: vũ công xoay bằng ảnh thật, bỏ thanh xem nhanh
+- Đã GỠ thanh "Xem nhanh" và `VITE_PREVIEW` (Long không cần; trang vốn là một trang kéo xuống). Bản Artifact build như thường: `npx vite build --assetsInlineLimit 100000000`. Sự kiện `olcw:goto` trong WorldScroll còn đó nhưng không ai gọi.
+- Vũ công: Long gửi 6 ảnh xoay (cùng khung với ảnh hộp nhạc đầu tiên, nắp dựng đứng). Chỉ 3 ảnh đồng nhất (có vương miện): mặt trước và hai dáng quay lưng; ba ảnh kia tóc búi không vương miện nên không dùng. Cắt rời bằng grabCut + hiệu với ảnh nền, lưu `musicbox-dancer-0/1/2.webp`, đặt lên đĩa đồng của ảnh mở hẳn (thu 0,95). `MusicBox.tsx` xoay theo góc: mặt trước quanh 0 độ, lưng quanh 165 và 195 độ, giữa hai mặt thì hoà ảnh + co ngang tối đa 42% (chưa có ảnh nghiêng 90 và 270 độ). Dừng nhạc thì quay nốt về mặt trước.
+- Muốn xoay thật hơn: cần Long tạo thêm ảnh nghiêng trái, nghiêng phải (và chéo 45, 315 độ), giữ vương miện và cùng khung.
+
+- Vũ công (sửa lần 2): bỏ hoà ảnh theo góc (gây bóng ma chồng hai hình). Giờ là nhịp: đứng mặt trước 2,4s, lật nửa vòng 0,9s (co ngang còn 20% rồi đổi ảnh đúng lúc mỏng nhất), đứng mặt lưng 2,4s, lật về; mỗi lượt xen hai dáng lưng. Dừng nhạc thì quay nốt về mặt trước. Hằng số HOLD, FLIP trong MusicBox.tsx. Muốn mượt thật hơn cần ảnh nghiêng 90 và 270 độ.
+
+### Lần 10
+- `lib/weather.ts`: gió và độ dày dùng chung (WindowSnow, Dust, tuyết chuyển cảnh) để cuộn qua cảnh tuyết không bị ngắt nhịp.
+- Chuyển cảnh nào cũng có chuông + chùm nốt lấp lánh (`sfx.chime` + `sparkle`). Trên cảm ứng, ngừng vuốt giữa hai cảnh thì tự trượt tới cảnh gần nhất (WorldScroll, `snap`).
+- Âm thanh: `sfx.fireNear(x)` (con trỏ gần mép trái thì lửa rõ hơn), `sfx.tap(kind)` tiếng chạm gỗ/giấy/chuông nhỏ gọi từ `lib/ripple.ts`.
+- Điện thoại: mũi tên cuộn dời xuống dưới nút đèn (trước đó đè lên nhau); hộp nhạc dọc tính tỉ lệ theo phần ảnh nhìn thấy nên hộp hiện trọn. Đã chụp ở 320x568, 360x640, 390x844, 412x915, 430x932: không tràn ngang.
+
+- Vũ công quay có khối (thay cho lật phẳng): `lib/figurine.ts` dựng lại mỗi khung hình từ hai ảnh (trước, lưng): thân/váy/chân là mặt trụ quay quanh trục đứng (bán kính theo hàng, váy lấy theo bề rộng thật), hai tay là tấm phẳng co theo cos; rìa tối dần; gần 90 độ hoà hai ảnh. Quay liên tục ~6,5s/vòng, chậm ở mặt trước và lưng, lướt nhanh qua hai bên (vì chưa có ảnh nghiêng, hai bên bị méo). Bóng vẽ cùng lượt tính (canvas `.mb-shadow`). Có ảnh nghiêng 90/270 độ thì thêm làm tham số để hai bên đẹp thật.
+
+- Vũ công (sửa lần 3, bản đang dùng): mặt trụ chỉ đẹp trong khoảng 20 độ quanh mặt trước và mặt lưng, quay ngang hơn thì méo (hai ảnh khác tư thế). Nên nhịp là: lắc ±20 độ hai nhịp ở mặt trước, lướt nửa vòng 0,55s bằng tấm phẳng kèm nhoè (k=0 trong `Figurine.render`), lắc ở mặt lưng, lướt về. Dừng nhạc thì dừng đúng chính diện. Muốn quay vòng thật cần ảnh nghiêng 90/270 độ.
+
+- Vũ công hiện chỉ lắc trái phải ±22 độ quanh mặt trước (không lướt sang lưng, theo yêu cầu của Long). SEG trong MusicBox.tsx rất lớn để tắt phần lướt.
+
+## Cập nhật (phiên mới): ánh sáng theo giờ thật + cảnh ngắm tuyết
+> Lưu ý: các mục hộp nhạc (3 trạng thái, vũ công lắc ±22°, danh sách phát, chế độ nhẹ `.lite`, tải sẵn ảnh) nằm ở các commit trước, chưa được ghi chi tiết ở trên. Đọc `MusicBox.tsx`, `musicLayout.ts`, `perf.ts`, `preload.ts` khi cần.
+
+### Ánh sáng theo giờ thật (`src/lib/timeOfDay.ts`)
+- Lấy giờ máy người xem, cập nhật mỗi phút, đặt các biến CSS `--tod-sky`, `--tod-wash`, `--tod-in`, `--tod-beam` trên `<html>`. Thử giờ bất kỳ: `?h=14.5`.
+- Ảnh làng gốc là đêm, nên ban đêm giữ nguyên. Ban ngày/bình minh/hoàng hôn: lớp `.door-tod` (trong `Door.tsx`) đổi màu bầu trời theo gradient từ trên xuống + lớp phủ rất nhẹ. Không dùng filter.
+- Trong nhà: `.tod-in` (App, cố định z-index 30, không bắt chuột) phủ rất nhẹ + hai dải sáng xiên (`::before`) khi trời sáng. Dải sáng khá mờ trên nền hổ phách, chưa xác nhận trên máy thật.
+
+### Cảnh 5: ngắm tuyết (`SnowWatch.tsx`, `snowLayout.ts`)
+- Nằm sau `.xf` trong `WorldScroll.tsx` (cuộn thường, chưa có chuyển cảnh riêng).
+- Ảnh Long gửi (khung 1672x941): `snow-land.webp` (ngồi sát), `snow-land-point.webp` (chỉ tay). KHÔNG còn bấm: bộ hẹn giờ trong `SnowWatch` cứ 14-32 giây một lần bắn sao băng; ~75% các lần hai người ngẩng chỉ tay đúng lúc (chuyển mờ ~6,5 giây rồi về), số còn lại chỉ có sao băng.
+- Mặt nạ hai người (grabCut + tinh chỉnh tay): `snow-hide-*.png` (che tuyết/hơi nước, để chúng ở SAU lưng hai người), `snow-cut-*.png` (vầng sáng khi rê chuột). Mặt nạ đổi theo dáng ở giữa lúc chuyển mờ. Viền bấm = `poly` trong `snowLayout.ts`.
+- Ô kính (`panes`) quy định nơi tuyết và hơi nước được phép xuất hiện (không đè lên khung gỗ).
+- Tuyết 3 lớp xa gần theo gió chung (`weather`). Hơi nước: bảng độ lau `Uint8Array`, rê chuột (hoặc kéo ngón tay, `touch-action: pan-y`) để lau, tự phủ lại ~30 giây, thỉnh thoảng một giọt nước chảy thành vệt. Chỉ tính lại khi có thay đổi. Cảnh không hiện thì dừng (`IntersectionObserver`).
+- CHƯA có: ảnh dọc cho điện thoại (hiện cắt cover quanh hai người, `focus` trong layout), ảnh bấm riêng cho sao băng (sao băng vẽ bằng mã), âm thanh cho cảnh này, chữ chính thức (chữ hiện tại trong mục `snow` của `content.ts` là bản nháp).
+- Mặt nạ làm bằng script ngoài repo; muốn đổi ảnh thì tách lại bằng grabCut (xem cách làm ở phần mèo).
+
+### Tắt đèn ở cảnh ngắm tuyết + chuyển cảnh mèo -> ngắm tuyết (đã làm lại)
+- Chuyển cảnh từ cây thông trở xuống (cây thông -> hai bé, hai bé -> ngắm tuyết) là **lá thư bay vụt qua** (Long KHÔNG muốn đóng mở thư): một phong bì cỡ cả màn hình, thu nhỏ lúc bay tới (cong, từ dưới phải), phóng lên che kín màn hình, cảnh bên dưới đổi tức thì lúc vừa che kín (`NEXT = 0.64`), rồi phong bì phóng tiếp ~3,4 lần, trôi lệch và mờ dần như bay vụt qua máy quay; dấu sáp mờ sớm hơn. Giấy màu dịu (không chói khi che kín màn hình). Một phần tử dùng chung `.xf-letter` (các lớp `.xl-*`; KHÔNG dùng tiền tố `lt-` vì đã có `.lt-*` ở cảnh khác). Biến `--lx --ly --lr --ls --lo --lso --lsh --lv` tính trong `apply()` của `WorldScroll.tsx` từ `lt` (= `p` hoặc `r`). Hằng số: `HOLD3`, `SPAN3`, `Y_CATS`, `Y_SNOW`. Giảm chuyển động: bỏ lá thư, đổi cảnh ở nửa chặng. Nắp phong bì vẫn còn trong mã nhưng luôn đóng.
+- Cảnh ngắm tuyết đã làm dịu: tuyết ít và nhỏ hơn, rơi chậm hơn; ánh ấm trên người và ánh nến nhẹ hơn; chuyển dáng ngồi chậm (1,6 s); vầng sáng đèn bàn nhẹ hơn.
+- Thanh chấm thứ tư "Ngắm tuyết", bảng `stopsAt` (tự trượt trên điện thoại) và sự kiện `olcw:goto` (chỉ số 3).
+- Tắt đèn: dùng chung `lights`. Bản đồ tối và ánh ấm được **dựng sẵn thành ảnh WebP** (`snow-dark-*.webp`, `snow-warm-*.webp`, khung 836x470, kéo giãn ra khung ảnh) bằng `python3 tools/snow/bake-light.py` (cần numpy, opencv-python-headless, pillow; hình cắt hai người `tools/snow/cut-*.png`); chỉ đổi `opacity` khi bật/tắt nên không có mặt nạ CSS phải tính lại mỗi khung (bản trước dùng `mask-composite` + `clip-path` nhiều lớp, nghi là nguyên nhân nháy đen trên máy thật). Giải mã sẵn mọi ảnh phụ khi vào cảnh. Cảnh cuối tắt hai lớp `soft-light` toàn màn hình của `.xf-sticky` (`data-scene="snow"`). Ánh nến `.sw-flame` vẫn chập chờn (nhẹ). Ánh sáng theo MỘT trường sáng chung hình elip (`LIT` trong `SnowWatch.tsx`) cho cả đồ vật lẫn hai người, cộng quầng sát nến: nến nằm phía trước lưng họ nên cả lưng, vai, chăn, bàn được chiếu, sáng nhất ở phía dưới và nhạt dần lên đầu (KHÔNG còn một đốm sáng quanh nến). Cây thông và đèn bàn bên trái tắt hẳn (lớp tối riêng). Ánh xanh lạnh của tuyết phủ lên đỉnh đầu và vai.
+- Chưa có: ảnh dọc cho điện thoại, âm thanh cho cảnh này, nút loa trong cảnh này.
+
+### Cập nhật cảnh ngắm tuyết: đèn bàn bấm được + ánh nến hắt lên hai người
+- Bấm chiếc đèn bàn bên trái (`SNOW.lamp`, đa giác theo ảnh gốc) để tắt/bật đèn (công tắc chung `lights`); rê chuột thì đèn sáng khẽ kèm bụi sao (`LitSpot`), thỉnh thoảng gợi ý nhẹ (`useHintPulse`). Nút bóng đèn góc trên phải vẫn còn.
+- (Đã thay bằng trường sáng elip, xem mục trên.) Trước đây độ tối chỉ theo khoảng cách tới ba ngọn nến (`bodyHoles`). Nến nằm phía trước hai người (bàn trà bên trái, đèn lồng bên phải), nên ánh nến ấm (`warmBg`) hắt lên lưng và vai họ, mạnh ở phía gần nến; ánh xanh lạnh của tuyết ngoài cửa sổ phủ lên đỉnh đầu và vai. Hai lớp ấm (người / chăn+bàn) bù nhau theo gradient dọc nên không có ranh giới ở thắt lưng. Cây thông và đèn bàn tắt hẳn (lớp tối riêng), chỉ nến còn sáng.
+
+### Cảnh ngắm tuyết: sao băng nhiều kiểu, tuyết bám ngoài cửa, ánh sáng hợp lý hơn
+- **Hết "đèn nháy":** nguyên nhân là gợi ý định kỳ của đèn bàn (`useHintPulse` làm đèn sáng vọt mỗi 8-14 giây, trông như đèn bật tắt). Đã bỏ; đèn bàn chỉ sáng khẽ khi rê chuột.
+- **Sao băng 5 kiểu** (`Meteors`, `KINDS` trong `SnowWatch.tsx`): trắng xanh (hay gặp), vàng bay chậm rắc tia lấp lánh, hai sao song song, sao chổi lớn xanh ngọc (hiếm), mưa sao nhỏ (vài vệt mảnh liên tiếp). Hướng phần lớn xuống trái, đôi khi xuống phải. Xem thử một kiểu: thêm `?meteor=gold` (classic, gold, twin, comet, shower) vào địa chỉ.
+- **Tuyết bám ngoài cửa** (`ClingSnow`): đụn tuyết tích trên bậu cửa phía ngoài (mép gồ ghề, dồn lên sát khung gỗ), tuyết dính dọc mép khung, hàng trăm cụm nhỏ dính trên kính (nhiều ở dưới và quanh mép). Dày dần trong ~45 giây đầu rồi đứng yên (không tốn tính toán nữa); mức dày nhớ giữa các lần vào cảnh. Thứ tự lớp: sao băng -> tuyết rơi -> tuyết bám -> hơi nước.
+- **Ánh sáng khi tắt đèn** (bake trong `tools/snow/bake-light.py`): hai người nhẹ hơn phòng (.62 so với .88; lưng quay về phía nến nên còn thấy sợi tóc, vân áo), mặt nạ thu về đúng mép thật (hết quầng tối quanh đầu), một đường sáng lạnh mảnh ngay trong mép (ánh tuyết ngoài cửa chiếu vào mặt trước họ, nhìn từ phía sau chỉ thấy viền), và dải ánh tuyết lạnh nhạt trên bậu cửa, gối và mặt chăn gần cửa sổ.
+
+### Cảnh ngắm tuyết: hai người chìm vào bóng + nhẹ máy hơn
+- Khi tắt đèn, hai người gần như chìm hẳn vào bóng (độ tối .975), chỉ còn đường viền lạnh mảnh của ánh tuyết ngoài cửa sổ; chỉ phần chăn, gối và mặt bàn gần nến mới sáng (vùng sáng `LIT` trong `tools/snow/bake-light.py` hẹp và thấp). Các lỗ trong hình cắt (phần khăn) đã được lấp, `snow-hide-*.png` cũng do script này sinh ra. Chạy lại script sau mỗi lần sửa.
+- Làm nhẹ cảnh cuối (Long muốn "nhẹ bớt"): tuyết rơi 70 hạt, vẽ 30 khung/giây; bỏ bụi vàng `Dust`; sao băng không vẽ gì khi không có sao nào; tuyết bám vẽ lại 10 lần/giây trong lúc dày lên rồi đứng yên; hơi nước chỉ vẽ lại tối đa ~22 lần/giây, ít giọt tròn, ít hạt li ti và tối đa 2 giọt chảy cùng lúc, thưa hơn.
+
+### Lượt sửa: viền đèn lồng, con trỏ riêng, thanh chấm, bóng cảnh cuối, chuyển cảnh bông tuyết
+- **Viền đèn lồng (cảnh mèo)** trước là hình chữ nhật nên lộ mép khi rê chuột; đã cắt lại bằng grabCut (`lampPoly` trong `catsLayout.ts`, cả ngang và dọc; script `tools/snow/cut-lantern.py`, đường dẫn trong script là của môi trường cũ, sửa khi dùng lại). Đèn bàn cảnh ngắm tuyết (`SNOW.lamp`) cũng được vẽ bám hơn.
+- **Con trỏ riêng** `src/components/Cursor.tsx`: chấm sáng + vòng đi trễ, vật bấm được thì vòng nở ra, bấm thì gợn một vòng; chỉ bật với chuột thật (`pointer: fine`), tắt khi giảm chuyển động; thêm class `has-cursor` lên `<html>` để ẩn con trỏ gốc.
+- **Thanh chấm cảnh** (`.xf-dots`): viên thuốc mờ, sợi chỉ vàng nối các nút hình thoi, nút hiện tại to và phát sáng, phần đã đi qua của sợi chỉ sáng hơn (`--prog`).
+- **Cảnh ngắm tuyết, tắt đèn**: hai người tối vừa phải (.8), tóc cô gái được nâng sáng riêng (elip quanh đầu, chỉ những điểm tối) để thấy rõ sợi tóc và chóp đỏ. Đã kiểm bằng mã: tuyết rơi, sao băng, tuyết bám, hơi nước chỉ nằm trong ô kính (không còn bụi hạt trong phòng; đó là `Dust` đã bỏ ở lượt trước).
+- **Chuyển cảnh bông tuyết** (hai bé -> ngắm tuyết, thay cho lá thư ở lần chuyển này): `.xf-flake` (lõi lục giác `.xf-hex` + SVG sáu nhánh), biến `--fs --fr --fo --fv` tính trong `apply()`; lõi phóng to che kín màn hình, cảnh đổi tại `NEXTR = 0.54`, rồi tan dần. Lá thư vẫn dùng cho cây thông -> hai bé. `SPAN3 = 1.25`.
+
+### Tuyết rơi theo mẫu của Long + 9 mẫu bông tuyết
+- `src/lib/snowflakes.ts`: chín mẫu bông tuyết (nhánh mập chẻ ba, lục giác cành mảnh, sao lưới, mũi giáo, lông chim, hoa, mạng nhện, lá răng cưa, nhánh có nút tròn), mỗi mẫu là một nhánh nhân sáu lần + lõi; cùng dữ liệu cho SVG chuyển cảnh và sprite tuyết rơi (`Path2D`).
+- Tuyết rơi cảnh ngắm tuyết (`SnowFall`): ~260 hạt (120 ở chế độ nhẹ), phần lớn là đốm bokeh tròn đủ cỡ (sắc / mềm / nhoè), ~26% là bông tuyết pha lê xoay chậm; dày và sáng ở phía trên, mờ dần xuống dưới; toàn sprite dựng sẵn, vẽ 30 khung/giây.
+- Chuyển cảnh bông tuyết: mỗi lần chuyển một mẫu khác nhau (`flakeI` trong `WorldScroll.tsx`).
+
+### Bông tuyết vector + chuyển cảnh nằm ngang -> dựng đứng -> bay ra
+- Bông tuyết là **vector phẳng** (nét dày, màu kem `#ecdcae` như bảng mẫu Long gửi), 9 mẫu trong `src/lib/snowflakes.ts` (`drawFlake(ctx, design, scale, color)`).
+- Chuyển cảnh hai bé -> ngắm tuyết vẽ bằng **canvas theo thanh cuộn** (`src/components/FlakeFx.tsx`, hàm vẽ nhận qua ref `flakeDraw` trong `WorldScroll.tsx`): bông tuyết nằm ngang (dẹt như đĩa, `scaleY = cos(tilt)`, tilt 78 -> 0 độ) xoay chậm, dựng đứng đối diện người xem, rồi bay thẳng ra phía trước (tăng cỡ theo hàm mũ), che kín màn hình (lớp kem lấp khe), cảnh đổi tại `NEXTR = 0.58`, rồi tan. Trước đây dùng SVG/CSS phóng to rất lớn nên vỡ nét và nháy (Long báo "glitch đau mắt"); canvas vẽ lại ở đúng cỡ mỗi khung nên không còn. `SPAN3 = 1.5`.
+- Tuyết rơi: bông pha lê dùng cùng mẫu vector, quay chậm hơn nhiều (tránh nhấp nháy răng cưa khi xoay sprite nhỏ), sprite 128px.
+
+### Bộ ảnh mới của cảnh ngắm tuyết (Long gửi lại: khăn len ô-liu không đuôi, áo phao, cây thông + người tuyết + đèn bàn)
+- `snow-land.webp` (ngồi sát, ảnh nền), `snow-land-point.webp` (anh chỉ tay lên trời), `snow-land-pat.webp` (anh xoa đầu cô gái), khung 1672x941. Ô kính mới: `[254,10,158,598] [457,8,936,602] [1440,8,196,602]`. Hai ngọn nến (đèn lồng, quả cầu tuyết), đèn bàn chao kem bên trái (`SNOW.lamp`). `tools/snow/bake-light.py` đã chỉnh cho 3 dáng; `tools/snow/cut-1..3.png` là hình cắt hai người (grabCut + elip lấp khăn).
+- Lịch ngẫu nhiên (`SnowWatch.tsx`): 50% chỉ tay + sao băng, 28% xoa đầu (không sao băng), còn lại chỉ có sao băng.
+- Chưa có ảnh dọc cho điện thoại; ảnh 4K chưa dùng (đang dùng bản 1672x941 Long gửi).
+
+### Sửa lỗi lượt này
+- **Lỗi nghiêm trọng do chính em gây ra (commit 49db655):** khi viết lại CSS thanh chấm, đoạn thay thế đã xoá nhầm ~100 dòng CSS (hộp nhạc: ẩn vũ công khi chưa mở và trình phát nhạc; bảng âm lượng; màn chờ; chế độ nhẹ `.lite`; tạm dừng hoạt ảnh cảnh không hiện `.idle`; gợn chạm). Đã khôi phục từ lịch sử git. Bài học: khi thay một đoạn CSS bằng script, kiểm `git diff --stat` xem số dòng bị xoá có đúng không.
+- Khoá cuộn trang khi thư đang mở (`html.modal-open`), để cuộn không kéo trang phía sau xuống chuyển cảnh trong lúc thư còn hiện.
+- Cảnh ngắm tuyết: bấm chiếc đèn lồng nhỏ có nến ở góc dưới trái để tắt/bật (`SNOW.lamp`). Bóng khi tắt đèn làm lại liền mạch: hình cắt nở ra và nhoè mạnh (không còn đường cắt cứng), bỏ viền sáng quanh người, chao đèn bàn tối như phòng.
+- Bóng cảnh ngồi cạnh nhau (làm lại lần 2): **bỏ hẳn hình cắt người** khỏi bản đồ tối (hình cắt luôn để lại viền ở mép tóc và vai; Long chê "nhìn ngu"). Chỉ còn bóng của phòng: ô kính sáng, mờ dần về phía bậu cửa (470 -> 585) để không có đường ngang cắt qua áo; người ngồi trước kính vốn đã tối do ngược sáng. Hình cắt vẫn dùng cho mặt nạ che tuyết (`snow-hide-*`), không dùng cho ánh sáng.
+
+### Bố cục điện thoại dọc cho cảnh ngắm tuyết + script kiểm toàn trang
+- Cảnh ngắm tuyết ở màn dọc (`tall`): cảnh nằm phía trên vừa cả chiều cao, chữ nằm ở dải tối phía dưới (như các cảnh khác), không còn chữ đè lên chăn. Vẫn dùng ảnh ngang (chưa có ảnh dọc): chỉ thấy hai người và phần giữa cửa sổ.
+- `tools/smoke/shots.cjs`: chụp 4 cảnh chính ở 1440x900 và 390x844 và báo lỗi console. Chạy sau mỗi thay đổi lớn (xem hướng dẫn ở đầu tệp). Lần chạy gần nhất: không lỗi console ở cả hai cỡ.
+- Tóc lòa xòa ở đỉnh đầu (Long báo "chỗ được chỗ không"): hai mặt nạ che khác nhau. `snow-hide-*.png` (rộng ~8px, nhoè) cho tuyết rơi, sao băng, tuyết bám để chúng không đè lên sợi tóc; `snow-hide-tight-*.png` (sát mép, nhoè nhẹ) riêng cho lớp sương kính để sương không để lại quầng sẫm quanh đầu. Cả hai do `tools/snow/bake-light.py` sinh ra.
+- **Tắt đèn = một lớp tối đều** (`.sw-dim`, rgba(8,4,3,.6) phủ cả cảnh, nằm dưới các ngọn nến `.sw-flame` nên nến vẫn sáng). Đã bỏ hẳn bản đồ tối/ánh ấm dựng sẵn (`snow-dark-*`, `snow-warm-*`) và mọi hình cắt người cho việc chỉnh sáng. `tools/snow/bake-light.py` giờ chỉ còn sinh `snow-hide-*.png` và `snow-hide-tight-*.png` (phần sau dòng `continue` là mã cũ không chạy).
+- Tóc để nguyên như ảnh gốc: tuyết rơi/sao băng/tuyết bám dùng mặt nạ rộng nhoè (không chạm sợi tóc); sương kính dùng mặt nạ nhỏ hơn và sương trên cao rất mỏng (alpha .07 ở đỉnh, đậm dần xuống bậu cửa) để không có quầng sẫm quanh đầu.
+- **Bông tuyết chuyển cảnh** giống thật hơn: nét mảnh hơn (`wScale` .62), tô gradient trắng băng -> xanh băng, quầng sáng lạnh quanh cành, nghiêng 66 độ (không dẹt hẳn), màn che kín màu trắng xanh `#d8e9f9` (không còn màu kem). Bông tuyết rơi trong cảnh cuối vẫn trắng.
+- **Tắt đèn cảnh cuối:** `Dim` (canvas) phủ tối .78 và khoét vũng sáng quanh từng ngọn nến (`SNOW.flames`, bán kính 470*k, giảm dần), cộng quầng sáng cam `.sw-flame` lớn hơn; nhờ vậy thấy ánh sáng toả ra từ đèn lồng và quả cầu tuyết rọi lên bàn, sách, người tuyết.
+- Bông tuyết chuyển cảnh nay DÙNG ĐÚNG MẪU CỦA MÀN HÌNH CHỜ (`LOADER_FLAKE` trong `lib/snowflakes.ts`: nét mảnh, vàng kem `#f3d596`, quầng vàng), che kín bằng màu nền màn chờ `#150d08`. Các mẫu cũ (`FLAKES`) chỉ còn dùng cho tuyết rơi.
+- Công tắc đèn cảnh cuối lại là chiếc đèn bàn to chao kem; vũng sáng nến rộng hơn (600*k) và ánh cam đậm hơn.
+
+### Chuyển cảnh hai bé -> ngắm tuyết làm lại (lần 5) + nốt nhạc ổn định
+- Giờ giống chuyển cảnh hộp nhạc nhưng ngược chiều: **màn ánh sáng vàng kéo từ TRÊN xuống**, cảnh ngắm tuyết hiện ra phía trên mép màn (mask `--sy` trên `.xf-snow`, dải sáng `.xf-gold-top`, `--sring`), mép màn rắc **bông tuyết rơi xuống** (`FlakeRain` trong `WorldScroll.tsx`, dùng mẫu `LOADER_FLAKE`, sprite dựng sẵn). Đã bỏ `FlakeFx` (bông tuyết canvas phóng to) và các mẫu 9 bông tuyết cho chuyển cảnh.
+- Nốt nhạc (`Notes`, chuyển cảnh hộp nhạc -> cây thông) hết lập loè: trước đây ký hiệu đổi theo chỉ số mảng (đổi liên tục khi hạt bị xoá) và chấm sáng nhấp nháy bằng sin; nay mỗi hạt giữ một ký hiệu cố định, hiện/tan mượt, ít hạt hơn (30/giây thay vì 46).
+- `FlakeRain`: bông tuyết rơi ở chuyển cảnh mèo -> ngắm tuyết nay đa dạng như tuyết ngoài trời: 10 mẫu nét mảnh (mẫu màn chờ + 9 mẫu `FLAKES`), 3 tông kem, kèm ~28% đốm tròn mềm (bokeh), đủ cỡ theo độ gần xa.
