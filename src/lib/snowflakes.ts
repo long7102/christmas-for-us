@@ -50,3 +50,6 @@ export function makeSprites(): HTMLCanvasElement[] {
     const x = c.getContext('2d')!; x.translate(64, 64); drawFlake(x, f, 0.62); return c
   })
 }
+
+/** Bông tuyết của màn hình chờ (Long thích nhất): ba đường xuyên tâm mảnh, mỗi nhánh có hai cặp cành con; tô màu vàng kem như màn chờ. Hộp -100..100. */
+export const LOADER_FLAKE: FlakeDesign = { arm: 'M0 0V-81M0 -56L-22 -75M0 -56L22 -75M0 -19L-16 -31M0 -19L16 -31', w: 5.2 }

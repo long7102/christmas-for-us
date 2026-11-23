@@ -386,9 +386,9 @@ function Dim() {
     ctx.fillStyle = 'rgba(7,3,2,.78)'; ctx.fillRect(0, 0, L.w, L.h)
     ctx.globalCompositeOperation = 'destination-out'
     for (const [x, y, k] of L.flames) {
-      const R = 470 * k
+      const R = 600 * k
       const g = ctx.createRadialGradient(x, y, 0, x, y, R)
-      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.18, 'rgba(0,0,0,.92)'); g.addColorStop(0.45, 'rgba(0,0,0,.6)'); g.addColorStop(0.75, 'rgba(0,0,0,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)')
+      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.22, 'rgba(0,0,0,.95)'); g.addColorStop(0.5, 'rgba(0,0,0,.7)'); g.addColorStop(0.78, 'rgba(0,0,0,.3)'); g.addColorStop(1, 'rgba(0,0,0,0)')
       ctx.fillStyle = g; ctx.fillRect(x - R, y - R, R * 2, R * 2)
     }
   }, [])
@@ -500,7 +500,7 @@ export default function SnowWatch({ active }: { active: boolean }) {
           <LitSpot src={L.poses[0].src} w={L.w} h={L.h} poly={L.lamp} on={lampHov} strength={0.5} />
           {/* tắt đèn: chỉ phủ một lớp tối đều lên cả cảnh; ngọn nến nằm trên lớp tối nên vẫn sáng */}
           <Dim />
-          {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 340 * k, top: y - 340 * k, width: 680 * k, height: 680 * k, animationDelay: `-${i * 0.7}s` }} />)}
+          {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 440 * k, top: y - 440 * k, width: 880 * k, height: 880 * k, animationDelay: `-${i * 0.7}s` }} />)}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             <polygon className="cat-hs" points={L.lamp.map((q) => q.join(',')).join(' ')} tabIndex={0} role="button" aria-label={lightsOn ? 'Đèn bàn, đang sáng' : 'Đèn bàn, đang tắt'}

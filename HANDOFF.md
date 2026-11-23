@@ -200,3 +200,5 @@ npx tsc -b        # kiểm tra kiểu
 - Tóc để nguyên như ảnh gốc: tuyết rơi/sao băng/tuyết bám dùng mặt nạ rộng nhoè (không chạm sợi tóc); sương kính dùng mặt nạ nhỏ hơn và sương trên cao rất mỏng (alpha .07 ở đỉnh, đậm dần xuống bậu cửa) để không có quầng sẫm quanh đầu.
 - **Bông tuyết chuyển cảnh** giống thật hơn: nét mảnh hơn (`wScale` .62), tô gradient trắng băng -> xanh băng, quầng sáng lạnh quanh cành, nghiêng 66 độ (không dẹt hẳn), màn che kín màu trắng xanh `#d8e9f9` (không còn màu kem). Bông tuyết rơi trong cảnh cuối vẫn trắng.
 - **Tắt đèn cảnh cuối:** `Dim` (canvas) phủ tối .78 và khoét vũng sáng quanh từng ngọn nến (`SNOW.flames`, bán kính 470*k, giảm dần), cộng quầng sáng cam `.sw-flame` lớn hơn; nhờ vậy thấy ánh sáng toả ra từ đèn lồng và quả cầu tuyết rọi lên bàn, sách, người tuyết.
+- Bông tuyết chuyển cảnh nay DÙNG ĐÚNG MẪU CỦA MÀN HÌNH CHỜ (`LOADER_FLAKE` trong `lib/snowflakes.ts`: nét mảnh, vàng kem `#f3d596`, quầng vàng), che kín bằng màu nền màn chờ `#150d08`. Các mẫu cũ (`FLAKES`) chỉ còn dùng cho tuyết rơi.
+- Công tắc đèn cảnh cuối lại là chiếc đèn bàn to chao kem; vũng sáng nến rộng hơn (600*k) và ánh cam đậm hơn.
