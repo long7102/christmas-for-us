@@ -33,7 +33,7 @@ export function PasswordGate({ onPass }: { onPass: () => void }) {
     if (!ok) { setBad(true); return }
     store.set('unlocked', true)
     setLeaving(true)
-    setTimeout(onPass, 900)
+    setTimeout(onPass, 1000)
   }
 
   return (
@@ -43,6 +43,7 @@ export function PasswordGate({ onPass }: { onPass: () => void }) {
         <img className="gate-bg" src={landSrc} alt="" draggable={false} />
       </picture>
       <div className="gate-veil" />
+      <i className="gate-bloom" aria-hidden />
       <div className="gate-lights" aria-hidden>
         {BULBS.map((i) => (
           <i key={i} style={{ left: `${(i / (BULBS.length - 1)) * 100}%`, top: `${6 + Math.sin((i / (BULBS.length - 1)) * Math.PI * 2) * -7 + 14 * Math.sin((i / (BULBS.length - 1)) * Math.PI)}px`, ['--c' as string]: COLORS[i % COLORS.length], animationDelay: `${(i % 5) * -0.55}s` }} />

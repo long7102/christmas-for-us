@@ -222,3 +222,10 @@ npx tsc -b        # kiểm tra kiểu
 - Sửa lỗi: ở màn ngang, nút cuộn góc dưới trái đè lên chữ cảnh hai bé; nay khi cảnh mèo đang hiện nút trượt xuống giữa (`:has(.xf-cats:not(.idle))`).
 - Chữ mô tả `.sec-desc` thêm bóng chữ để rõ trên vân chăn/gối.
 - Chưa đụng vào ảnh nào (ảnh AI Long duyệt). Chưa kiểm trên máy thật.
+
+### Ấm hơn + chuyển động (lần 2)
+- Vầng sáng ấm `.tree-scene::after` đậm hơn (.3 / .12 + một lớp phủ hổ phách .05) và theo giờ thật qua biến `--tod-warm` (`timeOfDay.ts`: đêm = 1, giữa trưa ≈ .4).
+- `src/lib/pointer.ts`: con trỏ chuột đẩy nhẹ bụi sáng (`Dust`), tàn lửa (`Embers`, cây thông) và tuyết (`SnowFall`, cảnh ngắm tuyết). Chỉ khi chuột thật (`pointer: fine`), tắt ở chế độ nhẹ và giảm chuyển động. Đã đo thử: mật độ tàn lửa quanh nguồn giảm ~20-25% khi chuột đỗ ở đó (số đo nhiễu, chưa nhìn trên máy thật). Muốn thử trong môi trường vẽ phần mềm phải thêm `?lite=0`.
+- Cổng mật khẩu: nhập đúng thì `.gate-bloom` (ánh sáng vàng) toả ra từ giữa thẻ ~0,95 giây, cổng mới mờ đi (trễ 0,4 giây), `onPass` lúc 1000ms. Không chạy khi giảm chuyển động.
+- Ảnh: KHÔNG nén thêm (nén lại webp/jpg là mất chất lượng). Đã thử tối ưu PNG không mất pixel: tiết kiệm 140 byte nên bỏ. Không có công cụ jpegtran/cwebp trong môi trường. `snow-hide-*.png` do `tools/snow/bake-light.py` sinh ra, đừng sửa tay.
+- Em CỐ Ý chưa làm: ảnh nền trôi chậm (Ken Burns: tốn máy, lệch vùng bấm và tooltip vài pixel) và mèo "thở" (cần tách mèo, dễ bị bóng ma ở mép; cần số đo trên máy thật trước).

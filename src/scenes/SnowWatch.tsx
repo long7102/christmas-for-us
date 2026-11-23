@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { snow as copy } from '../content/content'
 import { isLite, reducedMotion } from '../lib/device'
 import { weather } from '../lib/weather'
+import { pointerReactive, pointerIn } from '../lib/pointer'
 import { LitSpot } from '../components/LitSpot'
 import { lights, useLights } from '../lib/lights'
 import { SNOW as L } from './snowLayout'
@@ -32,14 +33,15 @@ function SnowFall({ active }: { active: boolean }) {
     const orbs = [orb(0), orb(0.5), orb(1)]
     const crystals = makeSprites()
     const n = isLite() ? 120 : 260
-    type P = { x: number; y: number; z: number; ph: number; spr: HTMLCanvasElement; size: number; a: number; rot: number; spin: number; crystal: boolean }
+    type P = { x: number; y: number; z: number; ph: number; spr: HTMLCanvasElement; size: number; a: number; rot: number; spin: number; crystal: boolean; vx: number; vy: number }
     const mk = (top: boolean): P => {
       const z = Math.random() ** 1.3, crystal = Math.random() < 0.26
       const spr = crystal ? crystals[Math.floor(Math.random() * crystals.length)] : orbs[z > 0.78 ? 2 : z > 0.45 ? 1 : 0]
       const size = crystal ? 20 + z * 36 : z > 0.75 ? 44 + z * 44 : 8 + z * 36
-      return { x: Math.random() * L.w, y: top ? -50 : Math.random() ** 1.15 * 600, z, ph: Math.random() * 6.28, spr, size, a: (crystal ? 0.7 : 0.55) + z * 0.4, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.28, crystal }
+      return { x: Math.random() * L.w, y: top ? -50 : Math.random() ** 1.15 * 600, z, ph: Math.random() * 6.28, spr, size, a: (crystal ? 0.7 : 0.55) + z * 0.4, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.28, crystal, vx: 0, vy: 0 }
     }
     ctx.imageSmoothingQuality = 'high'
+    const react = pointerReactive(), PR = 170
     const fl = Array.from({ length: n }, () => mk(false))
     let raf = 0, last = performance.now()
     const frame = (t: number) => {
@@ -47,11 +49,14 @@ function SnowFall({ active }: { active: boolean }) {
       if (t - last < 30) return // 30 khung hình/giây là đủ cho tuyết
       const dt = Math.min(0.08, (t - last) / 1000); last = t
       ctx.clearRect(0, 0, L.w, L.h)
+      const P = react ? pointerIn(cv, L.w, L.h) : null
       for (let i = 0; i < fl.length; i++) {
         let f = fl[i]
         f.y += (22 + f.z * 80) * dt
         f.x += (weather.sway(t, f.ph) * (10 + f.z * 40) + Math.sin(t / 900 + f.ph) * 7 * f.z) * dt
         f.rot += f.spin * dt
+        if (P) { const dx = f.x - P.x, dy = f.y - P.y, d2 = dx * dx + dy * dy; if (d2 < PR * PR && d2 > 1) { const d = Math.sqrt(d2), k = 1 - d / PR; f.vx += (dx / d) * k * k * 700 * dt * (0.4 + f.z); f.vy += (dy / d) * k * k * 700 * dt * (0.4 + f.z) } }
+        f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 1 - 2.4 * dt; f.vy *= 1 - 2.4 * dt
         if (f.y > 616) { f = fl[i] = mk(true) }
         if (f.x > L.w + 40) f.x = -40; else if (f.x < -40) f.x = L.w + 40
         const top = Math.max(0, 1 - f.y / 590) // dày và sáng ở phía trên, mờ dần xuống dưới

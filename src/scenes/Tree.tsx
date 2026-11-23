@@ -6,6 +6,7 @@ import { lights, useLights } from '../lib/lights'
 import SoundControl from '../components/SoundControl'
 import { useHintPulse } from '../lib/hintPulse'
 import { weather } from '../lib/weather'
+import { pointerReactive, pointerIn } from '../lib/pointer'
 import { LitSpot, Stardust } from '../components/LitSpot'
 import { store } from '../lib/storage'
 import { isUnlocked } from '../lib/unlock'
@@ -122,6 +123,7 @@ function Embers({ r, kick }: { r: R; kick: number }) {
     type E = { x: number; y: number; vx: number; vy: number; life: number; max: number; s: number; hot: boolean }
     const es: E[] = []
     const bx = r.x - ox + r.w * 0.45, by = r.y - oy + r.h * 0.78
+    const react = pointerReactive(), PR = 80
     const spawn = (hot: boolean): E => ({
       x: bx + (Math.random() - 0.5) * r.w * 0.5, y: by + (Math.random() - 0.5) * 6,
       vx: (Math.random() - 0.5) * (hot ? 90 : 22), vy: -(hot ? 80 + Math.random() * 110 : 30 + Math.random() * 40),
@@ -137,10 +139,12 @@ function Embers({ r, kick }: { r: R; kick: number }) {
       if (nextPop < 0) { nextPop = 900 + Math.random() * 2600; const n = 4 + Math.floor(Math.random() * 6); for (let i = 0; i < n; i++) es.push(spawn(true)) }
       ctx.clearRect(0, 0, W, H)
       ctx.globalCompositeOperation = 'lighter'
+      const P = react ? pointerIn(cv, W, H) : null
       for (let i = es.length - 1; i >= 0; i--) {
         const e = es[i]; e.life += dt
         if (e.life > e.max) { es.splice(i, 1); continue }
         e.vy += (e.hot ? 150 : -4) * dt
+        if (P) { const dx = e.x - P.x, dy = e.y - P.y, d2 = dx * dx + dy * dy; if (d2 < PR * PR && d2 > 1) { const d = Math.sqrt(d2), f = 1 - d / PR; e.vx += (dx / d) * f * f * 900 * dt; e.vy += (dy / d) * f * f * 900 * dt } }
         e.x += (e.vx + Math.sin(t / 380 + i) * 14) * dt; e.y += e.vy * dt
         const k = 1 - e.life / e.max, rad = e.s * (0.6 + k)
         const g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, rad * 4)
@@ -164,13 +168,17 @@ export function Dust({ w, h }: { w: number; h: number }) {
     const cv = ref.current!, ctx = cv.getContext('2d')!
     const K = 0.5, W = (cv.width = w * K), H = (cv.height = h * K)
     const n = reducedMotion() || isLite() ? 14 : 55
-    const ms = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 0.8 + Math.random() * 1.6, sp: 2 + Math.random() * 6, ph: Math.random() * 6.28, tw: 0.4 + Math.random() * 0.9 }))
+    const ms = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 0.8 + Math.random() * 1.6, sp: 2 + Math.random() * 6, ph: Math.random() * 6.28, tw: 0.4 + Math.random() * 0.9, vx: 0, vy: 0 }))
+    const react = pointerReactive(), R = 70
     let raf = 0, last = performance.now()
     const frame = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t
       ctx.clearRect(0, 0, W, H)
+      const P = react ? pointerIn(cv, W, H) : null
       for (const m of ms) {
         m.x += (weather.sway(t, m.ph) * 7 + m.sp * 0.6) * dt; m.y += (Math.cos(t / 1900 + m.ph) * 3 - m.sp * 0.45) * dt
+        if (P) { const dx = m.x - P.x, dy = m.y - P.y, d2 = dx * dx + dy * dy; if (d2 < R * R && d2 > 1) { const d = Math.sqrt(d2), f = 1 - d / R; m.vx += (dx / d) * f * f * 300 * dt; m.vy += (dy / d) * f * f * 300 * dt } }
+        m.x += m.vx * dt; m.y += m.vy * dt; m.vx *= 1 - 2.2 * dt; m.vy *= 1 - 2.2 * dt
         if (m.x > W + 5) m.x = -5; if (m.y < -5) m.y = H + 5; if (m.y > H + 5) m.y = -5
         const a = 0.15 + 0.4 * (0.5 + 0.5 * Math.sin(t / 1200 * m.tw + m.ph))
         ctx.fillStyle = `rgba(255,222,160,${a})`

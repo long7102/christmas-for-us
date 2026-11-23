@@ -919,7 +919,8 @@ html.modal-open, html.modal-open body { overflow: hidden !important; overscroll-
 
 /* vầng sáng ấm như hơi lửa toả lên từ phía dưới, "thở" rất chậm (chỉ đổi độ đậm, chu kỳ 9 giây) */
 .tree-scene::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; transition: opacity 1.2s ease;
-  background: radial-gradient(ellipse 85% 55% at 50% 104%, rgba(255, 150, 60, .2), rgba(255, 150, 60, 0) 72%), radial-gradient(ellipse 55% 45% at 90% 6%, rgba(255, 204, 128, .09), rgba(255, 204, 128, 0) 72%);
+  background: radial-gradient(ellipse 85% 55% at 50% 104%, rgba(255, 150, 60, calc(.3 * var(--tod-warm, 1))), rgba(255, 150, 60, 0) 72%), radial-gradient(ellipse 55% 45% at 90% 6%, rgba(255, 204, 128, calc(.12 * var(--tod-warm, 1))), rgba(255, 204, 128, 0) 72%),
+    linear-gradient(rgba(255, 168, 90, calc(.05 * var(--tod-warm, 1))), rgba(255, 168, 90, calc(.05 * var(--tod-warm, 1))));
   animation: warm-breathe 9s ease-in-out infinite; }
 @keyframes warm-breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 .tree-scene.lights-off::after, .snow-scene::after { opacity: 0; animation: none; }
@@ -931,3 +932,11 @@ html.modal-open, html.modal-open body { overflow: hidden !important; overscroll-
   .scroll-cue { transition: left .7s ease; }
   .xf-sticky:has(.xf-cats:not(.idle)) .scroll-cue { left: calc(50% - 20px); }
 }
+
+/* nhập đúng mật khẩu: ánh sáng vàng toả ra từ giữa thẻ rồi cổng mới mờ đi, cánh cửa hiện ra sau ánh sáng */
+.gate-bloom { position: absolute; z-index: 4; left: 50%; top: 50%; width: 150vmax; height: 150vmax; margin: -75vmax 0 0 -75vmax; border-radius: 50%; pointer-events: none; opacity: 0; transform: scale(.04);
+  background: radial-gradient(circle, rgba(255, 228, 156, .95) 0%, rgba(255, 192, 104, .62) 20%, rgba(255, 160, 70, .2) 42%, rgba(255, 160, 70, 0) 60%); }
+.gate[data-leaving='true'] { transition: opacity .6s ease .4s; }
+.gate[data-leaving='true'] .gate-bloom { animation: gate-bloom .95s cubic-bezier(.2, .7, .2, 1) forwards; }
+@keyframes gate-bloom { 0% { opacity: 0; transform: scale(.04); } 30% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .gate-bloom { display: none; } }
