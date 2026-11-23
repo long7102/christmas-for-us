@@ -33,13 +33,13 @@ export const FLAKES: FlakeDesign[] = [
 ]
 
 /** Vẽ một bông tuyết (trắng) vào canvas, tâm tại (0,0), hộp -100..100 nhân với scale. */
-export function drawFlake(ctx: CanvasRenderingContext2D, f: FlakeDesign, scale: number, color = '#fff') {
+export function drawFlake(ctx: CanvasRenderingContext2D, f: FlakeDesign, scale: number, color: string | CanvasGradient = '#fff', wScale = 1) {
   ctx.save(); ctx.scale(scale, scale)
   ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
   const arm = new Path2D(f.arm)
-  ctx.lineWidth = f.w
+  ctx.lineWidth = f.w * wScale
   for (let i = 0; i < 6; i++) { ctx.save(); ctx.rotate((i * Math.PI) / 3); if (f.fill) ctx.fill(arm); ctx.stroke(arm); ctx.restore() }
-  if (f.core) { ctx.lineWidth = f.coreW ?? f.w; ctx.stroke(new Path2D(f.core)) }
+  if (f.core) { ctx.lineWidth = (f.coreW ?? f.w) * wScale; ctx.stroke(new Path2D(f.core)) }
   ctx.restore()
 }
 

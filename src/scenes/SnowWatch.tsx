@@ -373,6 +373,28 @@ function Fog({ active, wipeRef }: { active: boolean; wipeRef: React.MutableRefOb
   return <canvas ref={ref} className="sw-cv sw-fog" aria-hidden />
 }
 
+/**
+ * Lớp tối khi tắt đèn: phủ đều cả cảnh nhưng khoét những vũng sáng tròn quanh từng ngọn nến (đèn lồng, quả cầu tuyết), nên thấy rõ ánh sáng
+ * toả ra từ nguồn và rọi lên bàn, sách, người tuyết xung quanh, xa dần thì tối. Vẽ một lần (canvas nhỏ), bật/tắt bằng độ trong suốt.
+ */
+function Dim() {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const cv = ref.current!, ctx = cv.getContext('2d')!
+    const K = 0.5; cv.width = Math.round(L.w * K); cv.height = Math.round(L.h * K)
+    ctx.scale(K, K)
+    ctx.fillStyle = 'rgba(7,3,2,.78)'; ctx.fillRect(0, 0, L.w, L.h)
+    ctx.globalCompositeOperation = 'destination-out'
+    for (const [x, y, k] of L.flames) {
+      const R = 470 * k
+      const g = ctx.createRadialGradient(x, y, 0, x, y, R)
+      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.18, 'rgba(0,0,0,.92)'); g.addColorStop(0.45, 'rgba(0,0,0,.6)'); g.addColorStop(0.75, 'rgba(0,0,0,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = g; ctx.fillRect(x - R, y - R, R * 2, R * 2)
+    }
+  }, [])
+  return <canvas ref={ref} className="sw-dim" aria-hidden />
+}
+
 export default function SnowWatch({ active }: { active: boolean }) {
   const sec = useRef<HTMLElement>(null)
   const txt = useRef<HTMLDivElement>(null)
@@ -477,8 +499,8 @@ export default function SnowWatch({ active }: { active: boolean }) {
 
           <LitSpot src={L.poses[0].src} w={L.w} h={L.h} poly={L.lamp} on={lampHov} strength={0.5} />
           {/* tắt đèn: chỉ phủ một lớp tối đều lên cả cảnh; ngọn nến nằm trên lớp tối nên vẫn sáng */}
-          <div className="sw-dim" />
-          {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 260 * k, top: y - 260 * k, width: 520 * k, height: 520 * k, animationDelay: `-${i * 0.7}s` }} />)}
+          <Dim />
+          {L.flames.map(([x, y, k], i) => <i key={i} className="sw-flame" style={{ left: x - 340 * k, top: y - 340 * k, width: 680 * k, height: 680 * k, animationDelay: `-${i * 0.7}s` }} />)}
 
           <svg className="tr-hit" viewBox={`0 0 ${L.w} ${L.h}`}>
             <polygon className="cat-hs" points={L.lamp.map((q) => q.join(',')).join(' ')} tabIndex={0} role="button" aria-label={lightsOn ? 'Đèn bàn, đang sáng' : 'Đèn bàn, đang tắt'}
