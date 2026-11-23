@@ -233,3 +233,8 @@ npx tsc -b        # kiểm tra kiểu
 ### Khung nhập mật khẩu làm lại
 - `PasswordGate.tsx` + cuối `styles.css` (mục "Khung nhập mật khẩu làm lại"): thẻ nhung nâu ấm (bỏ `backdrop-filter`), viền vàng hai lớp + khung trong có hoa văn góc (`Corner`), tuyết đọng trên mép (`SnowCap`, đáy lượn sóng), huy hiệu ổ khoá vàng (`Keyhole`), tiêu đề chữ vàng chuyển màu, đường kẻ ❦, ô nhập khắc chìm có biểu tượng ổ khoá, nút có vệt bóng lướt qua khi rê chuột. Các phần tử hiện dần lần lượt; vầng sáng sau thẻ `.gate-halo` thở 9 giây (tắt khi giảm chuyển động). KHÔNG đổi chữ (`content.gate`). Rung khi sai mật khẩu và ánh sáng vàng khi đúng vẫn nguyên.
 - Đã chụp 1440x900 và 390x844 (x2), kiểm sai/đúng mật khẩu, 0 lỗi console. Chưa thử điện thoại thật.
+
+### Khung mật khẩu kiểu vẽ tay (sketchy)
+- `src/lib/sketch.ts` sinh đường vẽ tay bằng số ngẫu nhiên cố định (mulberry32): `roughRect` (viền chữ nhật/viên thuốc, đầu nét lẹm qua), `roughCircle`, `hatch` (gạch bóng), `wave` (gạch chân), `doodle` (sao, bông tuyết, tim, lấp lánh, xoắn). KHÔNG dùng filter làm méo, chỉ là path thường nên nhẹ máy; mỗi lần mở trang nét đều giống nhau.
+- `src/components/Sketch.tsx`: `Sketch` phủ đúng khung phần tử cha (ResizeObserver, dựng lại khi đổi cỡ), `Doodle`, `Wave`. Các nét tự "vẽ ra" bằng `stroke-dashoffset` (`.sk-line`, `sk-draw`); giảm chuyển động thì hiện luôn. Hằng số nét (`CARD_STROKES`, `FIELD_STROKES`...) nằm đầu `PasswordGate.tsx`, phải là tham chiếu cố định để `useMemo` không dựng lại.
+- Hình nguệch ngoạc ngoài thẻ (`.gd-out`) chỉ hiện khi màn rộng >= 900px; trong thẻ thì luôn hiện. Dòng gợi ý, báo lỗi và nút dùng phông Patrick Hand (viết tay). Muốn dùng nét vẽ tay cho cảnh khác thì tái dùng `Sketch`.

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { sha256 } from '../lib/hash'
 import { PASSWORD_HASH, content, ui } from '../content/content'
 import { SnowParticles } from './SnowParticles'
+import { Sketch, Doodle, Wave, type SketchStroke, type HatchSpec } from './Sketch'
 import { store } from '../lib/storage'
 import landSrc from '../assets/village-land.webp'
 import portSrc from '../assets/village-port.webp'
@@ -27,17 +28,7 @@ function SnowCap() {
   return (
     <svg viewBox="0 0 400 36" preserveAspectRatio="none" className="gate-cap" aria-hidden>
       <defs><linearGradient id="gcap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#fffaf0" /><stop offset=".7" stopColor="#f1ece0" /><stop offset="1" stopColor="#d9dfe9" /></linearGradient></defs>
-      <path fill="url(#gcap)" d="M0 27V21Q8 11 20 15Q30 3 48 11Q62 0 80 10Q96 5 112 13Q130 1 150 10Q170 4 190 12Q210 0 232 9Q250 3 270 12Q290 1 312 10Q332 4 350 13Q372 7 386 15Q396 13 400 21V27Q392 33 380 28Q368 25 356 30Q344 34 330 28Q316 24 300 29Q286 33 270 28Q254 24 240 30Q226 34 210 28Q196 24 180 29Q166 33 150 28Q136 24 120 30Q106 34 90 28Q74 24 60 29Q44 33 30 28Q16 24 0 27Z" />
-    </svg>
-  )
-}
-/** Hoa văn góc khung vàng. */
-function Corner({ r }: { r: number }) {
-  return (
-    <svg viewBox="0 0 28 28" className="gate-corner" style={{ transform: `rotate(${r}deg)` }} aria-hidden>
-      <path d="M2 26C2 12 12 2 26 2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <path d="M2 18C2 10 10 2 18 2" fill="none" stroke="currentColor" strokeWidth=".9" strokeLinecap="round" opacity=".7" />
-      <circle cx="5" cy="5" r="1.7" fill="currentColor" />
+      <path fill="url(#gcap)" stroke="#aeb9cc" strokeWidth="1.3" vectorEffect="non-scaling-stroke" strokeLinejoin="round" d="M0 27V21Q8 11 20 15Q30 3 48 11Q62 0 80 10Q96 5 112 13Q130 1 150 10Q170 4 190 12Q210 0 232 9Q250 3 270 12Q290 1 312 10Q332 4 350 13Q372 7 386 15Q396 13 400 21V27Q392 33 380 28Q368 25 356 30Q344 34 330 28Q316 24 300 29Q286 33 270 28Q254 24 240 30Q226 34 210 28Q196 24 180 29Q166 33 150 28Q136 24 120 30Q106 34 90 28Q74 24 60 29Q44 33 30 28Q16 24 0 27Z" />
     </svg>
   )
 }
@@ -48,6 +39,27 @@ function Keyhole({ className }: { className?: string }) {
     </svg>
   )
 }
+
+const CARD_STROKES: SketchStroke[] = [
+  { inset: 4, j: 1.8, w: 1.9, o: 0.95, seed: 3, delay: 0.2, dur: 2.4 },
+  { inset: 10, j: 1.5, w: 1.1, o: 0.55, seed: 9, delay: 0.55, dur: 2.6 },
+]
+const CARD_HATCH = (w: number, h: number): HatchSpec[] => [
+  { x: 24, y: h - 20, n: 6, len: 30, gap: 6, ang: -0.9 },
+  { x: w - 24, y: 24, n: 6, len: 30, gap: 6, ang: 2.2 },
+]
+const MEDAL_STROKES: SketchStroke[] = [
+  { inset: -7, j: 1.1, w: 1.5, o: 0.95, seed: 4, delay: 0.7, dur: 1.4 },
+  { inset: -11, j: 1.5, w: 0.9, o: 0.5, seed: 5, delay: 0.95, dur: 1.5 },
+]
+const FIELD_STROKES: SketchStroke[] = [
+  { inset: 0, j: 1.3, w: 1.6, o: 0.95, seed: 11, delay: 1.5, dur: 1.4 },
+  { inset: -4, j: 1.6, w: 0.9, o: 0.5, seed: 12, delay: 1.7, dur: 1.5 },
+]
+const BTN_STROKES: SketchStroke[] = [
+  { inset: -5, j: 1.4, w: 1.5, o: 0.9, seed: 21, delay: 1.9, dur: 1.4 },
+  { inset: -9, j: 1.6, w: 0.9, o: 0.45, seed: 22, delay: 2.1, dur: 1.5 },
+]
 
 export function PasswordGate({ onPass }: { onPass: () => void }) {
   const [v, setV] = useState('')
@@ -81,12 +93,15 @@ export function PasswordGate({ onPass }: { onPass: () => void }) {
         <i className="gate-halo" aria-hidden />
         <SnowCap />
         <Holly /><Holly />
-        <span className="gate-frame" aria-hidden><Corner r={0} /><Corner r={90} /><Corner r={270} /><Corner r={180} /></span>
-        <div className="gate-medal" aria-hidden><Keyhole className="gate-medal-ico" /></div>
+        <Sketch className="sk-card" r={20} strokes={CARD_STROKES} hatch={CARD_HATCH} />
+        <div className="gate-medal" aria-hidden><Sketch shape="circle" className="sk-medal" strokes={MEDAL_STROKES} /><Keyhole className="gate-medal-ico" /></div>
+        <Doodle kind="star" size={13} seed={2} delay={1.1} className="gd gd-ml" />
+        <Doodle kind="flake" size={13} seed={5} delay={1.25} className="gd gd-mr" />
         <h1 className="gate-title">{content.gate.title}</h1>
-        <div className="gate-orn" aria-hidden><i /><b>❦</b><i /></div>
+        <Wave className="gate-wave" delay={1.2} />
         <p className="gate-hint">{content.gate.hint}</p>
         <div className="gate-field">
+          <Sketch shape="pill" className="sk-field" strokes={FIELD_STROKES} />
           <Keyhole className="gate-ico" />
           <input
             autoFocus
@@ -99,7 +114,17 @@ export function PasswordGate({ onPass }: { onPass: () => void }) {
           />
         </div>
         <p className="gate-bad" style={{ opacity: bad ? 1 : 0 }}>{content.gate.wrong}</p>
-        <button type="submit" className="btn-gold gate-btn">{ui.enter}</button>
+        <span className="gate-btnwrap">
+          <Sketch shape="pill" className="sk-btn" strokes={BTN_STROKES} />
+          <button type="submit" className="btn-gold gate-btn">{ui.enter}</button>
+        </span>
+        <Doodle kind="heart" size={11} seed={8} delay={2.2} className="gd gd-bl" />
+        <Doodle kind="spark" size={11} seed={9} delay={2.35} className="gd gd-br" />
+        <Doodle kind="swirl" size={17} seed={3} delay={1.4} className="gd gd-out gd-o1" />
+        <Doodle kind="flake" size={24} seed={7} delay={1.6} className="gd gd-out gd-o2" />
+        <Doodle kind="star" size={20} seed={4} delay={1.8} className="gd gd-out gd-o3" />
+        <Doodle kind="heart" size={20} seed={6} delay={2} className="gd gd-out gd-o4" />
+        <Doodle kind="spark" size={15} seed={10} delay={2.2} className="gd gd-out gd-o5" />
       </form>
     </div>
   )
