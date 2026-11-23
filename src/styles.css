@@ -940,3 +940,42 @@ html.modal-open, html.modal-open body { overflow: hidden !important; overscroll-
 .gate[data-leaving='true'] .gate-bloom { animation: gate-bloom .95s cubic-bezier(.2, .7, .2, 1) forwards; }
 @keyframes gate-bloom { 0% { opacity: 0; transform: scale(.04); } 30% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .gate-bloom { display: none; } }
+
+/* ===== Khung nhập mật khẩu làm lại: nhung ấm, viền vàng hai lớp, huy hiệu ổ khoá, tuyết đọng trên mép ===== */
+.gate-card { width: min(440px, calc(100vw - 40px)); padding: 2.9rem 2.2rem 2.4rem; border-radius: 20px; gap: .95rem; backdrop-filter: none;
+  background: radial-gradient(120% 55% at 50% 0%, rgba(255, 190, 110, .17), rgba(255, 190, 110, 0) 62%), linear-gradient(168deg, rgba(62, 24, 18, .94), rgba(34, 15, 12, .95) 48%, rgba(20, 11, 9, .96));
+  border: 1px solid rgba(242, 200, 121, .7);
+  box-shadow: 0 0 0 5px rgba(242, 200, 121, .07), 0 0 0 6px rgba(242, 200, 121, .3), 0 24px 70px rgba(0, 0, 0, .62), 0 0 100px rgba(255, 150, 60, .16); }
+.gate-card.shake { animation: gate-shake .45s; }
+.gate-halo { position: absolute; z-index: -1; inset: -70px -60px; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, rgba(255, 160, 70, .26), rgba(255, 160, 70, 0)); animation: warm-breathe 8s ease-in-out infinite; }
+.gate-frame { position: absolute; inset: 11px; border: 1px solid rgba(242, 200, 121, .3); border-radius: 13px; pointer-events: none; color: #e8b86a; }
+.gate-corner { position: absolute; width: 24px; height: 24px; }
+.gate-corner:nth-child(1) { left: -2px; top: -2px; } .gate-corner:nth-child(2) { right: -2px; top: -2px; }
+.gate-corner:nth-child(3) { left: -2px; bottom: -2px; } .gate-corner:nth-child(4) { right: -2px; bottom: -2px; }
+.gate-cap { position: absolute; z-index: 2; left: 9%; right: 9%; top: -18px; width: 82%; height: 30px; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45)); }
+.gate-holly { z-index: 3; }
+.gate-medal { position: relative; z-index: 1; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; color: #3b1a07; margin-bottom: -.15rem;
+  background: radial-gradient(circle at 35% 28%, #fff0bd, #ecbd68 46%, #a9691f 100%);
+  box-shadow: 0 0 0 3px rgba(24, 11, 6, .92), 0 0 0 4px rgba(242, 200, 121, .75), 0 6px 18px rgba(0, 0, 0, .55), 0 0 34px rgba(255, 180, 80, .38); }
+.gate-medal-ico { width: 28px; height: 28px; filter: drop-shadow(0 1px 0 rgba(255, 240, 200, .6)); }
+.gate-title { color: transparent; background: linear-gradient(180deg, #fff6da 0%, #f8d78f 52%, #e2a64f 100%); -webkit-background-clip: text; background-clip: text; text-shadow: none;
+  filter: drop-shadow(0 0 20px rgba(242, 200, 121, .4)) drop-shadow(0 2px 5px rgba(0, 0, 0, .55)); }
+.gate-orn { display: flex; align-items: center; gap: 10px; width: 62%; color: #e8b86a; margin-top: -.2rem; }
+.gate-orn i { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(232, 184, 106, 0), rgba(232, 184, 106, .85)); } .gate-orn i:last-child { transform: scaleX(-1); }
+.gate-orn b { font-weight: 400; font-size: 1.05rem; line-height: 1; }
+.gate-hint { color: #f6e8c8; opacity: .88; }
+.gate-field { position: relative; width: min(320px, 70vw); }
+.gate-ico { position: absolute; left: 17px; top: 50%; width: 19px; height: 19px; margin-top: -9.5px; color: #e8b86a; opacity: .8; pointer-events: none; transition: opacity .3s; }
+.gate-field:focus-within .gate-ico { opacity: 1; }
+.gate-input { width: 100%; padding: .75rem .9rem .75rem 2.6rem; caret-color: #f6cf86; background: linear-gradient(rgba(0, 0, 0, .3), rgba(0, 0, 0, .12)); box-shadow: inset 0 2px 8px rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 220, 160, .12); }
+.gate-input:focus { background: linear-gradient(rgba(60, 28, 8, .45), rgba(40, 18, 6, .3)); box-shadow: inset 0 2px 8px rgba(0, 0, 0, .5), 0 0 26px rgba(255, 190, 90, .4); }
+.gate-btn { overflow: hidden; margin-top: .15rem; min-width: 150px; }
+.gate-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; transform: skewX(-20deg); background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 252, 235, .6), rgba(255, 255, 255, 0)); transition: left .9s ease; pointer-events: none; }
+.gate-btn:hover::after, .gate-btn:focus-visible::after { left: 120%; }
+/* mọi phần tử trong thẻ hiện dần lần lượt khi vừa tới */
+@media (prefers-reduced-motion: no-preference) {
+  .gate-card > .gate-medal, .gate-card > .gate-title, .gate-card > .gate-orn, .gate-card > .gate-hint, .gate-card > .gate-field, .gate-card > .gate-btn { animation: sec-in 1.2s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(.25s + var(--k, 0) * .12s); }
+  .gate-card > .gate-title { --k: 1; } .gate-card > .gate-orn { --k: 2; } .gate-card > .gate-hint { --k: 3; } .gate-card > .gate-field { --k: 4; } .gate-card > .gate-btn { --k: 5; }
+  .gate-card .gate-corner { animation: sec-in 1.6s ease both; animation-delay: .5s; }
+}
+@media (prefers-reduced-motion: reduce) { .gate-halo { animation: none; } }

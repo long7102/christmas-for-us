@@ -229,3 +229,7 @@ npx tsc -b        # kiểm tra kiểu
 - Cổng mật khẩu: nhập đúng thì `.gate-bloom` (ánh sáng vàng) toả ra từ giữa thẻ ~0,95 giây, cổng mới mờ đi (trễ 0,4 giây), `onPass` lúc 1000ms. Không chạy khi giảm chuyển động.
 - Ảnh: KHÔNG nén thêm (nén lại webp/jpg là mất chất lượng). Đã thử tối ưu PNG không mất pixel: tiết kiệm 140 byte nên bỏ. Không có công cụ jpegtran/cwebp trong môi trường. `snow-hide-*.png` do `tools/snow/bake-light.py` sinh ra, đừng sửa tay.
 - Em CỐ Ý chưa làm: ảnh nền trôi chậm (Ken Burns: tốn máy, lệch vùng bấm và tooltip vài pixel) và mèo "thở" (cần tách mèo, dễ bị bóng ma ở mép; cần số đo trên máy thật trước).
+
+### Khung nhập mật khẩu làm lại
+- `PasswordGate.tsx` + cuối `styles.css` (mục "Khung nhập mật khẩu làm lại"): thẻ nhung nâu ấm (bỏ `backdrop-filter`), viền vàng hai lớp + khung trong có hoa văn góc (`Corner`), tuyết đọng trên mép (`SnowCap`, đáy lượn sóng), huy hiệu ổ khoá vàng (`Keyhole`), tiêu đề chữ vàng chuyển màu, đường kẻ ❦, ô nhập khắc chìm có biểu tượng ổ khoá, nút có vệt bóng lướt qua khi rê chuột. Các phần tử hiện dần lần lượt; vầng sáng sau thẻ `.gate-halo` thở 9 giây (tắt khi giảm chuyển động). KHÔNG đổi chữ (`content.gate`). Rung khi sai mật khẩu và ánh sáng vàng khi đúng vẫn nguyên.
+- Đã chụp 1440x900 và 390x844 (x2), kiểm sai/đúng mật khẩu, 0 lỗi console. Chưa thử điện thoại thật.
