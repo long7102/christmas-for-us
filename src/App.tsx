@@ -31,6 +31,7 @@ export default function App() {
 
   return (
     <>
+      <div className="film" aria-hidden />
       <Loader />
       <Cursor />
       {/* Các cảnh sau cánh cửa làm từng cảnh một: hiện có cây thông + 4 quà và hai chú mèo. */}

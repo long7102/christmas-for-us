@@ -62,6 +62,7 @@ export function PasswordGate({ onPass }: { onPass: () => void }) {
       <div className="gate-veil" />
       <i className="gate-bloom" aria-hidden />
       <div className="gate-lights" aria-hidden>
+        <svg viewBox="0 0 100 64" preserveAspectRatio="none"><polyline fill="none" stroke="#10201a" strokeWidth="2" vectorEffect="non-scaling-stroke" points={BULBS.map((i) => { const u = i / (BULBS.length - 1); return `${(u * 100).toFixed(2)},${(4 + Math.sin(u * Math.PI * 2) * -7 + 14 * Math.sin(u * Math.PI)).toFixed(1)}` }).join(' ')} /></svg>
         {BULBS.map((i) => (
           <i key={i} style={{ left: `${(i / (BULBS.length - 1)) * 100}%`, top: `${6 + Math.sin((i / (BULBS.length - 1)) * Math.PI * 2) * -7 + 14 * Math.sin((i / (BULBS.length - 1)) * Math.PI)}px`, ['--c' as string]: COLORS[i % COLORS.length], animationDelay: `${(i % 5) * -0.55}s` }} />
         ))}

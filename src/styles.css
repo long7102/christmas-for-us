@@ -1016,3 +1016,22 @@ html.modal-open, html.modal-open body { overflow: hidden !important; overscroll-
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .92  0 0 0 0 .76  0 0 0 0 .5  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
     radial-gradient(120% 55% at 50% 0%, rgba(255, 190, 110, .15), rgba(255, 190, 110, 0) 62%), linear-gradient(168deg, rgba(62, 24, 18, .95), rgba(34, 15, 12, .96) 48%, rgba(20, 11, 9, .97));
   box-shadow: inset 0 0 64px rgba(8, 3, 2, .6), 0 24px 70px rgba(0, 0, 0, .62), 0 0 100px rgba(255, 150, 60, .16); }
+
+/* ===== Không khí phim Giáng sinh 1990 (kiểu Home Alone): màu phim ấm, tối góc, hạt tĩnh, chữ in nổi, đèn bóng to ===== */
+:root { --ha-red: #a3211b; --ha-green: #1f4d34; --brass: #c9993f; }
+.film { position: fixed; inset: 0; z-index: 150; pointer-events: none;
+  background: radial-gradient(125% 100% at 50% 46%, rgba(0, 0, 0, 0) 54%, rgba(24, 9, 3, .46) 100%), linear-gradient(rgba(255, 150, 70, .055), rgba(255, 150, 70, .055)); }
+.film::after { content: ''; position: absolute; inset: 0; opacity: .55; background-size: 220px 220px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='2' seed='11'/><feColorMatrix values='0 0 0 0 .95  0 0 0 0 .82  0 0 0 0 .62  0 0 0 .2 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+.lite .film::after { display: none; }
+/* tiêu đề cảnh: chữ serif đậm in nổi, bóng đỏ thẫm như tiêu đề phim cũ */
+.sec-title { font-family: 'Playfair Display', 'Cormorant Garamond', serif; font-weight: 700; letter-spacing: -.012em; text-shadow: none;
+  filter: drop-shadow(0 2px 0 #7a1914) drop-shadow(0 4px 1px rgba(22, 6, 3, .6)) drop-shadow(0 0 20px rgba(255, 186, 96, .3)); }
+/* dây đèn bóng to kiểu cũ: bóng thuỷ tinh có đui xanh và điểm sáng, sáng ổn định (chỉ thở rất nhẹ) */
+.gate-lights { height: 76px; }
+.gate-lights svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.gate-lights i { width: 15px; height: 22px; margin-left: -7.5px; margin-top: 4px; border-radius: 50% 50% 48% 48% / 62% 62% 38% 38%;
+  background: radial-gradient(circle at 36% 30%, rgba(255, 255, 255, .85) 0 7%, var(--c) 34%, color-mix(in srgb, var(--c) 55%, #000) 100%);
+  box-shadow: 0 0 18px 5px color-mix(in srgb, var(--c) 70%, transparent); animation: ha-bulb 5s ease-in-out infinite; }
+.gate-lights i::before { content: ''; position: absolute; left: 50%; top: -7px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 1px 1px 2px 2px; background: linear-gradient(90deg, #1b3a28, #3a6a48 45%, #142a1e); box-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
+@keyframes ha-bulb { 0%, 100% { opacity: .82; } 50% { opacity: 1; } }

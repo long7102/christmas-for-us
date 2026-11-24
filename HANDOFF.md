@@ -247,3 +247,9 @@ npx tsc -b        # kiểm tra kiểu
 ### Tuyết đọng và ô-rô vẽ lại kiểu tranh khắc (`components/Winter.tsx`)
 - `SnowCap`: dựng đúng bề rộng thật (ResizeObserver, không kéo méo): các vòm tuyết tròn chia vừa khít chiều ngang (`snowCap` trong `lib/sketch.ts`), tô gradient trắng -> xanh băng, gạch bóng xanh nhạt dưới mỗi vòm, nhũ băng ở mép dưới, viền mực, vài điểm lấp lánh. `Holly`: lá răng cưa nhọn (`hollyLeaf`) tô xanh đậm dần, gân lá, viền mực, quả đỏ có bóng và điểm sáng; `flip` cho cành bên phải. Tĩnh, không hoạt ảnh nên nhẹ máy (fps khung ~52, như trước).
 - Lý do đổi: bản cũ là dải trắng phẳng và clip-art vector tô bệt, Long chê "còn quá thô".
+
+### Không khí phim Giáng sinh 1990 (Home Alone), lớp chung — lần 1
+- `.film` (App.tsx, cuối styles.css): lớp cố định phủ cả trang, z 150, không bắt chuột: tông phim ấm, tối góc, hạt phim tĩnh (`.film::after`, tắt ở `.lite`). Không filter, không hoạt ảnh; đo: cổng 55 so với 57 fps, cảnh hộp nhạc 12,3 so với 13 (môi trường không GPU).
+- Tiêu đề cảnh `.sec-title`: Playfair Display 700 (đã bundle), in nổi bằng `filter: drop-shadow` đỏ thẫm. ĐỪNG dùng `text-shadow` màu cho tiêu đề này: chữ đang là gradient vàng với fill trong suốt nên bóng lộ xuyên qua nhuộm đỏ cả chữ.
+- Cổng: dây đèn bóng to kiểu cũ (`.gate-lights`, đui xanh, điểm sáng, dây thật), thở nhẹ 5 giây thay cho nhấp nháy.
+- Token mới: `--ha-red`, `--ha-green`, `--brass`. Việc còn lại để "vintage hoàn toàn": màn chờ, nút, thanh chấm cảnh, lá thư `.lt-*`, bảng âm lượng, khung chữ.
