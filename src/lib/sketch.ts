@@ -155,3 +155,39 @@ export function flourish(w: number, h: number, seed: number): Stroke[] {
   }
   return out
 }
+
+/* ---------- tuyết đọng và lá ô-rô (tranh khắc cổ) ---------- */
+/** Dải tuyết đọng: đường trên là những gò tuyết to nhỏ khác nhau, đường dưới có nhũ băng. Cao 40. */
+export function snowCap(w: number, seed: number): { top: Pt[]; bottom: Pt[]; peaks: Pt[]; drips: Pt[] } {
+  const rnd = rng(seed)
+  const top: Pt[] = [[0, 29]], peaks: Pt[] = []
+  let x = 0
+  const n = Math.max(2, Math.round(w / 52)), ws = Array.from({ length: n }, () => 0.7 + rnd() * 0.6), sum = ws.reduce((a, b) => a + b, 0)
+  for (let i = 0; i < n; i++) {
+    const mw = (w * ws[i]) / sum, h = 8 + rnd() * 9, valley = 24 + rnd() * 1.6
+    for (let k = 0; k <= 6; k++) { const th = (Math.PI * k) / 6; top.push([x + mw / 2 - (mw / 2) * Math.cos(th), valley - h * Math.pow(Math.sin(th), 0.75)]) }
+    peaks.push([x + mw / 2, valley - h])
+    x += mw
+  }
+  top.push([w, 29])
+  const bottom: Pt[] = [], drips: Pt[] = []
+  for (let bx = w; bx > 0; bx -= 15 + rnd() * 9) {
+    if (rnd() < 0.38 && bx > 12 && bx < w - 12) { const tip = 37 + rnd() * 3; bottom.push([bx + 4, 32], [bx, tip], [bx - 4, 32]); drips.push([bx, tip]) }
+    else bottom.push([bx, 31 + rnd() * 2.5])
+  }
+  bottom.push([0, 31])
+  return { top, bottom, peaks, drips }
+}
+
+/** Viền lá ô-rô: răng cưa nhọn, nằm dọc trục x từ 0 tới `len` (đỉnh nhọn), rộng nhất `wd` mỗi bên. */
+export function hollyLeaf(len: number, wd: number, spikes = 6): Pt[] {
+  const up: Pt[] = [], dn: Pt[] = []
+  const N = spikes * 4
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, base = Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.01)), 0.72)
+    const ph = (t * spikes) % 1, tri = 1 - Math.abs(ph * 2 - 1)
+    const h = wd * base * (0.56 + 0.44 * tri)
+    up.push([len * t, -h]); dn.push([len * t, h])
+  }
+  return up.concat(dn.reverse())
+}

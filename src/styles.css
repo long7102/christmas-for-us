@@ -67,8 +67,8 @@ img { user-select: none; -webkit-user-drag: none; }
   border: 1px solid rgba(242,200,121,.55); box-shadow: 0 0 0 5px rgba(242,200,121,.08), 0 0 0 6px rgba(242,200,121,.28), 0 20px 70px rgba(0,0,0,.65), 0 0 90px rgba(255,150,60,.12); }
 .gate-card.shake { animation: gate-shake .45s; }
 @keyframes gate-shake { 20%,60% { transform: translateX(-8px); } 40%,80% { transform: translateX(8px); } }
-.gate-holly { position: absolute; width: 74px; height: 74px; top: -24px; left: -22px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.5)); }
-.gate-holly:nth-of-type(2) { left: auto; right: -22px; transform: scaleX(-1); }
+.gate-holly { position: absolute; width: 86px; height: 86px; top: -30px; left: -26px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.5)); }
+.gate-holly.r { left: auto; right: -26px; transform: scaleX(-1); }
 .gate-star { font-size: 1.6rem; color: var(--gold); text-shadow: 0 0 18px var(--gold); animation: gate-bulb 3s infinite ease-in-out; margin-bottom: -.4rem; }
 .gate-title { font-family: var(--hand); font-size: clamp(2.6rem, 8vw, 3.6rem); font-weight: 600; margin: 0; color: var(--gold-soft); text-shadow: 0 0 36px rgba(242,200,121,.45); line-height: 1.1; }
 .gate-hint { margin: 0; opacity: .8; font-style: italic; font-size: 1.15rem; }
@@ -948,7 +948,7 @@ html.modal-open, html.modal-open body { overflow: hidden !important; overscroll-
   box-shadow: 0 0 0 5px rgba(242, 200, 121, .07), 0 0 0 6px rgba(242, 200, 121, .3), 0 24px 70px rgba(0, 0, 0, .62), 0 0 100px rgba(255, 150, 60, .16); }
 .gate-card.shake { animation: gate-shake .45s; }
 .gate-halo { position: absolute; z-index: -1; inset: -70px -60px; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, rgba(255, 160, 70, .26), rgba(255, 160, 70, 0)); animation: warm-breathe 8s ease-in-out infinite; }
-.gate-cap { position: absolute; z-index: 2; left: 9%; right: 9%; top: -18px; width: 82%; height: 30px; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45)); }
+.gate-cap { position: absolute; z-index: 2; left: 9%; right: 9%; top: -26px; width: 82%; height: 42px; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45)); }
 .gate-holly { z-index: 3; }
 .gate-medal { position: relative; z-index: 1; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; color: #3b1a07; margin-bottom: -.15rem;
   background: radial-gradient(circle at 35% 28%, #fff0bd, #ecbd68 46%, #a9691f 100%);

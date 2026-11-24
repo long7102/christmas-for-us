@@ -3,6 +3,7 @@ import { sha256 } from '../lib/hash'
 import { PASSWORD_HASH, content, ui } from '../content/content'
 import { SnowParticles } from './SnowParticles'
 import { Sketch, Doodle, Flourish, type SketchStroke, type HatchSpec } from './Sketch'
+import { SnowCap, Holly } from './Winter'
 import { store } from '../lib/storage'
 import landSrc from '../assets/village-land.webp'
 import portSrc from '../assets/village-port.webp'
@@ -10,28 +11,6 @@ import portSrc from '../assets/village-port.webp'
 const BULBS = Array.from({ length: 19 }, (_, i) => i)
 const COLORS = ['#ff5a4d', '#ffd36b', '#5ed48a', '#7fc4ff', '#ffd36b']
 
-function Holly() {
-  return (
-    <svg viewBox="0 0 80 80" className="gate-holly" aria-hidden>
-      <g fill="#1f5a3a" stroke="#0d2e1d" strokeWidth="1">
-        <path d="M8 52c8-22 26-30 46-26-6 6-6 16-20 24-8 4-18 4-26 2z" />
-        <path d="M26 70c-2-20 6-36 24-46 2 8 8 14 2 28-4 10-14 18-26 18z" />
-      </g>
-      <g fill="#d7352b"><circle cx="22" cy="54" r="6" /><circle cx="32" cy="60" r="6" /><circle cx="28" cy="46" r="6" /></g>
-      <g fill="#fff" opacity=".55"><circle cx="20" cy="52" r="1.6" /><circle cx="30" cy="58" r="1.6" /><circle cx="26" cy="44" r="1.6" /></g>
-    </svg>
-  )
-}
-
-/** Tuyết đọng trên mép trên của thẻ. */
-function SnowCap() {
-  return (
-    <svg viewBox="0 0 400 36" preserveAspectRatio="none" className="gate-cap" aria-hidden>
-      <defs><linearGradient id="gcap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#fffaf0" /><stop offset=".7" stopColor="#f1ece0" /><stop offset="1" stopColor="#d9dfe9" /></linearGradient></defs>
-      <path fill="url(#gcap)" stroke="#aeb9cc" strokeWidth="1.3" vectorEffect="non-scaling-stroke" strokeLinejoin="round" d="M0 27V21Q8 11 20 15Q30 3 48 11Q62 0 80 10Q96 5 112 13Q130 1 150 10Q170 4 190 12Q210 0 232 9Q250 3 270 12Q290 1 312 10Q332 4 350 13Q372 7 386 15Q396 13 400 21V27Q392 33 380 28Q368 25 356 30Q344 34 330 28Q316 24 300 29Q286 33 270 28Q254 24 240 30Q226 34 210 28Q196 24 180 29Q166 33 150 28Q136 24 120 30Q106 34 90 28Q74 24 60 29Q44 33 30 28Q16 24 0 27Z" />
-    </svg>
-  )
-}
 function Keyhole({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>
@@ -46,7 +25,6 @@ const CARD_STROKES: SketchStroke[] = [
 ]
 const CARD_HATCH = (w: number, h: number): HatchSpec[] => [
   { x: 24, y: h - 20, n: 6, len: 30, gap: 6, ang: -0.9 },
-  { x: w - 24, y: 24, n: 6, len: 30, gap: 6, ang: 2.2 },
 ]
 const MEDAL_STROKES: SketchStroke[] = [
   { inset: -7, j: 1.1, w: 2.6, o: 0.95, seed: 4, delay: 0.7, dur: 1.4 },
@@ -92,7 +70,7 @@ export function PasswordGate({ onPass }: { onPass: () => void }) {
       <form onSubmit={submit} className={`gate-form gate-card${bad ? ' shake' : ''}`}>
         <i className="gate-halo" aria-hidden />
         <SnowCap />
-        <Holly /><Holly />
+        <Holly /><Holly flip />
         <Sketch className="sk-card" r={20} strokes={CARD_STROKES} hatch={CARD_HATCH} />
         <div className="gate-medal" aria-hidden><Sketch shape="circle" className="sk-medal" strokes={MEDAL_STROKES} /><Keyhole className="gate-medal-ico" /></div>
         <Doodle kind="compass" size={24} seed={2} delay={1.1} className="gd gd-ml" />
