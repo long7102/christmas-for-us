@@ -1,8 +1,9 @@
 /**
- * Nét vẽ tay: đường run nhẹ, đầu nét lẹm qua, sinh sẵn bằng số ngẫu nhiên cố định (mulberry32) nên mỗi lần mở trang đều giống nhau.
- * Không dùng filter làm méo: chỉ là các đường path thường, nhẹ máy.
+ * Nét mực vẽ tay kiểu khắc in cổ: đường tâm run nhẹ -> hình đặc có độ dày thay đổi (thon hai đầu, nhịp ép bút).
+ * Số ngẫu nhiên cố định (mulberry32) nên mỗi lần mở trang nét đều giống nhau. Chỉ là path thường, không filter nặng.
  */
 export type Pt = [number, number]
+export type Stroke = { pts: Pt[]; w: number }
 
 export function rng(seed: number) {
   let a = seed >>> 0
@@ -10,20 +11,46 @@ export function rng(seed: number) {
 }
 const f = (n: number) => n.toFixed(1)
 
-/** Đường cong mượt đi qua các điểm (Catmull-Rom đổi sang Bézier). */
-function smooth(pts: Pt[]): string {
+/** Điểm mẫu dày trên đường cong mượt (Catmull-Rom) đi qua các điểm. */
+export function sampleSpline(pts: Pt[], step: number): Pt[] {
   const n = pts.length
-  if (n < 2) return ''
+  if (n < 2) return pts.slice()
   const g = (i: number) => pts[Math.max(0, Math.min(n - 1, i))]
-  let d = `M${f(pts[0][0])} ${f(pts[0][1])}`
+  const out: Pt[] = []
   for (let i = 0; i < n - 1; i++) {
     const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2)
-    d += `C${f(p1[0] + (p2[0] - p0[0]) / 6)} ${f(p1[1] + (p2[1] - p0[1]) / 6)} ${f(p2[0] - (p3[0] - p1[0]) / 6)} ${f(p2[1] - (p3[1] - p1[1]) / 6)} ${f(p2[0])} ${f(p2[1])}`
+    const m = Math.max(1, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step))
+    for (let k = 0; k < m; k++) {
+      const t = k / m, t2 = t * t, t3 = t2 * t
+      const c = (a: number, b: number, cc: number, d: number) => 0.5 * (2 * b + (-a + cc) * t + (2 * a - 5 * b + 4 * cc - d) * t2 + (-a + 3 * b - 3 * cc + d) * t3)
+      out.push([c(p0[0], p1[0], p2[0], p3[0]), c(p0[1], p1[1], p2[1], p3[1])])
+    }
   }
-  return d
+  out.push(pts[n - 1])
+  return out
 }
 
-/** Chu vi hình chữ nhật bo góc (hoặc viên thuốc khi r >= h/2), lấy mẫu mỗi `step` px. */
+/** Nét mực: từ đường tâm dựng hình đặc, dày ở giữa, thon hai đầu, có nhịp ép bút nhẹ. */
+export function inkOutline(pts: Pt[], w: number, seed: number, taper = true): string {
+  const s = sampleSpline(pts, 2.5), n = s.length
+  if (n < 3) return ''
+  const rnd = rng(seed), p1 = rnd() * 6.28, p2 = rnd() * 6.28, p3 = rnd() * 6.28
+  const L: Pt[] = [], R: Pt[] = []
+  for (let i = 0; i < n; i++) {
+    const a = s[Math.max(0, i - 1)], b = s[Math.min(n - 1, i + 1)]
+    let tx = b[0] - a[0], ty = b[1] - a[1]
+    const m = Math.hypot(tx, ty) || 1; tx /= m; ty /= m
+    const t = i / (n - 1)
+    const env = taper ? Math.pow(Math.sin(Math.PI * t), 0.45) * 0.7 + 0.3 : 1
+    const press = 0.72 + 0.28 * Math.sin(t * 9 + p1) * Math.sin(t * 3.1 + p2) + 0.12 * Math.sin(t * 23 + p3)
+    const hw = Math.max(0.25, w * env * press) / 2
+    L.push([s[i][0] - ty * hw, s[i][1] + tx * hw]); R.push([s[i][0] + ty * hw, s[i][1] - tx * hw])
+  }
+  const q = (p: Pt) => `${f(p[0])} ${f(p[1])}`
+  return 'M' + L.map(q).join('L') + 'L' + R.reverse().map(q).join('L') + 'Z'
+}
+
+/** Chu vi chữ nhật bo góc (hoặc viên thuốc khi r >= h/2). */
 function perimeter(x: number, y: number, w: number, h: number, r: number, step: number): Pt[] {
   r = Math.max(0, Math.min(r, w / 2, h / 2))
   const pts: Pt[] = []
@@ -36,25 +63,23 @@ function perimeter(x: number, y: number, w: number, h: number, r: number, step: 
   return pts
 }
 
-/** Viền chữ nhật / viên thuốc vẽ tay: bắt đầu ở chỗ ngẫu nhiên, đi hết một vòng rồi lẹm qua điểm đầu một đoạn. */
-export function roughRect(w: number, h: number, r: number, inset: number, j: number, seed: number): string {
+/** Viền chữ nhật / viên thuốc vẽ tay: điểm đầu ngẫu nhiên, đi hết một vòng rồi lẹm qua điểm đầu. */
+export function roughRectPts(w: number, h: number, r: number, inset: number, j: number, seed: number): Pt[] {
   const rnd = rng(seed)
   const base = perimeter(inset, inset, w - inset * 2, h - inset * 2, r - inset * 0.5, 11)
   const s = Math.floor(rnd() * base.length)
   const rot = base.slice(s).concat(base.slice(0, s))
   const jit = (p: Pt): Pt => [p[0] + (rnd() - 0.5) * 2 * j, p[1] + (rnd() - 0.5) * 2 * j]
-  const pts = rot.map(jit).concat(rot.slice(0, 3).map((p) => jit([p[0] + (rnd() - 0.5) * j, p[1] + (rnd() - 0.5) * j])))
-  return smooth(pts)
+  return rot.map(jit).concat(rot.slice(0, 4).map((p) => jit([p[0] + (rnd() - 0.5) * j, p[1] + (rnd() - 0.5) * j])))
 }
 
 /** Vòng tròn vẽ tay, hơi xoắn vào trong ở cuối nét. */
-export function roughCircle(w: number, h: number, inset: number, j: number, seed: number): string {
+export function roughCirclePts(w: number, h: number, inset: number, j: number, seed: number): Pt[] {
   const rnd = rng(seed)
-  const R = Math.min(w, h) / 2 - inset, cx = w / 2, cy = h / 2, n = 26
-  const a0 = rnd() * 6.283
+  const R = Math.min(w, h) / 2 - inset, cx = w / 2, cy = h / 2, n = 26, a0 = rnd() * 6.283
   const pts: Pt[] = []
-  for (let i = 0; i <= n + 3; i++) { const a = a0 + (i / n) * 6.283, k = 1 - Math.max(0, i - n) * 0.012; const rr = R * k + (rnd() - 0.5) * 2 * j; pts.push([cx + rr * Math.cos(a), cy + rr * Math.sin(a)]) }
-  return smooth(pts)
+  for (let i = 0; i <= n + 3; i++) { const a = a0 + (i / n) * 6.283, k = 1 - Math.max(0, i - n) * 0.014; const rr = R * k + (rnd() - 0.5) * 2 * j; pts.push([cx + rr * Math.cos(a), cy + rr * Math.sin(a)]) }
+  return pts
 }
 
 /** Nét gạch bóng song song, như tô chì ở góc. */
@@ -69,49 +94,64 @@ export function hatch(x: number, y: number, n: number, len: number, gap: number,
   return d
 }
 
-/** Đường lượn sóng hai nét để gạch chân tiêu đề. */
-export function wave(w: number, h: number, seed: number): string {
-  const rnd = rng(seed)
-  const one = (x0: number, x1: number, y: number, amp: number) => {
-    const pts: Pt[] = []
-    for (let x = x0, i = 0; x <= x1; x += 13, i++) pts.push([x, y + Math.sin(i * 0.95) * amp + (rnd() - 0.5) * 1.6])
-    return smooth(pts)
-  }
-  return one(2, w - 2, h * 0.38, 3.2) + one(w * 0.12, w * 0.88, h * 0.78, 2.4)
+/* ---------- họa tiết khắc in cổ (vẽ quanh gốc 0,0 trong khoảng ±r) ---------- */
+const circ = (cx: number, cy: number, r: number, n = 18, a0 = 0, turns = 1): Pt[] => Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (turns * 6.283 * i) / n; return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as Pt })
+const spiral = (cx: number, cy: number, r0: number, r1: number, turns: number, a0: number, n = 22): Pt[] => Array.from({ length: n + 1 }, (_, i) => { const t = i / n, a = a0 + t * turns * 6.283, rr = r0 + (r1 - r0) * t; return [cx + rr * Math.cos(a), cy + rr * Math.sin(a)] as Pt })
+const rot = (ps: Pt[], a: number, tx = 0, ty = 0): Pt[] => ps.map(([x, y]) => [x * Math.cos(a) - y * Math.sin(a) + tx, x * Math.sin(a) + y * Math.cos(a) + ty] as Pt)
+const seg = (a: Pt, b: Pt, n = 3): Pt[] => Array.from({ length: n + 1 }, (_, i) => [a[0] + ((b[0] - a[0]) * i) / n, a[1] + ((b[1] - a[1]) * i) / n] as Pt)
+/** Lá ô-rô: viền răng cưa nhẹ, dài `len` theo trục x. */
+const leaf = (len: number, wd: number, n = 28): Pt[] => {
+  const up: Pt[] = [], dn: Pt[] = []
+  for (let i = 0; i <= n; i++) { const t = i / n, h = wd * Math.pow(Math.sin(Math.PI * t), 0.8) * (1 + 0.18 * Math.sin(t * Math.PI * 8)); up.push([len * t, -h]); dn.push([len * t, h]) }
+  return up.concat(dn.reverse())
 }
 
-export type DoodleKind = 'star' | 'flake' | 'heart' | 'spark' | 'swirl'
+export type MotifKind = 'key' | 'compass' | 'sprig' | 'scroll'
 
-/** Hình nguệch ngoạc, vẽ quanh gốc (0,0) trong khoảng ±r. */
-export function doodle(kind: DoodleKind, r: number, seed: number): string {
+export function motif(kind: MotifKind, r: number, seed: number): Stroke[] {
   const rnd = rng(seed)
-  const J = (v = 1) => (rnd() - 0.5) * 2 * v
-  const seg = (ax: number, ay: number, bx: number, by: number) => `M${f(ax + J(0.8))} ${f(ay + J(0.8))}L${f(bx + J(0.8))} ${f(by + J(0.8))}`
-  if (kind === 'star') {
+  const J = (v: number) => (rnd() - 0.5) * 2 * v
+  const jit = (s: Stroke): Stroke => ({ w: s.w, pts: s.pts.map((p) => [p[0] + J(r * 0.025), p[1] + J(r * 0.025)] as Pt) })
+  const out: Stroke[] = []
+  if (kind === 'key') {
+    const A = -0.62
+    out.push({ w: r * 0.13, pts: rot(circ(-0.58 * r, 0, 0.3 * r, 16), A) })
+    out.push({ w: r * 0.08, pts: rot(circ(-0.58 * r, 0, 0.13 * r, 10), A) })
+    out.push({ w: r * 0.14, pts: rot(seg([-0.28 * r, 0], [0.95 * r, 0], 6), A) })
+    out.push({ w: r * 0.1, pts: rot([[0.95 * r, 0], [0.95 * r, 0.3 * r], [0.72 * r, 0.3 * r], [0.72 * r, 0.12 * r]], A) })
+    out.push({ w: r * 0.1, pts: rot([[0.55 * r, 0], [0.55 * r, 0.22 * r], [0.4 * r, 0.22 * r]], A) })
+    out.push({ w: r * 0.1, pts: rot(seg([-0.14 * r, -0.11 * r], [-0.14 * r, 0.11 * r], 2), A) })
+  } else if (kind === 'compass') {
+    const star: Pt[] = []
+    for (let i = 0; i <= 16; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 8, k = i % 2 ? 0.2 : i % 4 === 0 ? 1 : 0.6; star.push([r * k * Math.cos(a), r * k * Math.sin(a)]) }
+    out.push({ w: r * 0.1, pts: star })
+    out.push({ w: r * 0.07, pts: circ(0, 0, 0.8 * r, 22, rnd() * 6.28, 0.94) })
+    out.push({ w: r * 0.12, pts: circ(0, 0, 0.07 * r, 6) })
+  } else if (kind === 'sprig') {
+    out.push({ w: r * 0.1, pts: [[-r, 0.55 * r], [-0.3 * r, 0.2 * r], [0.3 * r, -0.05 * r], [0.78 * r, -0.36 * r]] })
+    out.push({ w: r * 0.09, pts: rot(leaf(0.8 * r, 0.2 * r), -0.55, -0.35 * r, 0.22 * r) })
+    out.push({ w: r * 0.09, pts: rot(leaf(0.74 * r, 0.19 * r), 0.3, -0.3 * r, 0.2 * r) })
+    out.push({ w: r * 0.06, pts: rot(seg([0, 0], [0.7 * r, 0], 4), -0.55, -0.35 * r, 0.22 * r) })
+    for (const [x, y] of [[0.55, -0.24], [0.74, -0.1], [0.66, -0.4]]) { out.push({ w: r * 0.1, pts: circ(x * r, y * r, 0.12 * r, 10) }); out.push({ w: r * 0.05, pts: circ(x * r, y * r, 0.06 * r, 6, 3.5, 0.45) }) }
+  } else {
+    out.push({ w: r * 0.1, pts: [[0.98 * r, 0.12 * r], [0.5 * r, 0.1 * r], [0.16 * r, 0.22 * r], [0.1 * r, 0.5 * r], [0.12 * r, 0.98 * r]] })
+    out.push({ w: r * 0.08, pts: spiral(0.88 * r, 0.27 * r, 0.16 * r, 0.03 * r, 1.4, -1.5) })
+    out.push({ w: r * 0.08, pts: spiral(0.27 * r, 0.88 * r, 0.16 * r, 0.03 * r, 1.4, -0.1) })
+    out.push({ w: r * 0.07, pts: rot(leaf(0.42 * r, 0.09 * r), 0.785, 0.2 * r, 0.2 * r) })
+  }
+  return out.map(jit)
+}
+
+/** Đường hoa văn ngăn cách: hình thoi ở giữa, hai nhánh sóng nhỏ dần cuộn lại ở đầu. */
+export function flourish(w: number, h: number, seed: number): Stroke[] {
+  const rnd = rng(seed), c = w / 2, y = h / 2
+  const J = (v: number) => (rnd() - 0.5) * 2 * v
+  const out: Stroke[] = [{ w: 2, pts: [[c - 5, y], [c, y - 5], [c + 5, y], [c, y + 5], [c - 5, y]] }]
+  for (const s of [1, -1]) {
     const pts: Pt[] = []
-    for (let i = 0; i < 11; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? r * 0.46 : r; pts.push([rr * Math.cos(a), rr * Math.sin(a)]) }
-    return 'M' + pts.map((p) => `${f(p[0] + J(0.9))} ${f(p[1] + J(0.9))}`).join('L')
+    for (let i = 0; i <= 12; i++) { const t = i / 12, x = c + s * (12 + t * (w / 2 - 40)); pts.push([x + J(0.5), y + Math.sin(t * 9) * (5 - 3 * t) + J(0.5)]) }
+    out.push({ w: 2.2, pts })
+    out.push({ w: 1.6, pts: spiral(c + s * (w / 2 - 22), y - 3, 7, 1.5, 1.3, s > 0 ? 3.1 : 0, 16) })
   }
-  if (kind === 'spark') return seg(0, -r, 0, r) + seg(-r, 0, r, 0) + seg(-r * 0.45, -r * 0.45, r * 0.45, r * 0.45) + seg(r * 0.45, -r * 0.45, -r * 0.45, r * 0.45)
-  if (kind === 'flake') {
-    let d = ''
-    for (let k = 0; k < 3; k++) {
-      const a = (k * Math.PI) / 3, c = Math.cos(a), s = Math.sin(a)
-      d += seg(-r * c, -r * s, r * c, r * s)
-      for (const side of [-1, 1]) for (const t of [0.55]) {
-        const bx = side * r * t * c, by = side * r * t * s
-        for (const da of [0.7, -0.7]) { const ba = a + (side > 0 ? 0 : Math.PI) + da; d += seg(bx, by, bx + Math.cos(ba) * r * 0.3, by + Math.sin(ba) * r * 0.3) }
-      }
-    }
-    return d
-  }
-  if (kind === 'heart') {
-    const pts: Pt[] = []
-    for (let i = 0; i <= 22; i++) { const t = -Math.PI + (i / 20) * Math.PI * 2; const x = 16 * Math.sin(t) ** 3, y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)); pts.push([(x / 17) * r + J(0.6), (y / 17) * r + J(0.6)]) }
-    return smooth(pts)
-  }
-  // swirl: vòng xoắn nhỏ
-  const pts: Pt[] = []
-  for (let i = 0; i <= 26; i++) { const t = i / 26, a = t * Math.PI * 4.2, rr = r * (0.12 + 0.88 * t); pts.push([rr * Math.cos(a) + J(0.5), rr * Math.sin(a) + J(0.5)]) }
-  return smooth(pts)
+  return out
 }
