@@ -31,7 +31,7 @@ function paper(w: number, h: number, seed: number, tone: [string, string, string
   const g = x.createRadialGradient(w * 0.5, h * 0.48, 0, w * 0.5, h * 0.48, Math.max(w, h) * 0.65)
   g.addColorStop(0, tone[0]); g.addColorStop(0.6, tone[1]); g.addColorStop(1, tone[2]); x.fillStyle = g; x.fillRect(0, 0, w, h)
   for (let i = 0; i < 9; i++) { const cx = r() * w, cy = r() * h, rad = 70 + r() * 220, k = x.createRadialGradient(cx, cy, 0, cx, cy, rad); k.addColorStop(0, `rgba(120,76,28,${0.1 + r() * 0.16})`); k.addColorStop(1, 'rgba(120,76,28,0)'); x.fillStyle = k; x.fillRect(0, 0, w, h) }
-  for (let i = 0; i < 2; i++) { const cx = w * (0.25 + r() * 0.5), cy = h * (0.25 + r() * 0.5), rad = 60 + r() * 70; x.strokeStyle = `rgba(118,74,26,${0.16 + r() * 0.1})`; x.lineWidth = 5; x.beginPath(); x.arc(cx, cy, rad, 0, 6.283); x.stroke() }
+  for (let i = 0; i < 2; i++) { const cx = w * (0.25 + r() * 0.5), cy = h * (0.25 + r() * 0.5), rad = 60 + r() * 70; x.strokeStyle = `rgba(118,74,26,${0.09 + r() * 0.06})`; x.lineWidth = 4; x.beginPath(); x.arc(cx, cy, rad, 0, 6.283); x.stroke() }
   for (let i = 0; i < 60; i++) { x.fillStyle = `rgba(96,56,20,${0.25 + r() * 0.3})`; x.beginPath(); x.arc(r() * w, r() * h, 1.2 + r() * 2.6, 0, 6.283); x.fill() }
   x.lineWidth = 1
   for (let i = 0; i < 1100; i++) { const px = r() * w, py = r() * h, a = r() * 6.283, l = 6 + r() * 22; x.strokeStyle = r() < 0.5 ? `rgba(255,248,225,${0.05 + r() * 0.07})` : `rgba(90,60,25,${0.04 + r() * 0.07})`; x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(a) * l, py + Math.sin(a) * l); x.stroke() }
@@ -81,7 +81,7 @@ export async function createEnvelopeGL(o: EnvOpts): Promise<EnvGL> {
   const host = o.host
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1))
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.VSMShadowMap
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15
   renderer.setClearColor(0x000000, 0)
   const cv = renderer.domElement; cv.style.display = 'block'; cv.style.width = '100%'; cv.style.height = '100%'
@@ -92,11 +92,11 @@ export async function createEnvelopeGL(o: EnvOpts): Promise<EnvGL> {
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 60)
   scene.add(new THREE.HemisphereLight(0xfff0d8, 0x4a3018, 1.05))
   const key = new THREE.DirectionalLight(0xffe0ac, 2.6); key.position.set(-2.6, 4.6, 5.2); key.castShadow = true
-  key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.0006; key.shadow.radius = 5
+  key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.0006; key.shadow.radius = 9; key.shadow.blurSamples = 16
   Object.assign(key.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 16 })
   scene.add(key)
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.42 }))
-  ground.rotation.x = -Math.PI / 2; ground.position.set(0, -H / 2 - 0.62, 0); ground.receiveShadow = true; scene.add(ground)
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.3 }))
+  ground.rotation.x = -Math.PI / 2; ground.position.set(0, -H / 2 - 0.5, 0); ground.receiveShadow = true; scene.add(ground)
 
   const rig = new THREE.Group(); scene.add(rig)
   const mat = (map: T.Texture, bump: T.Texture, rough = 0.93, bs = 1.6) => new THREE.MeshStandardMaterial({ map, bumpMap: bump, bumpScale: bs, roughness: rough, metalness: 0 })

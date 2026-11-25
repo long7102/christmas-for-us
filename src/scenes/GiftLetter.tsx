@@ -341,7 +341,7 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
         </div>
       </div>
 
-      <button ref={hitRef} type="button" className="vm-sealhit" tabIndex={stage === 'closed' ? 0 : -1}
+      <button ref={hitRef} type="button" className={'vm-sealhit' + (stage === 'closed' ? '' : ' gone')} tabIndex={stage === 'closed' ? 0 : -1}
         aria-label={locked ? 'Con dấu sáp, chưa tới giờ bóc' : 'Giữ để bóc con dấu sáp'}
         onPointerDown={startHold} onPointerUp={endHold} onPointerCancel={endHold} onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); startHold(e) } }} onKeyUp={(e) => { if (e.key === 'Enter' || e.key === ' ') endHold() }}>

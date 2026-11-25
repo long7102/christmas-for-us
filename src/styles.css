@@ -1204,3 +1204,5 @@ html.modal-open { overflow: hidden !important; overscroll-behavior: none; }
 .vm-gl { position: absolute; inset: 0; pointer-events: none; }
 .vm-env.gl-hide { visibility: hidden; }
 .vm-sealhit .vm-ring { left: -14%; top: -14%; width: 128%; height: 128%; }
+
+.vm-sealhit.gone { display: none; }
