@@ -6,6 +6,7 @@ import { CurtainIcon, GarlandIcon, RugIcon, ShelfIcon, ToolsIcon, TreeIcon, Wind
 import { sfx } from '../lib/audio'
 import qrSrc from '../assets/qr-sinh-nhat-em.png'
 import { countdown, isUnlocked } from '../lib/unlock'
+import { GiftLetter } from './GiftLetter'
 
 export type Modal = { kind: 'gift'; i: number } | { kind: 'memory'; id: string; i?: number } | null
 
@@ -30,7 +31,7 @@ export function PaperFilter() {
   )
 }
 
-function Stamp({ tilt = 4 }: { tilt?: number }) {
+export function Stamp({ tilt = 4 }: { tilt?: number }) {
   return (
     <svg className="lt-stamp" viewBox="0 0 70 84" style={{ transform: `rotate(${tilt}deg)` }} aria-hidden>
       <rect x="3" y="3" width="64" height="78" fill="#efe0b6" stroke="#8a2a22" strokeWidth="1.6" strokeDasharray="3 2.4" />
@@ -42,7 +43,7 @@ function Stamp({ tilt = 4 }: { tilt?: number }) {
   )
 }
 
-function Postmark({ text }: { text: string }) {
+export function Postmark({ text }: { text: string }) {
   return (
     <svg className="lt-postmark" viewBox="0 0 120 120" aria-hidden>
       <g fill="none" stroke="#3a4a6a" strokeWidth="2" opacity=".62">
@@ -83,7 +84,7 @@ function iconFor(id: string) {
   return <OrnamentIcon kind={id} />
 }
 
-function Reply({ id }: { id: number }) {
+export function Reply({ id }: { id: number }) {
   const key = `note${id}`
   const [v, setV] = useState(() => store.get<string>(key, ''))
   const [done, setDone] = useState(false)
@@ -106,7 +107,7 @@ function Reply({ id }: { id: number }) {
 }
 
 /** Mã QR quà 8/1 (ảnh Long gửi, giữ nguyên điểm ảnh). Nền trắng đủ rộng để quét; có nút lưu ảnh vì không quét được màn hình của chính máy mình. */
-function Qr({ label }: { label?: string }) {
+export function Qr({ label }: { label?: string }) {
   return (
     <div className="lt-qr">
       <img src={qrSrc} width={450} height={450} alt="Mã QR quà sinh nhật" draggable={false} />
@@ -164,6 +165,9 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
   const open = !!g && !locked
   const wide = (g && open && g.kind !== 'plain') || !!m
   const body = g ? g.body.map((t, i) => <p className="hand" key={i}>{t}</p>) : null
+
+  // quà: phong bì 3D xoay được, bóc con dấu sáp rồi đọc thư (xem GiftLetter.tsx)
+  if (modal.kind === 'gift' && g) return createPortal(<GiftLetter g={g} locked={locked} cd={cd} closing={closing} onClose={onClose} />, document.body)
 
   // đưa ra <body>: các lớp cảnh có will-change/transform làm `position: fixed` bám theo lớp đó thay vì màn hình, lá thư bị đẩy ra ngoài tầm nhìn
   return createPortal(
