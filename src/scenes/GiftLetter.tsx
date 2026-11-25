@@ -1,7 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { treeText, type gifts } from '../content/content'
 import { sfx } from '../lib/audio'
-import { reducedMotion } from '../lib/device'
+import { isLite, reducedMotion } from '../lib/device'
+import type { EnvGL } from './envelopeGL'
 import { rng } from '../lib/sketch'
 import { Doodle, Flourish, Sketch, type SketchStroke } from '../components/Sketch'
 import { Postmark, Qr, Reply, Stamp } from './Letter'
@@ -158,6 +159,10 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
   const timers = useRef<number[]>([])
   const a = useRef({ rx: -6, ry: -14, vx: 0, vy: 0, drag: false, lx: 0, ly: 0, lt: 0, idle: 0, tgt: null as number | null })
   const [written, setWritten] = useState(false)
+  // phong bì WebGL (three.js) khi máy hỗ trợ và không ở chế độ nhẹ; ngược lại dùng phong bì CSS 3D
+  const [glMode, setGlMode] = useState<'pending' | 'on' | 'off'>('pending')
+  const glRef = useRef<EnvGL | null>(null)
+  const glHost = useRef<HTMLDivElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const quillRef = useRef<HTMLDivElement>(null)
   const hold = useRef({ on: false, t0: 0, raf: 0, back: 0, p: 0 })
@@ -189,9 +194,14 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
       const sway = calm || st !== 'closed' ? 0 : Math.sin(t / 1700) * 2.2
       if (rig.current) rig.current.style.transform = `rotateX(${(s.rx + sway * 0.4).toFixed(2)}deg) rotateY(${(s.ry + sway).toFixed(2)}deg)`
       // nút bắt chuột nằm ngoài khối 3D (dò chuột trong 3D không đáng tin), bám theo vị trí con dấu trên màn hình, chỉ nhận chuột khi con dấu quay mặt về phía người xem
-      const sv = sealRef.current, hb = hitRef.current
-      if (sv && hb) {
-        const r = sv.getBoundingClientRect(), ang = ((s.ry % 360) + 360) % 360
+      const gl = glRef.current
+      if (gl) gl.setRot(s.rx + sway * 0.4, s.ry + sway)
+      const hb = hitRef.current
+      let r: { left: number; top: number; width: number; height: number } | null = null
+      if (gl) { const q = gl.sealRect(); r = q ? { left: q.x - q.w / 2, top: q.y - q.h / 2, width: q.w, height: q.h } : null }
+      else { const sv = sealRef.current; r = sv ? sv.getBoundingClientRect() : null }
+      if (r && hb) {
+        const ang = ((s.ry % 360) + 360) % 360
         hb.style.transform = `translate(${r.left.toFixed(1)}px, ${r.top.toFixed(1)}px)`; hb.style.width = `${r.width.toFixed(1)}px`; hb.style.height = `${r.height.toFixed(1)}px`
         hb.style.pointerEvents = st === 'closed' && (ang < 62 || ang > 298) && !s.drag ? 'auto' : 'none'
       }
@@ -199,6 +209,19 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
   }, [calm])
+  useEffect(() => {
+    let dead = false
+    let inst: EnvGL | null = null
+    const ok = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')) } catch { return false } })()
+    if (!ok || isLite() || !glHost.current) { setGlMode('off'); return }
+    import('./envelopeGL')
+      .then((m) => m.createEnvelopeGL({ host: glHost.current!, stamp: g.stamp, label: 'Gửi người thương', to: 'Khánh Hạ', from: 'Long' }))
+      .then((e) => { if (dead) { e.dispose(); return } inst = e; glRef.current = e; setGlMode('on') })
+      .catch(() => { if (!dead) setGlMode('off') })
+    return () => { dead = true; glRef.current = null; inst?.dispose() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useEffect(() => { glRef.current?.stage(stage) }, [stage, glMode])
   useEffect(() => () => { timers.current.forEach(clearTimeout); cancelAnimationFrame(hold.current.raf); cancelAnimationFrame(hold.current.back) }, [])
 
   const later = (f: () => void, ms: number) => { timers.current.push(window.setTimeout(f, ms)) }
@@ -221,7 +244,7 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
 
   const crack = () => {
     const el = sealRef.current
-    if (el) {
+    if (el && !glRef.current) {
       const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2
       setFrags(Array.from({ length: 16 }, (_, i) => ({ id: i, x: cx, y: cy, dx: (Math.random() - 0.5) * 280, dy: -(40 + Math.random() * 130), rot: (Math.random() - 0.5) * 600, s: 5 + Math.random() * 9, d: Math.random() * 0.1 })))
     }
@@ -232,11 +255,11 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
     later(() => { setStage('out'); sfx.rustle(0.7, 0.4) }, 1500)
     later(() => { setStage('read'); sfx.sparkle() }, 3000)
   }
-  const setHoldVar = (p: number) => sealRef.current?.style.setProperty('--hold', String(p))
+  const setHoldVar = (p: number) => { sealRef.current?.style.setProperty('--hold', String(p)); hitRef.current?.style.setProperty('--hold', String(p)); glRef.current?.setHold(p) }
   const startHold = (e: React.PointerEvent | React.KeyboardEvent) => {
     e.stopPropagation()
     if (stageRef.current !== 'closed' || hold.current.on) return
-    if (locked) { setShake((n) => n + 1); sfx.thud(0.35); return }
+    if (locked) { setShake((n) => n + 1); glRef.current?.shake(); sfx.thud(0.35); return }
     const h = hold.current; cancelAnimationFrame(h.back); h.on = true; h.t0 = performance.now(); setHolding(true); sfx.rustle(0.5, 0.25)
     if ('pointerId' in e) (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     const step = (t: number) => {
@@ -260,7 +283,7 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
     if (stage !== 'read' || calm) return
     const p = paper.current, l = letter3d.current
     if (!p || !l) return
-    const r0 = l.getBoundingClientRect(), r1 = p.getBoundingClientRect()
+    const r0 = glRef.current?.letterRect() ?? l.getBoundingClientRect(), r1 = p.getBoundingClientRect()
     if (!r0.width || !r1.width) return
     p.animate([
       { transformOrigin: '0 0', transform: `translate(${r0.left - r1.left}px, ${r0.top - r1.top}px) scale(${r0.width / r1.width}, ${r0.height / r1.height})`, opacity: 0 },
@@ -283,10 +306,11 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
   return (
     <div className={`tr-modal vm${closing ? ' closing' : ''}`} data-stage={stage} data-lenis-prevent onClick={onClose}>
       <div className="vm-rigwrap">
-        <i className="vm-ground" aria-hidden />
+        <div ref={glHost} className="vm-gl" aria-hidden />
+        {glMode === 'off' && <i className="vm-ground" aria-hidden />}
         <div className="vm-hit" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={(e) => e.stopPropagation()}>
           <div className="vm-rig" ref={rig}>
-            <div className="vm-env">
+            <div className={`vm-env${glMode === 'off' ? '' : ' gl-hide'}`}>
               <div className="vm-face vm-seal-face">
                 <Sketch className="sk-env" r={3} strokes={ENV_STROKES} />
                 <svg className="vm-folds" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden><path d="M0 0 L50 58 L0 100 Z" /><path d="M100 0 L50 58 L100 100 Z" /><path d="M0 100 L50 58 L100 100 Z" /></svg>
@@ -320,7 +344,9 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
       <button ref={hitRef} type="button" className="vm-sealhit" tabIndex={stage === 'closed' ? 0 : -1}
         aria-label={locked ? 'Con dấu sáp, chưa tới giờ bóc' : 'Giữ để bóc con dấu sáp'}
         onPointerDown={startHold} onPointerUp={endHold} onPointerCancel={endHold} onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); startHold(e) } }} onKeyUp={(e) => { if (e.key === 'Enter' || e.key === ' ') endHold() }} />
+        onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); startHold(e) } }} onKeyUp={(e) => { if (e.key === 'Enter' || e.key === ' ') endHold() }}>
+        {glMode === 'on' && <svg viewBox="0 0 100 100" className="vm-ring" aria-hidden><circle cx="50" cy="50" r="47" pathLength={1} /></svg>}
+      </button>
 
       {stage === 'closed' && (
         <>
@@ -350,7 +376,6 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
           <div className="vl-wrap" ref={wrapRef} onClick={(e) => { e.stopPropagation(); if (!written) window.dispatchEvent(new Event('olcw:skipwrite')) }} role="dialog" aria-label={g.title}>
             <div className="vl-paper" ref={paper} style={{ clipPath: clip }}>
               <Doodle kind="scroll" size={26} seed={11} delay={0.9} className="vl-corner tl" />
-              <Doodle kind="scroll" size={26} seed={12} delay={1.1} className="vl-corner br" />
               <div className="lt-body">
                 <div className="vl-date">{g.stamp}</div>
                 <h2>{g.title}</h2>

@@ -119,7 +119,6 @@ export function Reply({ id }: { id: number }) {
         <a className="lt-btn primary" href={href}>{treeText.send}</a>
         <button className="lt-btn" onClick={copy} type="button">{done ? treeText.copied : treeText.copy}</button>
       </div>
-      <p className="lt-small">{treeText.sendHint}<br />Email nhận: <span className="lt-sel">{LONG_EMAIL}</span></p>
     </div>
   )
 }

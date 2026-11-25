@@ -1199,3 +1199,8 @@ html.modal-open { overflow: hidden !important; overscroll-behavior: none; }
 
 /* đoạn đầu ôm trọn chữ cái đầu trang trí để đoạn sau không bị thụt vào cạnh nó */
 .hw-p:first-child { overflow: hidden; }
+
+/* phong bì WebGL: canvas phủ toàn màn hình phía sau; bản CSS 3D chỉ giữ chỗ (ẩn) hoặc làm dự phòng */
+.vm-gl { position: absolute; inset: 0; pointer-events: none; }
+.vm-env.gl-hide { visibility: hidden; }
+.vm-sealhit .vm-ring { left: -14%; top: -14%; width: 128%; height: 128%; }

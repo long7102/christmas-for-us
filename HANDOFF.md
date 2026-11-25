@@ -295,3 +295,9 @@ npx tsc -b        # kiểm tra kiểu
 - Giấy: `--vaged` (vết ố trà, vòng ố, đốm nâu li ti), góc cháy xém (`.vl-paper::before`), mép răng cưa gồ ghề hơn (`deckle()`); `--vpaper` đổi sang tông vàng ố sẫm, dùng cho cả phong bì.
 - Chữ cái đầu trang trí (`.hw-drop`, Playfair đỏ thẫm), đường kẻ hoa văn dưới tiêu đề (`Flourish`), hoa văn góc (`Doodle scroll`), bút lông vẽ lại có cán và đầu vót dính mực (`Quill`), lọ mực (`Inkwell`, chỉ hiện ở màn >= 980px).
 - Chưa kiểm bằng mắt trên máy thật.
+
+### Phong bì WebGL (three.js) thay cho CSS 3D, bỏ dòng email, bỏ hoa văn đè nút Đóng
+- Long chê phong bì CSS "hoạt ảnh rẻ tiền" và muốn giống dearr.app (ánh sáng, bóng, giấy có vân, sáp nổi khối). Đã dựng `src/scenes/envelopeGL.ts` bằng three.js 0.187 (import động, chỉ tải khi mở một quà): giấy sinh bằng mã (`paper()`: vết ố, sợi, đốm, bump), phong bì là `BoxGeometry` có độ dày, nắp tam giác có bản lề (`flap`), con dấu sáp `ExtrudeGeometry` + `MeshPhysicalMaterial` (clearcoat, bump chữ L♥H), vết nứt/vết sáp, mảnh vỡ có trọng lực, tờ thư trượt ra, đèn ấm + bóng đổ mềm (`ShadowMaterial`).
+- `GiftLetter.tsx`: `glMode` ('pending' | 'on' | 'off'). Có WebGL và KHÔNG ở chế độ nhẹ -> dùng WebGL (CSS env bị ẩn bằng `.gl-hide`, vẫn giữ chỗ làm vùng kéo); ngược lại dùng phong bì CSS cũ làm dự phòng. Góc quay, vòng giữ con dấu, giai đoạn mở thư vẫn do GiftLetter điều khiển (`gl.setRot/setHold/stage/shake`). Nút bắt chuột `.vm-sealhit` bám theo `gl.sealRect()` (con dấu chiếu lên màn hình); FLIP dùng `gl.letterRect()`.
+- Đã xoá dòng "Bấm Gửi cho anh ... Email nhận: ..." trong thư (cũng bỏ lộ địa chỉ email trên màn hình; nút gửi vẫn dùng mailto) và hoa văn góc dưới phải (đè nút Đóng).
+- CHƯA kiểm bằng mắt, CHƯA triển khai: môi trường thử chạy WebGL bằng SwiftShader rất chậm. Cần kiểm: bố cục/ánh sáng, con dấu, nắp mở đúng chiều, thư trượt ra, bóng đổ, hiệu năng trên điện thoại thật.
