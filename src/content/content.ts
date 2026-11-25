@@ -1,9 +1,10 @@
 /** Nội dung cá nhân. Các cảnh sau sẽ được thêm lại từng cảnh một. */
 export const HER_NAME = 'Khánh Hạ'
 
-/** SHA-256 của mật khẩu (không lưu mật khẩu dạng chữ). */
-/** Chế độ xem trước của Long: mở trang với ?xem=<mã> thì mọi quà tự mở khoá để kiểm nội dung (chỉ lưu bản băm SHA-256 của mã). Xem HANDOFF. */
+/** Chế độ xem trước của Long: mở trang với ?xem=<mã> thì mọi quà tự mở khoá để kiểm nội dung (chỉ lưu bản băm SHA-256 của mã). Chỉ là tiện ích cho chủ trang, KHÔNG phải bảo vệ thật. Xem HANDOFF. */
 export const PREVIEW_HASH = '808f3e76f3f08013479a1cfb8a3f1578d5d2595ac04367e89b3653ff0cc4db24'
+
+/** SHA-256 của mật khẩu (không lưu mật khẩu dạng chữ). */
 export const PASSWORD_HASH = 'd516a567d213abaeb7b8550a7f5d3e4d07b58693e187ddd9442d4886e0042a82'
 
 export const content = {

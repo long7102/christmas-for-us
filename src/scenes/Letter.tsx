@@ -150,15 +150,6 @@ function Corner({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
   )
 }
 
-function Seal({ mark }: { mark: string }) {
-  return (
-    <div className="lt-seal" aria-hidden>
-      <svg viewBox="0 0 64 64"><path d="M32 2c7 0 9 6 15 6 6 0 9 5 8 11 5 4 8 8 5 14 3 6 0 11-6 14-1 7-6 10-12 9-5 5-10 5-14 0-6 1-11-2-12-9-6-3-9-8-6-14-3-6 0-10 5-14-1-6 2-11 8-11 6 0 8-6 15-6z" fill="url(#sealg)" /><defs><radialGradient id="sealg" cx=".35" cy=".3" r=".8"><stop offset="0" stopColor="#d64a40" /><stop offset=".6" stopColor="#a5251f" /><stop offset="1" stopColor="#6c1411" /></radialGradient></defs></svg>
-      <span>{mark}</span>
-    </div>
-  )
-}
-
 export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal>; onClose: () => void }) {
   const [, tick] = useState(0)
   const [closing, setClosing] = useState(false)
@@ -180,9 +171,6 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
   const locked = g ? !isUnlocked(g.unlockAt) : false
   const cd = g && locked ? countdown(g.unlockAt) : null
   const title = g ? g.title : m!.title
-  const open = !!g && !locked
-  const wide = (g && open && g.kind !== 'plain') || !!m
-  const body = g ? g.body.map((t, i) => <p className="hand" key={i}>{t}</p>) : null
 
   // quà: phong bì 3D xoay được, bóc con dấu sáp rồi đọc thư (xem GiftLetter.tsx)
   if (modal.kind === 'gift' && g) return createPortal(<GiftLetter g={g} locked={locked} cd={cd} closing={closing} onClose={onClose} />, document.body)
@@ -190,35 +178,16 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
   // đưa ra <body>: các lớp cảnh có will-change/transform làm `position: fixed` bám theo lớp đó thay vì màn hình, lá thư bị đẩy ra ngoài tầm nhìn
   return createPortal(
     <div className={`tr-modal${closing ? ' closing' : ''}`} data-lenis-prevent onClick={onClose}>
-      <div className={`lt-sheet ${m ? 'memory' : 'gift'} ${wide ? 'wide' : ''}`} data-paper={g ? `g${g.id}` : modal.kind === 'memory' ? paperFor(modal.id) : ''} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
+      <div className="lt-sheet memory wide" data-paper={modal.kind === 'memory' ? paperFor(modal.id) : ''} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
         <div className="lt-paper" />
         <div className="lt-deco" />
-        {g && <Postmark text={g.stamp} />}
-        <Stamp tilt={g ? 4 : -5} />
-        {g ? <Seal mark="L♥H" /> : <i className="lt-pin" />}
+        <Stamp tilt={-5} />
+        <i className="lt-pin" />
         <div className="lt-frame" />
         <Corner pos="tl" /><Corner pos="br" />
-        {g && open && <div className="lt-sparkles" aria-hidden>{Array.from({ length: 9 }, (_, i) => <i key={i} style={{ left: `${(i * 37 + 8) % 96}%`, top: `${(i * 53 + 5) % 92}%`, animationDelay: `-${(i * 0.43).toFixed(2)}s` }}>✦</i>)}</div>}
         <div className="lt-body">
           <h2>{title}</h2>
           <div className="lt-rule" aria-hidden />
-          {cd && (
-            <>
-              <p>{treeText.locked}</p>
-              <div className="lt-clock" role="timer" aria-label={`Còn ${cd.d} ngày ${cd.h} giờ ${cd.m} phút ${cd.s} giây`}>
-                {([['ngày', cd.d], ['giờ', cd.h], ['phút', cd.m], ['giây', cd.s]] as const).map(([u, v]) => (
-                  <div key={u}><b>{String(v).padStart(2, '0')}</b><span>{u}</span></div>
-                ))}
-              </div>
-            </>
-          )}
-          {g && open && g.kind === 'plain' && (g.body.length === 0 ? <p className="hand">{treeText.empty}</p> : body)}
-          {g && open && g.kind !== 'plain' && (
-            <div className="lt-cols">
-              <div className="lt-col">{body}</div>
-              <div className="lt-col">{g.kind === 'reply' ? <Reply id={g.id} /> : <Qr label={g.extra} />}</div>
-            </div>
-          )}
           {m && (
             <div className="lt-cols">
               <div className="lt-col lt-left">

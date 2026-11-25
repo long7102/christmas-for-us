@@ -77,7 +77,7 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
   const paper = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
   const a = useRef({ rx: -6, ry: -14, vx: 0, vy: 0, drag: false, lx: 0, ly: 0, lt: 0, idle: 0, tgt: null as number | null })
-  const hold = useRef({ on: false, t0: 0, raf: 0, p: 0 })
+  const hold = useRef({ on: false, t0: 0, raf: 0, back: 0, p: 0 })
   const calm = reducedMotion()
   const clip = useMemo(() => deckle(g.id * 7 + 3), [g.id])
 
@@ -116,7 +116,7 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
   }, [calm])
-  useEffect(() => () => { timers.current.forEach(clearTimeout); cancelAnimationFrame(hold.current.raf) }, [])
+  useEffect(() => () => { timers.current.forEach(clearTimeout); cancelAnimationFrame(hold.current.raf); cancelAnimationFrame(hold.current.back) }, [])
 
   const later = (f: () => void, ms: number) => { timers.current.push(window.setTimeout(f, ms)) }
 
@@ -154,7 +154,7 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
     e.stopPropagation()
     if (stageRef.current !== 'closed' || hold.current.on) return
     if (locked) { setShake((n) => n + 1); sfx.thud(0.35); return }
-    const h = hold.current; h.on = true; h.t0 = performance.now(); setHolding(true); sfx.rustle(0.5, 0.25)
+    const h = hold.current; cancelAnimationFrame(h.back); h.on = true; h.t0 = performance.now(); setHolding(true); sfx.rustle(0.5, 0.25)
     if ('pointerId' in e) (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     const step = (t: number) => {
       if (!h.on) return
@@ -168,8 +168,8 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
     const h = hold.current
     if (!h.on) return
     h.on = false; cancelAnimationFrame(h.raf); setHolding(false)
-    const back = () => { h.p = Math.max(0, h.p - 0.06); setHoldVar(h.p); if (h.p > 0) h.raf = requestAnimationFrame(back) }
-    h.raf = requestAnimationFrame(back)
+    const back = () => { h.p = Math.max(0, h.p - 0.06); setHoldVar(h.p); if (h.p > 0) h.back = requestAnimationFrame(back) }
+    h.back = requestAnimationFrame(back)
   }
 
   // tờ thư bay từ vị trí trong phong bì ra tờ giấy đọc (FLIP): phóng lớn dần như bay về phía người xem

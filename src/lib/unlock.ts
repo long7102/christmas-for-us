@@ -8,7 +8,16 @@ export function now(): number {
 }
 /** Chế độ xem trước của Long: nhớ trong localStorage, bật bằng ?xem=<mã>, tắt bằng ?xem=off hoặc nút "Thoát". */
 const PREVIEW_KEY = 'olcw:preview'
-export function previewOn(): boolean { try { return localStorage.getItem(PREVIEW_KEY) === '1' } catch { return false } }
+/** Cờ xem trước chỉ là tiện ích cho chủ trang (không phải bảo vệ thật) nên tự hết hạn sau 2 giờ, tránh nằm lại trên máy người khác. */
+const PREVIEW_TTL = 2 * 3600 * 1000
+export function previewOn(): boolean {
+  try {
+    const t = Number(localStorage.getItem(PREVIEW_KEY))
+    if (t > 0 && Date.now() - t < PREVIEW_TTL) return true
+    localStorage.removeItem(PREVIEW_KEY)
+  } catch { /* bỏ qua */ }
+  return false
+}
 export async function initPreview(): Promise<void> {
   const code = new URLSearchParams(location.search).get('xem')
   if (code === null) return
@@ -16,10 +25,14 @@ export async function initPreview(): Promise<void> {
     if (code === 'off') { localStorage.removeItem(PREVIEW_KEY); return }
     const { sha256 } = await import('./hash')
     const { PREVIEW_HASH } = await import('../content/content')
-    if ((await sha256(code)) === PREVIEW_HASH) localStorage.setItem(PREVIEW_KEY, '1')
+    if ((await sha256(code)) === PREVIEW_HASH) localStorage.setItem(PREVIEW_KEY, String(Date.now()))
   } catch { /* bỏ qua */ }
 }
-export function exitPreview() { try { localStorage.removeItem(PREVIEW_KEY) } catch { /* bỏ qua */ } location.href = location.pathname }
+export function exitPreview() {
+  try { localStorage.removeItem(PREVIEW_KEY) } catch { /* bỏ qua */ }
+  const u = new URL(location.href); u.searchParams.delete('xem')
+  if (u.href === location.href) location.reload(); else location.href = u.href
+}
 export const isUnlocked = (iso: string) => previewOn() || now() >= Date.parse(iso)
 export function countdown(iso: string) {
   let s = Math.max(0, Math.floor((Date.parse(iso) - now()) / 1000))

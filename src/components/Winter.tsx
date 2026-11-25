@@ -60,8 +60,6 @@ export function Holly({ flip = false }: { flip?: boolean }) {
         const vx = l.len * (0.12 + k * 0.15)
         for (const s of [-1, 1]) veins.push(poly(place([[vx, 0], [vx + l.len * 0.07, s * l.wd * 0.32], [vx + l.len * 0.15, s * l.wd * 0.58]], l.a, l.x, l.y)))
       }
-      const shade = hatch(0, 0, 0, 0, 0, 0, 1)
-      void shade
       return { fill: poly(placed) + 'Z', ink: inkOutline(placed.concat(placed.slice(0, 2)), 1.7, l.seed, false), veins: veins.join('') }
     })
     const berries = ([[19, 55, 7], [30, 62, 6.5], [24, 46, 6.2]] as [number, number, number][]).map(([x, y, r], i) => ({ x, y, r, ink: inkOutline(Array.from({ length: 14 }, (_, k) => [x + r * Math.cos((k / 12) * 6.283 + i), y + r * Math.sin((k / 12) * 6.283 + i)] as Pt), 1.3, 9 + i, false) }))

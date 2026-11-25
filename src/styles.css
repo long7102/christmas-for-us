@@ -1139,4 +1139,6 @@ html.modal-open { overflow: hidden !important; overscroll-behavior: none; }
 .lt-cameo > svg.sk { position: absolute; z-index: 0; inset: -2px; width: calc(100% + 4px); height: calc(100% + 4px); }
 .sk-cameo { color: var(--line, #6a4a26); }
 .lt-cameo .ic { filter: url(#ic-sketch); }
+/* bộ lọc nặng chạy lại mỗi khung hình nên dừng hoạt ảnh của hình khi đang lọc (chế độ nhẹ bỏ lọc và giữ hoạt ảnh) */
+:root:not(.lite) .lt-cameo .ic, :root:not(.lite) .lt-cameo .ic * { animation: none !important; }
 .lite .lt-cameo .ic { filter: none; }

@@ -6,12 +6,16 @@ import { isLite, reducedMotion } from './device'
 
 const ptr = { x: -9999, y: -9999, on: false }
 let started = false
+let rectVer = 0
+const rects = new WeakMap<HTMLElement, { v: number; r: DOMRect }>()
 
 export function trackPointer() {
   if (started) return
   started = true
   addEventListener('pointermove', (e) => { if (e.pointerType === 'touch') return; ptr.x = e.clientX; ptr.y = e.clientY; ptr.on = true }, { passive: true })
   document.documentElement.addEventListener('pointerleave', () => { ptr.on = false })
+  const bump = () => { rectVer++ }
+  addEventListener('scroll', bump, { passive: true }); addEventListener('resize', bump)
 }
 
 /** Có nên cho hạt phản ứng với con trỏ không (gọi một lần lúc dựng hiệu ứng). */
@@ -23,8 +27,10 @@ export function pointerReactive() {
 
 /** Toạ độ con trỏ trong hệ toạ độ của canvas (rộng cw, cao ch), hoặc null khi không có chuột. */
 export function pointerIn(cv: HTMLElement, cw: number, ch: number): { x: number; y: number } | null {
-  if (!ptr.on) return null
-  const r = cv.getBoundingClientRect()
+  if (!ptr.on || isLite()) return null
+  let c = rects.get(cv)
+  if (!c || c.v !== rectVer) { c = { v: rectVer, r: cv.getBoundingClientRect() }; rects.set(cv, c) }
+  const r = c.r
   if (!r.width || !r.height) return null
   return { x: ((ptr.x - r.left) * cw) / r.width, y: ((ptr.y - r.top) * ch) / r.height }
 }
