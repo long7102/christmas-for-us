@@ -3,7 +3,7 @@ import { treeText, type gifts } from '../content/content'
 import { sfx } from '../lib/audio'
 import { reducedMotion } from '../lib/device'
 import { rng } from '../lib/sketch'
-import { Flourish, Sketch, type SketchStroke } from '../components/Sketch'
+import { Doodle, Flourish, Sketch, type SketchStroke } from '../components/Sketch'
 import { Postmark, Qr, Reply, Stamp } from './Letter'
 
 type Gift = (typeof gifts)[number]
@@ -20,10 +20,10 @@ const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 /** Mép giấy răng cưa của tờ thư: đa giác có độ lệch cố định (không đổi giữa các lần mở). */
 function deckle(seed: number) {
   const r = rng(seed), pts: string[] = [], n = 30, m = 40
-  for (let i = 0; i <= n; i++) pts.push(`${((i / n) * 100).toFixed(2)}% ${(r() * 0.5).toFixed(2)}%`)
-  for (let i = 1; i <= m; i++) pts.push(`${(100 - r() * 0.55).toFixed(2)}% ${((i / m) * 100).toFixed(2)}%`)
-  for (let i = n - 1; i >= 0; i--) pts.push(`${((i / n) * 100).toFixed(2)}% ${(100 - r() * 0.5).toFixed(2)}%`)
-  for (let i = m - 1; i > 0; i--) pts.push(`${(r() * 0.55).toFixed(2)}% ${((i / m) * 100).toFixed(2)}%`)
+  for (let i = 0; i <= n; i++) pts.push(`${((i / n) * 100).toFixed(2)}% ${(r() * (r() < 0.12 ? 1.7 : 0.85)).toFixed(2)}%`)
+  for (let i = 1; i <= m; i++) pts.push(`${(100 - r() * (r() < 0.12 ? 1.2 : 0.6)).toFixed(2)}% ${((i / m) * 100).toFixed(2)}%`)
+  for (let i = n - 1; i >= 0; i--) pts.push(`${((i / n) * 100).toFixed(2)}% ${(100 - r() * (r() < 0.12 ? 1.7 : 0.85)).toFixed(2)}%`)
+  for (let i = m - 1; i > 0; i--) pts.push(`${(r() * (r() < 0.12 ? 1.2 : 0.6)).toFixed(2)}% ${((i / m) * 100).toFixed(2)}%`)
   return `polygon(${pts.join(',')})`
 }
 
@@ -55,14 +55,43 @@ function WaxSeal() {
 }
 
 function Quill() {
+  const u = useId().replace(/[^a-zA-Z0-9]/g, '')
   return (
     <svg viewBox="0 0 90 300" className="vl-quill" aria-hidden>
-      <path d="M62 4C30 40 20 110 30 190 34 216 46 232 58 250 64 200 80 120 76 56 74 30 70 14 62 4z" fill="#d9d2bf" stroke="#4a4130" strokeWidth="1.4" />
-      <path d="M62 4C58 80 52 170 58 250" fill="none" stroke="#4a4130" strokeWidth="1.8" />
-      <g stroke="#4a4130" strokeWidth=".7" opacity=".7" fill="none">
-        {Array.from({ length: 22 }, (_, i) => <path key={i} d={`M${60 - i * 0.2} ${24 + i * 9}L${34 + i * 0.5} ${34 + i * 9}M${60 - i * 0.2} ${24 + i * 9}L${76 - i * 0.3} ${32 + i * 9}`} />)}
+      <defs>
+        <linearGradient id={`${u}v`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#cdbd96" /><stop offset=".5" stopColor="#f1e8d2" /><stop offset="1" stopColor="#c4b28a" /></linearGradient>
+        <linearGradient id={`${u}c`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#eadfbf" /><stop offset=".6" stopColor="#b39460" /><stop offset="1" stopColor="#6a4a24" /></linearGradient>
+      </defs>
+      <path d="M62 4C30 40 20 110 30 190 34 216 46 232 58 250 64 200 80 120 76 56 74 30 70 14 62 4z" fill={`url(#${u}v)`} stroke="#5a4630" strokeWidth="1.1" strokeLinejoin="round" />
+      <g stroke="#6a563a" strokeWidth=".6" fill="none" opacity=".8">
+        {Array.from({ length: 30 }, (_, i) => { const y = 16 + i * 7.6, x = 62 - Math.min(5, i * 0.2); return <path key={i} d={`M${x} ${y}L${x - 24 + Math.abs(i - 14) * 0.5 - (i % 3) * 2} ${y + 11}M${x} ${y}L${x + 14 - Math.abs(i - 14) * 0.3 + (i % 2) * 2} ${y + 9}`} /> })}
       </g>
-      <path d="M58 250L54 296" stroke="#4a4130" strokeWidth="3" strokeLinecap="round" />
+      <path d="M71 64 63 82 74 80 66 100" fill="none" stroke="#5a4630" strokeWidth=".9" opacity=".7" />
+      <path d="M62 4C58 80 52 170 58 250" fill="none" stroke="#4a3a24" strokeWidth="2.3" strokeLinecap="round" />
+      <path d="M55 248 61 248 56.5 290 53.5 296 53 290Z" fill={`url(#${u}c)`} stroke="#3a2a16" strokeWidth=".9" strokeLinejoin="round" />
+      <path d="M53.2 284 56.6 284 56.4 291 53.8 296 53 290Z" fill="#120a05" />
+    </svg>
+  )
+}
+
+/** Lọ mực thuỷ tinh có nút bần, đặt cạnh tờ thư. */
+function Inkwell() {
+  const u = useId().replace(/[^a-zA-Z0-9]/g, '')
+  return (
+    <svg viewBox="0 0 70 84" className="vl-inkwell" aria-hidden>
+      <defs>
+        <linearGradient id={`${u}g`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#3a2a1c" /><stop offset=".45" stopColor="#1a120b" /><stop offset="1" stopColor="#0b0705" /></linearGradient>
+        <linearGradient id={`${u}k`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#a8854e" /><stop offset=".5" stopColor="#caa86c" /><stop offset="1" stopColor="#8c6a38" /></linearGradient>
+      </defs>
+      <ellipse cx="35" cy="78" rx="30" ry="5" fill="#000" opacity=".35" />
+      <path d="M10 44Q10 32 22 32H48Q60 32 60 44V68Q60 78 50 78H20Q10 78 10 68Z" fill={`url(#${u}g)`} stroke="#5a4630" strokeWidth="1.2" />
+      <path d="M14 46Q14 38 22 37" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity=".28" />
+      <rect x="25" y="20" width="20" height="14" rx="2" fill={`url(#${u}g)`} stroke="#5a4630" strokeWidth="1" />
+      <rect x="22" y="30" width="26" height="5" rx="2" fill="#2a1c10" stroke="#5a4630" strokeWidth=".9" />
+      <rect x="28" y="4" width="14" height="18" rx="2" fill={`url(#${u}k)`} stroke="#4a3216" strokeWidth="1" />
+      <path d="M29 9H41M29 14H41" stroke="#4a3216" strokeWidth=".7" opacity=".6" />
+      <rect x="20" y="50" width="30" height="18" fill="#e4d4ac" stroke="#6a4a24" strokeWidth=".9" />
+      <path d="M24 56H46M24 61H42" stroke="#6a4a24" strokeWidth=".8" opacity=".7" />
     </svg>
   )
 }
@@ -102,7 +131,7 @@ function Handwrite({ paras, delay, instant, onDone, onNib }: { paras: string[]; 
     <div ref={box} className="hw">
       {paras.map((t, pi) => (
         <p className="hand hw-p" key={pi} aria-label={t}>
-          {Array.from(t).map((ch, ci) => { const on = k++ < n; return <span key={ci} className={`hw-c${on ? ' on' : ''}`} aria-hidden>{ch}</span> })}
+          {Array.from(t).map((ch, ci) => { const on = k++ < n; return <span key={ci} className={`hw-c${on ? ' on' : ''}${pi === 0 && ci === 0 ? ' hw-drop' : ''}`} aria-hidden>{ch}</span> })}
         </p>
       ))}
     </div>
@@ -320,10 +349,12 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
         <div className="vl-scroll">
           <div className="vl-wrap" ref={wrapRef} onClick={(e) => { e.stopPropagation(); if (!written) window.dispatchEvent(new Event('olcw:skipwrite')) }} role="dialog" aria-label={g.title}>
             <div className="vl-paper" ref={paper} style={{ clipPath: clip }}>
+              <Doodle kind="scroll" size={26} seed={11} delay={0.9} className="vl-corner tl" />
+              <Doodle kind="scroll" size={26} seed={12} delay={1.1} className="vl-corner br" />
               <div className="lt-body">
                 <div className="vl-date">{g.stamp}</div>
                 <h2>{g.title}</h2>
-                <div className="lt-rule" aria-hidden />
+                <Flourish className="vl-fl" delay={0.8} />
                 {g.kind === 'plain' && <Handwrite paras={paras} delay={calm ? 0 : 900} instant={calm} onDone={() => setWritten(true)} onNib={nib} />}
                 {g.kind !== 'plain' && (
                   <div className="lt-cols">
@@ -336,6 +367,7 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
             </div>
             <div ref={quillRef} className="hw-quill" aria-hidden><Quill /></div>
             <div className={`vl-rest${written ? ' on' : ''}`} aria-hidden><Quill /></div>
+            <div className={`vl-ink${written ? ' on' : ''}`} aria-hidden><Inkwell /></div>
           </div>
         </div>
       )}

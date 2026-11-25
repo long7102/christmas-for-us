@@ -1164,3 +1164,35 @@ html.modal-open { overflow: hidden !important; overscroll-behavior: none; }
 .vl-rest.on { opacity: 1; }
 @media (min-width: 980px) { .vl-rest { display: block; } }
 @media (prefers-reduced-motion: reduce) { .hw-c.on { animation: none; } }
+
+/* ===== Cổ hơn: giấy ngả màu, chữ thư pháp, chữ cái đầu trang trí, bút lông thật, lọ mực ===== */
+:root {
+  --vaged: radial-gradient(circle at 22% 18%, rgba(120, 76, 28, .22), rgba(120, 76, 28, 0) 15%), radial-gradient(circle at 80% 30%, rgba(110, 70, 26, .17), rgba(110, 70, 26, 0) 10%),
+    radial-gradient(circle at 64% 84%, rgba(120, 76, 28, .24), rgba(120, 76, 28, 0) 17%), radial-gradient(circle at 12% 76%, rgba(100, 64, 22, .2), rgba(100, 64, 22, 0) 12%),
+    radial-gradient(circle at 70% 56%, rgba(0, 0, 0, 0) 0 40px, rgba(120, 76, 28, .22) 41px 44px, rgba(0, 0, 0, 0) 47px),
+    radial-gradient(circle at 38% 44%, rgba(96, 56, 20, .38) 0 2px, rgba(0, 0, 0, 0) 3.4px), radial-gradient(circle at 52% 70%, rgba(96, 56, 20, .32) 0 1.6px, rgba(0, 0, 0, 0) 2.8px),
+    radial-gradient(circle at 86% 74%, rgba(96, 56, 20, .34) 0 2.2px, rgba(0, 0, 0, 0) 3.4px), radial-gradient(circle at 18% 40%, rgba(96, 56, 20, .32) 0 1.8px, rgba(0, 0, 0, 0) 3px),
+    radial-gradient(circle at 91% 18%, rgba(96, 56, 20, .3) 0 1.5px, rgba(0, 0, 0, 0) 2.6px), radial-gradient(circle at 28% 88%, rgba(96, 56, 20, .3) 0 1.7px, rgba(0, 0, 0, 0) 2.8px);
+  --vpaper: var(--vaged),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' seed='6'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .36  0 0 0 0 .18  0 0 0 .26 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(ellipse 92% 92% at 50% 48%, #e6d2a6 0%, #d6bd8a 58%, #a98a56 100%);
+}
+.vl-paper { box-shadow: inset 0 0 96px rgba(96, 54, 16, .6), inset 0 0 8px rgba(60, 30, 8, .75); }
+.vl-paper::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(circle at 0 0, rgba(70, 38, 10, .38), rgba(70, 38, 10, 0) 24%), radial-gradient(circle at 100% 0, rgba(70, 38, 10, .3), rgba(70, 38, 10, 0) 20%),
+    radial-gradient(circle at 0 100%, rgba(70, 38, 10, .32), rgba(70, 38, 10, 0) 22%), radial-gradient(circle at 100% 100%, rgba(70, 38, 10, .4), rgba(70, 38, 10, 0) 26%); }
+.vl-paper .lt-body { z-index: 1; }
+/* mực sắt-mật: nâu đen, hơi nhoè nét */
+.vl-paper .lt-body p.hand, .vl-paper .lt-reply textarea, .vm-name { font-family: 'Charm', 'Patrick Hand', cursive; }
+.vl-paper .lt-body p.hand { font-size: clamp(1.32rem, 3.4vw, 1.58rem); line-height: 1.5; color: #33200f; text-shadow: 0 0 .8px rgba(51, 32, 15, .65), .35px .45px 0 rgba(51, 32, 15, .22); }
+.vl-paper .lt-reply textarea { font-size: 1.4rem; color: #33200f; }
+.vl-paper .lt-body h2 { color: #6a1f14; text-shadow: 0 1px 0 rgba(255, 240, 200, .5); }
+.vm-name { font-weight: 400; }
+/* chữ cái đầu trang trí */
+.hw-c.hw-drop { float: left; font-family: 'Playfair Display', serif; font-weight: 700; font-style: normal; font-size: 3.5em; line-height: .78; padding: .05em .1em 0 0; color: #7a1914; text-shadow: 0 1px 0 rgba(255, 230, 170, .5); }
+.vl-fl { display: block; width: 62%; height: auto; margin: 2px 0 10px; color: #7a4a22; }
+.vl-corner { position: absolute; z-index: 1; color: #7a4a22; opacity: .85; pointer-events: none; }
+.vl-corner.tl { left: 12px; top: 12px; } .vl-corner.br { right: 12px; bottom: 12px; transform: scale(-1, -1); }
+.vl-ink { position: absolute; right: -84px; bottom: 16%; width: 62px; display: none; opacity: 0; transition: opacity .8s; filter: drop-shadow(0 5px 6px rgba(0, 0, 0, .55)); pointer-events: none; }
+.vl-ink.on { opacity: 1; } .vl-inkwell { display: block; width: 100%; height: auto; }
+@media (min-width: 980px) { .vl-ink { display: block; } }

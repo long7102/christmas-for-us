@@ -289,3 +289,9 @@ npx tsc -b        # kiểm tra kiểu
 - Triệu chứng: nửa trên màn hình chỉ có dải trời tím, ảnh làng bắt đầu từ giữa màn hình (lệch xuống đúng nửa chiều cao ảnh).
 - Nguyên nhân (suy ra từ mã GSAP, KHÔNG tái hiện được trong trình duyệt thử): GSAP 3.15.1 (`CSSPlugin.js` ~dòng 859-865) đọc thuộc tính CSS `translate` của phần tử, đổi thành transform px cố định rồi tắt `translate`; các lệnh `gsap.set({x, y})` sau đó ghi đè, nên phép căn giữa `translate: -50% -50%` của `.door-cover` có thể bị mất hoặc cũ tuỳ kích thước lúc đo. QUY TẮC: phần tử do GSAP điều khiển thì KHÔNG căn giữa bằng `translate`/`scale`/`rotate` riêng; dùng margin, flex hoặc bọc thêm một lớp.
 - Sửa: `.door-cover` căn giữa bằng `margin-left/top: calc(var(--cw|--ch) / -2)`.
+
+### Cổ hơn (lần 1): giấy ngả màu, chữ thư pháp, bút lông thật, lọ mực
+- Chữ viết tay trong thư và tên trên phong bì dùng phông Charm (thư pháp, có tiếng Việt, đã bundle 400/700) thay cho Patrick Hand; mực nâu đen hơi nhoè (`.vl-paper .lt-body p.hand`).
+- Giấy: `--vaged` (vết ố trà, vòng ố, đốm nâu li ti), góc cháy xém (`.vl-paper::before`), mép răng cưa gồ ghề hơn (`deckle()`); `--vpaper` đổi sang tông vàng ố sẫm, dùng cho cả phong bì.
+- Chữ cái đầu trang trí (`.hw-drop`, Playfair đỏ thẫm), đường kẻ hoa văn dưới tiêu đề (`Flourish`), hoa văn góc (`Doodle scroll`), bút lông vẽ lại có cán và đầu vót dính mực (`Quill`), lọ mực (`Inkwell`, chỉ hiện ở màn >= 980px).
+- Chưa kiểm bằng mắt trên máy thật.
