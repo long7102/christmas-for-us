@@ -10,6 +10,9 @@ import { pointerReactive, pointerIn } from '../lib/pointer'
 import { LitSpot, Stardust } from '../components/LitSpot'
 import { store } from '../lib/storage'
 import { isUnlocked, previewOn } from '../lib/unlock'
+
+/** false: hộp quà đã mở chỉ khoá trong phiên hiện tại (F5 mở lại được). true: khoá vĩnh viễn trên máy này. */
+const PERSIST_OPENED = false
 import { ModalView, PaperFilter, type Modal } from './Letter'
 import { LAND, PORT, polyBox, type Layout, type P, type R } from './treeLayout'
 
@@ -286,7 +289,8 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
   const [modal, setModal] = useState<Modal>(null)
   const [hov, setHov] = useState<number | null>(null)
   const [lit, setLit] = useState<P | null>(null)
-  const [opened, setOpened] = useState<Record<number, boolean>>(() => store.get('giftsOpened', {}))
+  // Hộp quà đã mở thì khoá. TẠM THỜI chỉ nhớ trong phiên (F5 là mở lại được) để Long kiểm thư; đổi PERSIST_OPENED thành true để khoá vĩnh viễn (nhớ trong localStorage).
+  const [opened, setOpened] = useState<Record<number, boolean>>(() => (PERSIST_OPENED ? store.get('giftsOpened', {}) : {}))
   const [opening, setOpening] = useState<number | null>(null)
   const [, tick] = useState(0)
   const lightsOn = useLights()
@@ -348,7 +352,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
     setOpening(i)
     setTimeout(() => {
       const next = { ...opened, [i]: true }
-      setOpened(next); store.set('giftsOpened', next); setOpening(null)
+      setOpened(next); if (PERSIST_OPENED) store.set('giftsOpened', next); setOpening(null)
       setModal({ kind: 'gift', i })
     }, reducedMotion() ? 200 : 1900)
   }

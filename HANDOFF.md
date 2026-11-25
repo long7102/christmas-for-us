@@ -277,6 +277,7 @@ npx tsc -b        # kiểm tra kiểu
 
 ### Sửa nắp phong bì + hộp quà đã mở thì khoá
 - Nắp phong bì: lớp lót `.vm-flap-in` bị lật 180 độ quanh trục X nên `clip-path` phải đảo dọc (`polygon(0 100%, 100% 100%, 100% 84%, 50% 0, 0 84%)`), nếu không nắp mở ra bị ngược (cạnh rộng ở xa, chỏm chạm phong bì). Quy tắc: phần tử có `transform: rotateX(180deg)` thì hình cắt của nó cũng phải lật theo.
+- [CẬP NHẬT] TẠM THỜI chỉ khoá trong phiên: hằng `PERSIST_OPENED = false` đầu `Tree.tsx` (F5 mở lại được, không đọc/ghi `giftsOpened`). Muốn khoá vĩnh viễn thì đổi thành `true`.
 - Hộp quà đã mở (`giftsOpened` trong localStorage) coi như tắt: `Tree.tsx` không còn vẽ vùng bấm (`.tr-gifthit`), `openGift` thoát ngay. Hệ quả: Hạ đóng thư rồi (hoặc tải lại trang) thì KHÔNG đọc lại được thư/QR/lời nhắn đã viết. Chế độ xem trước (`?xem=`) bỏ qua khoá này để Long vẫn mở lại để kiểm.
 
 ### Học từ dearr.app: thư được viết ra, con dấu có khối và vỡ đôi
