@@ -1193,6 +1193,9 @@ html.modal-open { overflow: hidden !important; overscroll-behavior: none; }
 .vl-fl { display: block; width: 62%; height: auto; margin: 2px 0 10px; color: #7a4a22; }
 .vl-corner { position: absolute; z-index: 1; color: #7a4a22; opacity: .85; pointer-events: none; }
 .vl-corner.tl { left: 12px; top: 12px; } .vl-corner.br { right: 12px; bottom: 12px; transform: scale(-1, -1); }
-.vl-ink { position: absolute; right: -84px; bottom: 16%; width: 62px; display: none; opacity: 0; transition: opacity .8s; filter: drop-shadow(0 5px 6px rgba(0, 0, 0, .55)); pointer-events: none; }
+.vl-ink { position: absolute; right: -84px; top: 34%; width: 62px; display: none; opacity: 0; transition: opacity .8s; filter: drop-shadow(0 5px 6px rgba(0, 0, 0, .55)); pointer-events: none; }
 .vl-ink.on { opacity: 1; } .vl-inkwell { display: block; width: 100%; height: auto; }
 @media (min-width: 980px) { .vl-ink { display: block; } }
+
+/* đoạn đầu ôm trọn chữ cái đầu trang trí để đoạn sau không bị thụt vào cạnh nó */
+.hw-p:first-child { overflow: hidden; }
