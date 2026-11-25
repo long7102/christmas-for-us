@@ -1081,7 +1081,7 @@ html.modal-open { overflow: hidden !important; overscroll-behavior: none; }
 @keyframes vm-trem { to { transform: translate(.7px, -.5px); } }
 .vm-seal.shake { animation: vm-no .45s; }
 @keyframes vm-no { 20%, 60% { transform: translateZ(.6px) translate(calc(-50% - 4px), 30%) rotate(-6deg); } 40%, 80% { transform: translateZ(.6px) translate(calc(-50% + 4px), 30%) rotate(-6deg); } }
-.vm-seal.gone { opacity: 0; pointer-events: none; transition: opacity .12s; }
+.vm-seal.gone { pointer-events: none; }
 .vm-stain { position: absolute; left: 50%; bottom: 0; width: calc(var(--W) * .2); aspect-ratio: 1; backface-visibility: hidden; transform: translateZ(.4px) translate(-50%, 30%); border-radius: 50%; background: radial-gradient(closest-side, rgba(120, 18, 24, .5), rgba(120, 18, 24, 0)); opacity: 0; transition: opacity .3s; pointer-events: none; }
 .vm:not([data-stage='closed']) .vm-stain { opacity: 1; }
 /* thư nằm trong phong bì, trượt lên qua miệng phong bì */
@@ -1143,3 +1143,23 @@ html.modal-open { overflow: hidden !important; overscroll-behavior: none; }
 /* bộ lọc nặng chạy lại mỗi khung hình nên dừng hoạt ảnh của hình khi đang lọc (chế độ nhẹ bỏ lọc và giữ hoạt ảnh) */
 :root:not(.lite) .lt-cameo .ic, :root:not(.lite) .lt-cameo .ic * { animation: none !important; }
 .lite .lt-cameo .ic { filter: none; }
+
+/* con dấu sáp có khối, vỡ làm đôi rồi rơi; bóng đổ dưới phong bì */
+.vm-half { position: absolute; inset: 0; } .vm-half.l { clip-path: inset(0 50% 0 0); } .vm-half.r { clip-path: inset(0 0 0 50%); }
+.vm-seal.gone .vm-ring { display: none; }
+.vm-seal.gone .vm-half.l { animation: vm-halfl .9s cubic-bezier(.5, 0, .9, .6) forwards; }
+.vm-seal.gone .vm-half.r { animation: vm-halfr .9s cubic-bezier(.5, 0, .9, .6) forwards; }
+@keyframes vm-halfl { to { transform: translate(-30%, 150%) rotate(-42deg); opacity: 0; } }
+@keyframes vm-halfr { to { transform: translate(30%, 170%) rotate(36deg); opacity: 0; } }
+.vm-ground { position: absolute; left: 50%; top: calc(50% + min(560px, 84vw, 88dvh) * .38); width: min(520px, 80vw); height: 46px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(0, 0, 0, .5), rgba(0, 0, 0, 0)); pointer-events: none; }
+/* thư được viết ra từng chữ, bút lông chạy theo */
+.hw-c { opacity: 0; }
+.hw-c.on { opacity: 1; animation: hw-in .22s ease-out both; }
+@keyframes hw-in { from { clip-path: inset(-2px 100% -2px 0); } to { clip-path: inset(-2px -2px -2px 0); } }
+.vl-late { opacity: 0; pointer-events: none; transition: opacity .9s ease .1s; } .vl-late.on { opacity: 1; pointer-events: auto; }
+.hw-quill { position: absolute; left: 0; top: 0; width: 28px; height: 93px; transform-origin: 17px 92px; opacity: 0; pointer-events: none; z-index: 3; transition: transform .09s linear, opacity .25s; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45)); }
+.hw-quill .vl-quill, .vl-rest .vl-quill { position: static; display: block; width: 100%; height: auto; transform: none; filter: none; }
+.vl-rest { position: absolute; right: -66px; top: 8%; width: 60px; display: none; opacity: 0; transition: opacity .8s; transform: rotate(12deg); pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .5)); }
+.vl-rest.on { opacity: 1; }
+@media (min-width: 980px) { .vl-rest { display: block; } }
+@media (prefers-reduced-motion: reduce) { .hw-c.on { animation: none; } }

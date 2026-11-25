@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { treeText, type gifts } from '../content/content'
 import { sfx } from '../lib/audio'
 import { reducedMotion } from '../lib/device'
@@ -28,16 +28,25 @@ function deckle(seed: number) {
 }
 
 function WaxSeal() {
+  const u = useId().replace(/[^a-zA-Z0-9]/g, '')
+  const blob = 'M50 5c9 0 13 7 22 8 8 1 15 6 14 15 7 6 9 14 4 22 4 8 0 15-8 19-2 9-9 13-18 11-7 8-16 8-23 1-9 2-17-3-19-11-8-4-11-12-7-20-5-8-3-16 4-22-1-9 6-14 14-15 9-1 13-8 22-8z'
   return (
     <svg viewBox="0 0 100 100" className="vm-wax" aria-hidden>
       <defs>
-        <radialGradient id="vmwax" cx=".36" cy=".3" r=".85"><stop offset="0" stopColor="#c2373a" /><stop offset=".45" stopColor="#8f161c" /><stop offset="1" stopColor="#4a0a0e" /></radialGradient>
+        <radialGradient id={`${u}w`} cx=".36" cy=".3" r=".85"><stop offset="0" stopColor="#c2373a" /><stop offset=".45" stopColor="#8f161c" /><stop offset="1" stopColor="#4a0a0e" /></radialGradient>
+        <radialGradient id={`${u}h`} cx=".5" cy=".5" r=".5"><stop offset="0" stopColor="#fff" stopOpacity=".6" /><stop offset="1" stopColor="#fff" stopOpacity="0" /></radialGradient>
+        <linearGradient id={`${u}r`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#e07c7e" /><stop offset=".5" stopColor="#8f161c" /><stop offset="1" stopColor="#2c0508" /></linearGradient>
+        <radialGradient id={`${u}c`} cx=".55" cy=".6" r=".6"><stop offset="0" stopColor="#6c0f14" /><stop offset="1" stopColor="#8f161c" /></radialGradient>
       </defs>
-      <path d="M50 5c9 0 13 7 22 8 8 1 15 6 14 15 7 6 9 14 4 22 4 8 0 15-8 19-2 9-9 13-18 11-7 8-16 8-23 1-9 2-17-3-19-11-8-4-11-12-7-20-5-8-3-16 4-22-1-9 6-14 14-15 9-1 13-8 22-8z" fill="url(#vmwax)" />
-      <circle cx="50" cy="51" r="30" fill="none" stroke="#3a070a" strokeWidth="2" opacity=".6" />
-      <circle cx="50" cy="51" r="27" fill="none" stroke="#d0585a" strokeWidth="1" opacity=".4" />
+      <path d={blob} fill={`url(#${u}w)`} />
+      <path d={blob} fill="none" stroke="#f0a0a2" strokeWidth="1.4" opacity=".35" transform="translate(-.9 -.9)" />
+      <path d={blob} fill="none" stroke="#240406" strokeWidth="1.6" opacity=".45" transform="translate(1 1.1)" />
+      <circle cx="50" cy="51" r="30" fill={`url(#${u}c)`} />
+      <circle cx="50" cy="51" r="30" fill="none" stroke={`url(#${u}r)`} strokeWidth="3" />
       <text x="50" y="60" textAnchor="middle" fontSize="25" fontStyle="italic" fontWeight="700" fontFamily="'Playfair Display', serif" fill="#e0868a" opacity=".5" transform="translate(-.8 -.9)">L♥H</text>
       <text x="50" y="60" textAnchor="middle" fontSize="25" fontStyle="italic" fontWeight="700" fontFamily="'Playfair Display', serif" fill="#4c0a0e" opacity=".85">L♥H</text>
+      <ellipse cx="37" cy="27" rx="17" ry="8" fill={`url(#${u}h)`} transform="rotate(-28 37 27)" />
+      <circle cx="33" cy="23" r="2.3" fill="#fff" opacity=".6" />
       <g className="vm-crack" fill="none" stroke="#1c0305" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M52 6 L47 26 L56 40 L49 58 L54 78 L50 95" /><path d="M8 50 L30 54 L46 47 L70 56 L94 49" /><path d="M47 26 L30 20 M56 40 L72 34 M49 58 L36 70" />
       </g>
@@ -55,6 +64,48 @@ function Quill() {
       </g>
       <path d="M58 250L54 296" stroke="#4a4130" strokeWidth="3" strokeLinecap="round" />
     </svg>
+  )
+}
+
+/** Thư được viết ra từng chữ, có bút lông chạy theo và tiếng bút; chạm vào tờ thư để hiện hết ngay. */
+function Handwrite({ paras, delay, instant, onDone, onNib }: { paras: string[]; delay: number; instant: boolean; onDone: () => void; onNib: (el: HTMLElement | null) => void }) {
+  const total = useMemo(() => paras.reduce((a, t) => a + t.length, 0), [paras])
+  const [n, setN] = useState(instant ? total : 0)
+  const box = useRef<HTMLDivElement>(null)
+  const nRef = useRef(n); nRef.current = n
+  const doneRef = useRef(false)
+  useEffect(() => {
+    if (instant || total === 0) { setN(total); if (!doneRef.current) { doneRef.current = true; onDone() } return }
+    const flat = paras.join('\n'), base = clamp(9500 / total, 14, 34)
+    let i = 0, t: number
+    const step = () => {
+      i++; setN(i)
+      const ch = flat[i - 1] ?? ''
+      if (ch !== ' ' && ch !== '\n' && i % 2 === 0) sfx.penScratch()
+      if (i >= total) { if (!doneRef.current) { doneRef.current = true; onDone() } onNib(null); return }
+      const pause = ch === '.' || ch === '!' || ch === '?' ? 280 : ch === ',' || ch === ':' ? 130 : ch === '\n' ? 400 : 0
+      t = window.setTimeout(step, base * (ch === ' ' ? 1.4 : 0.7 + Math.random() * 0.7) + pause)
+    }
+    t = window.setTimeout(step, delay)
+    const skip = () => { window.clearTimeout(t); i = total; setN(total); onNib(null); if (!doneRef.current) { doneRef.current = true; onDone() } }
+    window.addEventListener('olcw:skipwrite', skip)
+    return () => { window.clearTimeout(t); window.removeEventListener('olcw:skipwrite', skip) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  // bút lông chạy theo chữ vừa viết
+  useLayoutEffect(() => {
+    if (n <= 0 || n >= total || !box.current) return
+    onNib(box.current.querySelectorAll<HTMLElement>('.hw-c')[n - 1] ?? null)
+  }, [n, total, onNib])
+  let k = 0
+  return (
+    <div ref={box} className="hw">
+      {paras.map((t, pi) => (
+        <p className="hand hw-p" key={pi} aria-label={t}>
+          {Array.from(t).map((ch, ci) => { const on = k++ < n; return <span key={ci} className={`hw-c${on ? ' on' : ''}`} aria-hidden>{ch}</span> })}
+        </p>
+      ))}
+    </div>
   )
 }
 
@@ -77,6 +128,9 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
   const paper = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
   const a = useRef({ rx: -6, ry: -14, vx: 0, vy: 0, drag: false, lx: 0, ly: 0, lt: 0, idle: 0, tgt: null as number | null })
+  const [written, setWritten] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const quillRef = useRef<HTMLDivElement>(null)
   const hold = useRef({ on: false, t0: 0, raf: 0, back: 0, p: 0 })
   const calm = reducedMotion()
   const clip = useMemo(() => deckle(g.id * 7 + 3), [g.id])
@@ -186,12 +240,21 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
     ], { duration: 1100, easing: 'cubic-bezier(.2,.8,.2,1)' })
   }, [stage, calm])
 
-  const body = g.body.map((t, i) => <p className="hand" key={i}>{t}</p>)
+  const paras = g.body.length ? g.body : g.kind === 'plain' ? [treeText.empty] : []
   const unlockedRead = !locked
+  // đưa đầu bút lông tới cuối chữ vừa viết (toạ độ so với tờ thư); null thì giấu bút
+  const nib = (el: HTMLElement | null) => {
+    const q = quillRef.current, w = wrapRef.current
+    if (!q || !w) return
+    if (!el) { q.style.opacity = '0'; return }
+    const r = el.getBoundingClientRect(), b = w.getBoundingClientRect()
+    q.style.opacity = '1'; q.style.transform = `translate(${(r.right - b.left - 17).toFixed(1)}px, ${(r.bottom - b.top - 92).toFixed(1)}px) rotate(30deg)`
+  }
 
   return (
     <div className={`tr-modal vm${closing ? ' closing' : ''}`} data-stage={stage} data-lenis-prevent onClick={onClose}>
       <div className="vm-rigwrap">
+        <i className="vm-ground" aria-hidden />
         <div className="vm-hit" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={(e) => e.stopPropagation()}>
           <div className="vm-rig" ref={rig}>
             <div className="vm-env">
@@ -204,7 +267,7 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
                   <i className="vm-stain" />
                   <div ref={sealRef} className={`vm-seal${holding ? ' holding' : ''}${stage !== 'closed' ? ' gone' : ''}${shake ? ' shake' : ''}`} key={stage === 'closed' ? 'k' + shake : 'x'} aria-hidden>
                     <svg viewBox="0 0 100 100" className="vm-ring"><circle cx="50" cy="50" r="47" pathLength={1} /></svg>
-                    <WaxSeal />
+                    <div className="vm-half l"><WaxSeal /></div><div className="vm-half r"><WaxSeal /></div>
                   </div>
                 </div>
               </div>
@@ -255,23 +318,24 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
 
       {stage === 'read' && unlockedRead && (
         <div className="vl-scroll">
-          <div className="vl-wrap" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={g.title}>
+          <div className="vl-wrap" ref={wrapRef} onClick={(e) => { e.stopPropagation(); if (!written) window.dispatchEvent(new Event('olcw:skipwrite')) }} role="dialog" aria-label={g.title}>
             <div className="vl-paper" ref={paper} style={{ clipPath: clip }}>
               <div className="lt-body">
                 <div className="vl-date">{g.stamp}</div>
                 <h2>{g.title}</h2>
                 <div className="lt-rule" aria-hidden />
-                {g.kind === 'plain' && (g.body.length === 0 ? <p className="hand">{treeText.empty}</p> : body)}
+                {g.kind === 'plain' && <Handwrite paras={paras} delay={calm ? 0 : 900} instant={calm} onDone={() => setWritten(true)} onNib={nib} />}
                 {g.kind !== 'plain' && (
                   <div className="lt-cols">
-                    <div className="lt-col">{body}</div>
-                    <div className="lt-col">{g.kind === 'reply' ? <Reply id={g.id} /> : <Qr label={g.extra} />}</div>
+                    <div className="lt-col"><Handwrite paras={paras} delay={calm ? 0 : 900} instant={calm} onDone={() => setWritten(true)} onNib={nib} /></div>
+                    <div className={`lt-col vl-late${written ? ' on' : ''}`}>{g.kind === 'reply' ? <Reply id={g.id} /> : <Qr label={g.extra} />}</div>
                   </div>
                 )}
                 <button className="lt-close" onClick={onClose}>{treeText.close}</button>
               </div>
             </div>
-            <Quill />
+            <div ref={quillRef} className="hw-quill" aria-hidden><Quill /></div>
+            <div className={`vl-rest${written ? ' on' : ''}`} aria-hidden><Quill /></div>
           </div>
         </div>
       )}

@@ -162,6 +162,15 @@ class Sfx {
       n.connect(f); f.connect(g); g.connect(this.fx!); n.start(t, Math.random() * 2); n.stop(t + len + 0.02)
     }
   }
+  /** Tiếng bút lông cào trên giấy: một nét ngắn, gọi lặp khi chữ đang được viết ra. */
+  penScratch(vol = 0.14) {
+    if (!this.ctx || !this.noise || this.ctx.state !== 'running') return
+    const c = this.ctx, t = c.currentTime, len = 0.05 + Math.random() * 0.07
+    const n = c.createBufferSource(); n.buffer = this.noise
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3200 + Math.random() * 3200; f.Q.value = 0.9
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol * (0.5 + Math.random() * 0.5), t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + len)
+    n.connect(f); f.connect(g); g.connect(this.fx!); n.start(t, Math.random() * 2); n.stop(t + len + 0.02)
+  }
   crackleBurst() { if (!this.ctx) return; for (let i = 0; i < 14; i++) setTimeout(() => this.pop(1), i * (25 + Math.random() * 70)) }
 
 
