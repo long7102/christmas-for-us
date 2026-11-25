@@ -41,7 +41,8 @@ export const gifts: { id: number; kind: GiftKind; title: string; stamp: string; 
       'Chúc em một tuổi mới thật nhẹ nhàng: ăn ngon, ngủ ngon, và luôn có những điều nhỏ bé làm em mỉm cười.',
       'Anh còn một món quà nữa dành cho em, ở mã QR bên dưới.',
     ],
-    extra: 'Mã QR sẽ thêm sau',
+    // [nháp] dòng hướng dẫn quét do Claude viết, Long sửa lại sau
+    extra: 'Em quét bằng một chiếc máy khác, hoặc lưu ảnh rồi mở bằng ứng dụng quét mã nhé.',
   },
   { id: 4, kind: 'plain', title: 'Valentine', stamp: '14 · 02', unlockAt: '2027-02-14T00:00:00+07:00', body: [] },
 ]

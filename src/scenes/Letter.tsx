@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { LONG_EMAIL, gifts, getMemory, lampStories, treeText } from '../content/content'
 import { store } from '../lib/storage'
 import { CurtainIcon, GarlandIcon, RugIcon, ShelfIcon, ToolsIcon, TreeIcon, WindowIcon, BasketIcon, BellIcon, BooksIcon, PaintingIcon, BowIcon, PineIcon, FireIcon, LampIcon, OrnamentIcon, StarIcon, StockingIcon, WreathIcon } from './Icons'
 import { sfx } from '../lib/audio'
+import qrSrc from '../assets/qr-sinh-nhat-em.png'
 import { countdown, isUnlocked } from '../lib/unlock'
 
 export type Modal = { kind: 'gift'; i: number } | { kind: 'memory'; id: string; i?: number } | null
@@ -103,17 +105,13 @@ function Reply({ id }: { id: number }) {
   )
 }
 
+/** Mã QR quà 8/1 (ảnh Long gửi, giữ nguyên điểm ảnh). Nền trắng đủ rộng để quét; có nút lưu ảnh vì không quét được màn hình của chính máy mình. */
 function Qr({ label }: { label?: string }) {
   return (
-    <div className="lt-qr" role="img" aria-label="Chỗ để mã QR">
-      <svg viewBox="0 0 100 100">
-        <rect x="2" y="2" width="96" height="96" fill="none" stroke="#6b4a24" strokeWidth="2" strokeDasharray="6 4" />
-        {[[12, 12], [64, 12], [12, 64]].map(([x, y]) => (
-          <g key={x + '-' + y}><rect x={x} y={y} width="24" height="24" fill="none" stroke="#4a2e17" strokeWidth="4" /><rect x={x + 8} y={y + 8} width="8" height="8" fill="#4a2e17" /></g>
-        ))}
-        <text x="50" y="58" textAnchor="middle" fontSize="11" fill="#6b4a24" fontFamily="serif" fontStyle="italic">QR</text>
-      </svg>
+    <div className="lt-qr">
+      <img src={qrSrc} width={450} height={450} alt="Mã QR quà sinh nhật" draggable={false} />
       <span>{label}</span>
+      <a className="lt-btn" href={qrSrc} download="ma-qr-qua-sinh-nhat.png">Lưu ảnh mã QR</a>
     </div>
   )
 }
@@ -167,7 +165,8 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
   const wide = (g && open && g.kind !== 'plain') || !!m
   const body = g ? g.body.map((t, i) => <p className="hand" key={i}>{t}</p>) : null
 
-  return (
+  // đưa ra <body>: các lớp cảnh có will-change/transform làm `position: fixed` bám theo lớp đó thay vì màn hình, lá thư bị đẩy ra ngoài tầm nhìn
+  return createPortal(
     <div className={`tr-modal${closing ? ' closing' : ''}`} data-lenis-prevent onClick={onClose}>
       <div className={`lt-sheet ${m ? 'memory' : 'gift'} ${wide ? 'wide' : ''}`} data-paper={g ? `g${g.id}` : modal.kind === 'memory' ? paperFor(modal.id) : ''} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
         <div className="lt-paper" />
@@ -215,6 +214,7 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
           <button className="lt-close" onClick={onClose}>{treeText.close}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

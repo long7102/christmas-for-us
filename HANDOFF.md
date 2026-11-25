@@ -253,3 +253,9 @@ npx tsc -b        # kiểm tra kiểu
 - Tiêu đề cảnh `.sec-title`: Playfair Display 700 (đã bundle), in nổi bằng `filter: drop-shadow` đỏ thẫm. ĐỪNG dùng `text-shadow` màu cho tiêu đề này: chữ đang là gradient vàng với fill trong suốt nên bóng lộ xuyên qua nhuộm đỏ cả chữ.
 - Cổng: dây đèn bóng to kiểu cũ (`.gate-lights`, đui xanh, điểm sáng, dây thật), thở nhẹ 5 giây thay cho nhấp nháy.
 - Token mới: `--ha-red`, `--ha-green`, `--brass`. Việc còn lại để "vintage hoàn toàn": màn chờ, nút, thanh chấm cảnh, lá thư `.lt-*`, bảng âm lượng, khung chữ.
+
+### Sửa lỗi: mở thư chỉ thấy một tờ giấy toàn màn hình + gắn mã QR quà 8/1
+- LỖI CÓ SẴN từ 24f5a60 (đã dựng bản gốc riêng để kiểm: lá thư nằm ở y = -1499, ngoài tầm nhìn). Hai nguyên nhân chồng nhau: (1) `.xf-layer.xf-tree` có `will-change: transform, opacity` nên `position: fixed` của `.tr-modal` bám theo lớp đó thay vì màn hình; (2) `html.modal-open body { overflow: hidden }` biến `body` thành khung cuộn, lớp cảnh `position: sticky` trôi mất, chỉ còn nền giấy.
+- Sửa: `ModalView` (Letter.tsx) dùng `createPortal(..., document.body)`; khoá cuộn chỉ đặt trên `html`; `.tr-modal` z-index 160 (trên `.film` 150 để mã QR không bị phủ màu). Đã kiểm máy tính + điện thoại: thư nằm trong màn hình, cuộn bị khoá (1755 -> 1755), Esc đóng và gỡ khoá, 0 lỗi console. Bài học: ĐỪNG đặt modal `fixed` bên trong lớp có `will-change`/`transform`/`filter`.
+- Mã QR quà 8/1: `src/assets/qr-sinh-nhat-em.png` (ảnh Long gửi, giữ nguyên byte), hiện trong `Qr` (Letter.tsx), nền trắng có lề để quét, nút "Lưu ảnh mã QR" (Hạ không quét được màn hình của chính điện thoại mình). Dòng hướng dẫn trong `content.ts` (gifts[2].extra) là NHÁP của Claude. Claude KHÔNG đọc được nội dung mã (kiểu chấm tròn có logo giữa) nên không biết nó trỏ tới đâu; Long cần tự quét thử.
+- Lưu ý: `unlockAt` của quà này đang là 2027-01-08 (Long viết "8/1/2026"), xem Long muốn năm nào.
