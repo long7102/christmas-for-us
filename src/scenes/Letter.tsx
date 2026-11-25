@@ -7,6 +7,12 @@ import { sfx } from '../lib/audio'
 import qrSrc from '../assets/qr-sinh-nhat-em.png'
 import { countdown, isUnlocked } from '../lib/unlock'
 import { GiftLetter } from './GiftLetter'
+import { Sketch, type SketchStroke } from '../components/Sketch'
+
+const CAMEO_STROKES: SketchStroke[] = [
+  { inset: 2, j: 1.8, w: 3, o: 0.9, seed: 51, delay: 0.1 },
+  { inset: 8, j: 1.5, w: 1.4, o: 0.55, seed: 52, delay: 0.3 },
+]
 
 export type Modal = { kind: 'gift'; i: number } | { kind: 'memory'; id: string; i?: number } | null
 
@@ -20,6 +26,18 @@ export function PaperFilter() {
         <feColorMatrix in="w" type="matrix" values="0.45 0.45 0.1 0 0  0.45 0.45 0.1 0 0  0.45 0.45 0.1 0 0  0 0 0 1 0" result="gray" />
         <feComponentTransfer in="gray" result="post"><feFuncR type="discrete" tableValues=".16 .3 .46 .62 .8 .94" /><feFuncG type="discrete" tableValues=".1 .22 .36 .52 .72 .9" /><feFuncB type="discrete" tableValues=".05 .12 .22 .34 .52 .78" /></feComponentTransfer>
         <feComposite in="post" in2="SourceGraphic" operator="in" />
+      </filter>
+      <filter id="ic-sketch" x="-6%" y="-6%" width="112%" height="112%" colorInterpolationFilters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="w" />
+        <feDisplacementMap in="SourceGraphic" in2="w" scale="3.4" xChannelSelector="R" yChannelSelector="G" result="d" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="1" seed="9" result="n2" />
+        <feDisplacementMap in="d" in2="n2" scale="1.5" xChannelSelector="G" yChannelSelector="R" result="d2" />
+        <feColorMatrix in="d2" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="a" />
+        <feMorphology in="a" operator="dilate" radius="1.1" result="dil" />
+        <feFlood floodColor="#3b2410" result="ink" />
+        <feComposite in="ink" in2="dil" operator="in" result="outline" />
+        <feMerge result="m"><feMergeNode in="outline" /><feMergeNode in="d2" /></feMerge>
+        <feColorMatrix in="m" type="saturate" values="0.72" />
       </filter>
       <filter id="tr-rough" x="-5%" y="-5%" width="110%" height="110%">
         <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="5" result="a" />
@@ -204,7 +222,7 @@ export function ModalView({ modal, onClose: finish }: { modal: NonNullable<Modal
           {m && (
             <div className="lt-cols">
               <div className="lt-col lt-left">
-                <div className="lt-icon"><div className="lt-cameo">{iconFor((modal as { id: string }).id)}</div></div>
+                <div className="lt-icon"><div className="lt-cameo"><Sketch shape="ellipse" className="sk-cameo" strokes={CAMEO_STROKES} />{iconFor((modal as { id: string }).id)}</div></div>
               </div>
               <div className="lt-col">
                 {m.meaning.map((t, i) => <p key={i}>{t}</p>)}

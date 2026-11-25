@@ -15,4 +15,7 @@ import '@fontsource/playfair-display/700-italic.css'
 import './styles.css'
 import App from './App'
 
-createRoot(document.getElementById('root')!).render(<App />)
+import { initPreview } from './lib/unlock'
+
+// xem trước (?xem=<mã>) phải xử lý xong trước khi dựng trang để các quà đọc đúng trạng thái
+initPreview().finally(() => createRoot(document.getElementById('root')!).render(<App />))

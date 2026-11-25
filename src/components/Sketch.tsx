@@ -1,5 +1,5 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { flourish, hatch as hatchPath, inkOutline, motif, roughCirclePts, roughRectPts, type MotifKind, type Pt, type Stroke } from '../lib/sketch'
+import { flourish, hatch as hatchPath, inkOutline, motif, roughCirclePts, roughEllipsePts, roughRectPts, type MotifKind, type Pt, type Stroke } from '../lib/sketch'
 
 export type SketchStroke = { inset: number; j: number; w: number; o: number; seed: number; delay: number; dur?: number }
 export type HatchSpec = { x: number; y: number; n: number; len: number; gap: number; ang: number }
@@ -11,7 +11,7 @@ function Ink({ pts, w, seed, o = 1, delay, dur, taper = true }: { id?: string; p
 }
 const clean = (s: string) => s.replace(/[^a-zA-Z0-9]/g, '')
 
-type Props = { shape?: 'rect' | 'pill' | 'circle'; r?: number; strokes: SketchStroke[]; hatch?: (w: number, h: number) => HatchSpec[]; className?: string }
+type Props = { shape?: 'rect' | 'pill' | 'circle' | 'ellipse'; r?: number; strokes: SketchStroke[]; hatch?: (w: number, h: number) => HatchSpec[]; className?: string }
 
 /** Lớp vẽ tay phủ đúng khung của phần tử cha (đo bằng ResizeObserver, dựng lại khi đổi cỡ). */
 export function Sketch({ shape = 'rect', r = 18, strokes, hatch, className = '' }: Props) {
@@ -20,7 +20,7 @@ export function Sketch({ shape = 'rect', r = 18, strokes, hatch, className = '' 
   const [sz, setSz] = useState({ w: 0, h: 0 })
   useLayoutEffect(() => {
     const el = ref.current!
-    const upd = () => { const b = el.getBoundingClientRect(); const w = Math.round(b.width), h = Math.round(b.height); setSz((s) => (s.w === w && s.h === h ? s : { w, h })) }
+    const upd = () => { const b = el.getBoundingClientRect(); const w = Math.round(el.clientWidth || b.width), h = Math.round(el.clientHeight || b.height); setSz((s) => (s.w === w && s.h === h ? s : { w, h })) }
     upd()
     const ro = new ResizeObserver(upd); ro.observe(el)
     return () => ro.disconnect()
@@ -29,7 +29,7 @@ export function Sketch({ shape = 'rect', r = 18, strokes, hatch, className = '' 
   const lines = useMemo(() => {
     if (!w || !h) return []
     const rr = shape === 'pill' ? h / 2 : r
-    return strokes.map((s) => (shape === 'circle' ? roughCirclePts(w, h, s.inset, s.j, s.seed) : roughRectPts(w, h, rr, s.inset, s.j, s.seed)))
+    return strokes.map((s) => (shape === 'circle' ? roughCirclePts(w, h, s.inset, s.j, s.seed) : shape === 'ellipse' ? roughEllipsePts(w, h, s.inset, s.j, s.seed) : roughRectPts(w, h, rr, s.inset, s.j, s.seed)))
   }, [w, h, shape, r, strokes])
   const hatches = useMemo(() => (w && h && hatch ? hatch(w, h).map((a, i) => hatchPath(a.x, a.y, a.n, a.len, a.gap, a.ang, 40 + i)) : []), [w, h, hatch])
   return (

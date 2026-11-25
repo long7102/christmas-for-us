@@ -6,7 +6,21 @@ export function now(): number {
   }
   return Date.now()
 }
-export const isUnlocked = (iso: string) => now() >= Date.parse(iso)
+/** Chế độ xem trước của Long: nhớ trong localStorage, bật bằng ?xem=<mã>, tắt bằng ?xem=off hoặc nút "Thoát". */
+const PREVIEW_KEY = 'olcw:preview'
+export function previewOn(): boolean { try { return localStorage.getItem(PREVIEW_KEY) === '1' } catch { return false } }
+export async function initPreview(): Promise<void> {
+  const code = new URLSearchParams(location.search).get('xem')
+  if (code === null) return
+  try {
+    if (code === 'off') { localStorage.removeItem(PREVIEW_KEY); return }
+    const { sha256 } = await import('./hash')
+    const { PREVIEW_HASH } = await import('../content/content')
+    if ((await sha256(code)) === PREVIEW_HASH) localStorage.setItem(PREVIEW_KEY, '1')
+  } catch { /* bỏ qua */ }
+}
+export function exitPreview() { try { localStorage.removeItem(PREVIEW_KEY) } catch { /* bỏ qua */ } location.href = location.pathname }
+export const isUnlocked = (iso: string) => previewOn() || now() >= Date.parse(iso)
 export function countdown(iso: string) {
   let s = Math.max(0, Math.floor((Date.parse(iso) - now()) / 1000))
   const d = Math.floor(s / 86400); s -= d * 86400

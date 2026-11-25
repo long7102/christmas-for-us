@@ -9,6 +9,7 @@ import { startPerfWatch } from './lib/perf'
 import { useRipple } from './lib/ripple'
 import { Cursor } from './components/Cursor'
 import { startTimeOfDay } from './lib/timeOfDay'
+import { exitPreview, previewOn } from './lib/unlock'
 
 
 type Phase = 'gate' | 'door' | 'world'
@@ -32,6 +33,7 @@ export default function App() {
   return (
     <>
       <div className="film" aria-hidden />
+      {previewOn() && <div className="pv-badge" role="status"><span>Chế độ xem trước: mọi quà đã mở khoá</span><button type="button" onClick={exitPreview}>Thoát</button></div>}
       <Loader />
       <Cursor />
       {/* Các cảnh sau cánh cửa làm từng cảnh một: hiện có cây thông + 4 quà và hai chú mèo. */}

@@ -3,6 +3,7 @@ import { treeText, type gifts } from '../content/content'
 import { sfx } from '../lib/audio'
 import { reducedMotion } from '../lib/device'
 import { rng } from '../lib/sketch'
+import { Flourish, Sketch, type SketchStroke } from '../components/Sketch'
 import { Postmark, Qr, Reply, Stamp } from './Letter'
 
 type Gift = (typeof gifts)[number]
@@ -10,6 +11,10 @@ type Stage = 'closed' | 'cracked' | 'opening' | 'out' | 'read'
 type Frag = { id: number; x: number; y: number; dx: number; dy: number; rot: number; s: number; d: number }
 
 const HOLD_MS = 1100
+const ENV_STROKES: SketchStroke[] = [
+  { inset: 9, j: 1.4, w: 2.4, o: 0.8, seed: 31, delay: 0.3 },
+  { inset: 15, j: 1.2, w: 1.3, o: 0.5, seed: 32, delay: 0.5 },
+]
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 
 /** Mép giấy răng cưa của tờ thư: đa giác có độ lệch cố định (không đổi giữa các lần mở). */
@@ -36,15 +41,6 @@ function WaxSeal() {
       <g className="vm-crack" fill="none" stroke="#1c0305" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M52 6 L47 26 L56 40 L49 58 L54 78 L50 95" /><path d="M8 50 L30 54 L46 47 L70 56 L94 49" /><path d="M47 26 L30 20 M56 40 L72 34 M49 58 L36 70" />
       </g>
-    </svg>
-  )
-}
-
-function Plane() {
-  return (
-    <svg viewBox="0 0 120 50" className="vm-plane" aria-hidden>
-      <g fill="#22386e" opacity=".85"><path d="M6 30c10-9 40-12 78-9 14 1 26 4 30 8-6 5-20 7-34 7-30 2-58 0-74-6z" /><path d="M52 26 38 8h8l24 17z" /><path d="M52 30 40 44h8l22-12z" /><path d="M12 26 8 14h6l8 11z" /></g>
-      <g fill="none" stroke="#22386e" strokeWidth="1.2" opacity=".6"><path d="M-2 40c8-3 16-3 22 0M4 46c8-3 16-3 22 0" /></g>
     </svg>
   )
 }
@@ -200,26 +196,26 @@ export function GiftLetter({ g, locked, cd, closing, onClose }: {
           <div className="vm-rig" ref={rig}>
             <div className="vm-env">
               <div className="vm-face vm-seal-face">
+                <Sketch className="sk-env" r={3} strokes={ENV_STROKES} />
+                <svg className="vm-folds" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden><path d="M0 0 L50 58 L0 100 Z" /><path d="M100 0 L50 58 L100 100 Z" /><path d="M0 100 L50 58 L100 100 Z" /></svg>
                 <div className="vm-flap">
-                  <div className="vm-flap-out">
-                    <i className="vm-stain" />
-                    <div ref={sealRef} className={`vm-seal${holding ? ' holding' : ''}${stage !== 'closed' ? ' gone' : ''}${shake ? ' shake' : ''}`} key={stage === 'closed' ? 'k' + shake : 'x'} aria-hidden>
-                      <svg viewBox="0 0 100 100" className="vm-ring"><circle cx="50" cy="50" r="47" pathLength={1} /></svg>
-                      <WaxSeal />
-                    </div>
-                  </div>
+                  <div className="vm-flap-out"><svg className="vm-flapline" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden><path d="M0 16 L50 100 L100 16" /></svg></div>
                   <div className="vm-flap-in" />
+                  <i className="vm-stain" />
+                  <div ref={sealRef} className={`vm-seal${holding ? ' holding' : ''}${stage !== 'closed' ? ' gone' : ''}${shake ? ' shake' : ''}`} key={stage === 'closed' ? 'k' + shake : 'x'} aria-hidden>
+                    <svg viewBox="0 0 100 100" className="vm-ring"><circle cx="50" cy="50" r="47" pathLength={1} /></svg>
+                    <WaxSeal />
+                  </div>
                 </div>
               </div>
               <div className="vm-face vm-addr-face">
+                <Sketch className="sk-env" r={3} strokes={ENV_STROKES} />
                 <div className="vm-addr">
-                  <div className="vm-from"><span className="vm-lab">Người gửi</span><i className="vm-name">Long</i><u /><u /></div>
+                  <span className="vm-lab vm-tag">Thư tay</span>
                   <div className="vm-pm"><Postmark text={g.stamp} /></div>
                   <div className="vm-stamp"><Stamp tilt={3} /></div>
-                  <div className="vm-to"><span className="vm-lab">Người nhận</span><i className="vm-name">Khánh Hạ</i><u /><u /><u /></div>
-                  <span className="vm-lab vm-tag">Thư tay</span>
-                  <Plane />
-                  <span className="vm-lab vm-air">Thư hàng không</span>
+                  <div className="vm-to"><span className="vm-lab">Gửi người thương</span><i className="vm-name">Khánh Hạ</i><Flourish className="vm-fl" delay={1} /></div>
+                  <div className="vm-from"><span className="vm-lab">Người gửi</span><i className="vm-name sm">Long</i></div>
                 </div>
               </div>
               <i className="vm-edge e-t" /><i className="vm-edge e-b" /><i className="vm-edge e-l" /><i className="vm-edge e-r" />

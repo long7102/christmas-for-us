@@ -82,6 +82,15 @@ export function roughCirclePts(w: number, h: number, inset: number, j: number, s
   return pts
 }
 
+/** Hình elip vẽ tay (khung cameo), hơi xoắn vào trong ở cuối nét. */
+export function roughEllipsePts(w: number, h: number, inset: number, j: number, seed: number): Pt[] {
+  const rnd = rng(seed)
+  const rx = w / 2 - inset, ry = h / 2 - inset, cx = w / 2, cy = h / 2, n = 34, a0 = rnd() * 6.283
+  const pts: Pt[] = []
+  for (let i = 0; i <= n + 3; i++) { const a = a0 + (i / n) * 6.283, k = 1 - Math.max(0, i - n) * 0.012; pts.push([cx + (rx * k + (rnd() - 0.5) * 2 * j) * Math.cos(a), cy + (ry * k + (rnd() - 0.5) * 2 * j) * Math.sin(a)]) }
+  return pts
+}
+
 /** Nét gạch bóng song song, như tô chì ở góc. */
 export function hatch(x: number, y: number, n: number, len: number, gap: number, ang: number, seed: number): string {
   const rnd = rng(seed)
