@@ -1064,7 +1064,8 @@ html.modal-open { overflow: hidden !important; overscroll-behavior: none; }
 .vm-flapline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; } .vm-flapline path { fill: none; stroke: #5d3d1c; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; opacity: .85; }
 .vm-folds { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; } .vm-folds path { fill: rgba(86, 52, 18, .07); stroke: #5d3d1c; stroke-width: 1.2; vector-effect: non-scaling-stroke; opacity: .7; stroke-linejoin: round; }
 .sk-env { color: #6a4a26; }
-.vm-flap-in { transform: rotateX(180deg); background: repeating-linear-gradient(45deg, rgba(110, 70, 30, .15) 0 1px, rgba(0, 0, 0, 0) 1px 6px), #e2d3ae; }
+/* lớp lót bị lật 180 độ quanh trục X nên hình cắt phải đảo ngược theo chiều dọc để sau khi lật khớp với mặt ngoài */
+.vm-flap-in { clip-path: polygon(0 100%, 100% 100%, 100% 84%, 50% 0, 0 84%); transform: rotateX(180deg); background: repeating-linear-gradient(45deg, rgba(110, 70, 30, .15) 0 1px, rgba(0, 0, 0, 0) 1px 6px), #e2d3ae; }
 .vm[data-stage='opening'] .vm-flap, .vm[data-stage='out'] .vm-flap, .vm[data-stage='read'] .vm-flap { transform: translateZ(-9px) rotateX(180deg); }
 /* con dấu sáp */
 .vm-seal { position: absolute; left: 50%; bottom: 0; width: calc(var(--W) * .155); aspect-ratio: 1; pointer-events: none; z-index: 2; backface-visibility: hidden;

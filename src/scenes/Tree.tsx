@@ -9,7 +9,7 @@ import { weather } from '../lib/weather'
 import { pointerReactive, pointerIn } from '../lib/pointer'
 import { LitSpot, Stardust } from '../components/LitSpot'
 import { store } from '../lib/storage'
-import { isUnlocked } from '../lib/unlock'
+import { isUnlocked, previewOn } from '../lib/unlock'
 import { ModalView, PaperFilter, type Modal } from './Letter'
 import { LAND, PORT, polyBox, type Layout, type P, type R } from './treeLayout'
 
@@ -342,6 +342,8 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
 
   const openGift = (i: number) => {
     const gf = gifts[i]
+    // hộp quà đã mở rồi thì coi như tắt, không mở lại được (chế độ xem trước của chủ trang vẫn mở lại để kiểm nội dung)
+    if (opened[i] && !previewOn()) return
     if (!isUnlocked(gf.unlockAt) || opened[i] || opening !== null) { setModal({ kind: 'gift', i }); return }
     setOpening(i)
     setTimeout(() => {
@@ -471,6 +473,7 @@ export default function Tree({ paused = false }: { paused?: boolean }) {
             ))}
             {L.polys.map((p, i) => {
               const gf = gifts[i]
+              if (opened[i] && !previewOn()) return null
               return (
                 <polygon key={gf.id} className="tr-gifthit" points={(opened[i] ? bodyPoly(i) : p).map((q) => q.join(',')).join(' ')} tabIndex={0} role="button"
                   aria-label={gf.title}
